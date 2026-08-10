@@ -103,6 +103,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 border-b ${headerBgClass}`}>
         <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
+            {/* Skora Logo -> Redirects to Landing Page (/) */}
             <Link
               href="/"
               className={`relative z-50 flex items-center gap-1.5 text-2xl font-extrabold tracking-tight transition-colors duration-300 ${logoTextClass}`}
@@ -116,8 +117,9 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             </Link>
 
             <nav className="hidden h-full items-center gap-8 lg:flex">
+              {/* Home Link -> Redirects to Dedicated Home Page (/home) */}
               <Link
-                href="/"
+                href="/home"
                 className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${textClass}`}
               >
                 Home
@@ -137,8 +139,9 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 <span className="absolute bottom-0 left-0 h-[3px] w-full origin-left scale-x-0 bg-blue-600 transition-transform duration-300 ease-out group-hover:scale-x-100" />
               </button>
 
+              {/* Healthcare IT Link -> Redirects to Doctor Healthcare Portal (/healthcare) */}
               <Link
-                href="/services/pms"
+                href="/healthcare"
                 className={`group relative flex h-full items-center gap-1.5 text-[15px] font-semibold transition-colors duration-300 ${
                   isTransparentNav ? "text-emerald-300 hover:text-emerald-200" : "text-emerald-600 hover:text-emerald-500"
                 }`}
@@ -298,7 +301,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
           >
             <div className="flex flex-col pt-24 px-6 pb-12 min-h-screen">
               <div className="flex flex-col gap-6 flex-grow">
-                <Link href="/" className="border-b border-gray-100 pb-4 text-xl font-bold text-gray-900">
+                <Link href="/home" className="border-b border-gray-100 pb-4 text-xl font-bold text-gray-900">
                   Home
                 </Link>
                 <button
@@ -311,7 +314,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   Services <ArrowRight size={20} className="text-blue-600" />
                 </button>
                 <Link
-                  href="/services/pms"
+                  href="/healthcare"
                   className="flex items-center gap-3 text-lg font-bold text-emerald-600 mt-2"
                 >
                   <div className="p-2 bg-emerald-50 rounded">

@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import EnterpriseHero from "@/components/EnterpriseHero";
 import CapabilitiesSection from "@/components/CapabilitiesSection";
 import FeelTheMarket from "@/components/FeelTheMarket";
+import TechExpertiseSection from "@/components/TechExpertiseSection";
 import LaptopSlider from "@/components/LaptopSlider";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
@@ -31,40 +32,45 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col relative overflow-hidden">
-      {/* High-Impact Cinematic GSAP 3D Intro Sequence */}
+    <main className="min-h-screen bg-[#05070E] text-white flex flex-col relative overflow-hidden">
+      {/* High-Impact GSAP 3D Cyber Intro Sequence */}
       <LandingIntro />
 
-      {/* Top Scroll Progress Indicator */}
+      {/* Top Sticky Scroll Progress Bar */}
       <ScrollProgressBar />
 
-      {/* Navbar with exact scroll transition logic */}
+      {/* Navbar with transparent-to-white scroll transition logic */}
       <Navbar onOpenConsultation={handleOpenConsultation} />
 
-      {/* 1. ENTERPRISE HERO SECTION — DARK THEME (#071a42) */}
+      {/* 1. ENTERPRISE HERO — Electric Blue Theme & 5 Front Showcase 3D Cards */}
       <EnterpriseHero onOpenConsultation={handleOpenConsultation} />
 
-      {/* 2. CAPABILITIES SECTION — LIGHT THEME (bg-slate-50) */}
+      {/* 2. WHAT WE BUILD AT SKORA — MNC Corporate Glassmorphism Capabilities */}
       <ScrollReveal variant="fade-up" duration={800}>
         <CapabilitiesSection />
       </ScrollReveal>
 
-      {/* 3. FEEL THE MARKET ICE CUBES & TECH MARQUEES — DARK THEME (#030914) & LIGHT MARQUEES */}
+      {/* 3. FEEL THE MARKET IN YOUR FAVOUR — 3D Rusty Frosty Ice Cubes & Melting Water Drip Loop */}
       <ScrollReveal variant="fade-up" duration={800}>
         <FeelTheMarket />
       </ScrollReveal>
 
-      {/* 4. 3D 6-LAPTOP CAROUSEL WHEEL — DARK THEME (#030914) */}
+      {/* 4. OUR TECH & MEDIA EXPERTISE — Pure White Background */}
+      <ScrollReveal variant="fade-up" duration={800}>
+        <TechExpertiseSection />
+      </ScrollReveal>
+
+      {/* 5. 3D 6-LAPTOP CAROUSEL WHEEL */}
       <ScrollReveal variant="zoom" duration={900}>
         <LaptopSlider />
       </ScrollReveal>
 
-      {/* 5. TESTIMONIALS SECTION — LIGHT THEME (#f8fbff) */}
+      {/* 6. TESTIMONIALS SECTION ("Partnered with the Best") */}
       <ScrollReveal variant="fade-up" duration={800}>
         <TestimonialsSection />
       </ScrollReveal>
 
-      {/* 6. FOOTER — DARK THEME (#020409) WITH FLOATING PARTICLES */}
+      {/* 7. FOOTER */}
       <Footer />
 
       {/* Consultation Lead Modal */}
