@@ -292,20 +292,20 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-[1000] flex flex-col overflow-y-auto bg-slate-950/95 backdrop-blur-2xl px-4 py-6 sm:p-8"
+            className="fixed inset-0 z-[1000] flex flex-col overflow-y-auto bg-[#F4F6F1]/98 backdrop-blur-2xl px-4 py-6 sm:p-8 text-[#0B1310]"
           >
             <div className="flex w-full items-center justify-between mx-auto max-w-[90rem]">
               <button
                 onClick={closeServices}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all border border-white/15 cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-[#E8F7ED] text-[#0B1310] text-xs font-bold transition-all border border-[#E2E8F0] shadow-sm cursor-pointer"
               >
-                <ArrowLeft size={16} className="text-cyan-400" />
+                <ArrowLeft size={16} className="text-[#16A34A]" />
                 <span>Return to Previous Page</span>
               </button>
 
               <button
                 onClick={closeServices}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 hover:rotate-90 cursor-pointer"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#0B1310] border border-[#E2E8F0] shadow-sm transition hover:bg-slate-200 hover:rotate-90 cursor-pointer"
               >
                 <X size={22} />
               </button>
@@ -318,13 +318,13 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 transition={{ delay: 0.1 }}
                 className="mb-10 lg:mb-16 text-center lg:text-left"
               >
-                <h2 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl">
+                <h2 className="text-4xl font-black tracking-tight text-[#0B1310] md:text-5xl lg:text-6xl uppercase">
                   Our{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">
+                  <span className="text-[#22C55E]">
                     Expertise
                   </span>
                 </h2>
-                <p className="mt-4 text-lg text-slate-400 font-medium">
+                <p className="mt-4 text-lg text-slate-600 font-medium">
                   Select a division to explore our capabilities.
                 </p>
               </motion.div>
@@ -340,21 +340,21 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     <Link
                       href={item.link}
                       onClick={closeServices}
-                      className="group relative flex h-[350px] lg:h-[450px] w-full flex-col justify-end overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(37,99,235,0.2)] hover:border-sky-400/50 cursor-pointer"
+                      className="group relative flex h-[350px] lg:h-[420px] w-full flex-col justify-end overflow-hidden rounded-[2.2rem] border border-[#E2E8F0] bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#22C55E] cursor-pointer"
                     >
                       <img
                         src={item.img}
                         alt={item.name}
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent opacity-90 transition-opacity group-hover:opacity-80"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/85 to-transparent opacity-95 transition-opacity group-hover:opacity-90"></div>
                       <div className="relative z-10 p-8">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-sky-400 backdrop-blur-md transition-colors group-hover:bg-sky-400 group-hover:text-white">
+                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8F7ED] text-[#16A34A] border border-[#22C55E]/30 backdrop-blur-md transition-colors group-hover:bg-[#22C55E] group-hover:text-white">
                           <item.icon size={28} />
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-2">{item.name}</h3>
-                        <p className="text-slate-300 font-medium mb-6">{item.desc}</p>
-                        <div className="flex items-center gap-2 text-sm font-bold text-sky-400">
+                        <h3 className="text-2xl font-extrabold text-[#0B1310] mb-2">{item.name}</h3>
+                        <p className="text-slate-600 font-medium mb-6 text-sm leading-relaxed">{item.desc}</p>
+                        <div className="flex items-center gap-2 text-sm font-bold text-[#16A34A]">
                           <span>Explore Division</span>
                           <ArrowRight
                             size={16}

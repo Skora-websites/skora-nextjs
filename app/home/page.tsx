@@ -472,17 +472,17 @@ export default function HomePage() {
   return (
     <main
       ref={containerRef}
-      className="min-h-screen bg-[#F8F9F6] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden"
+      className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden"
     >
       <ScrollProgressBar />
       <Navbar onOpenConsultation={handleOpenConsultation} />
 
-      {/* Light Background Morphing GSAP Blobs */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-200/30 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-[800px] right-10 w-[500px] h-[500px] bg-[#E8F7ED]/60 rounded-full blur-[120px] pointer-events-none" />
+      {/* Light Background Morphing GSAP Ambient Blobs */}
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-200/35 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[800px] right-10 w-[500px] h-[500px] bg-[#E2ECE4]/70 rounded-full blur-[120px] pointer-events-none" />
 
       {/* =========================================================================
-          1. HERO SECTION — CONSULTIV DRIBBBLE LIGHT THEME
+          1. HERO SECTION — CONSULTIV DRIBBBLE WARM LIGHT THEME
           ========================================================================= */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center relative z-10">
         {/* Social Proof Eyebrow Pill */}
@@ -490,7 +490,7 @@ export default function HomePage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white border border-[#E2E8F0] shadow-sm text-xs font-semibold mb-8"
+          className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white border border-[#E1E6DF] shadow-sm text-xs font-semibold mb-8"
         >
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E8F7ED] text-[#16A34A] font-bold text-[11px]">
             <span>“</span> Guest favorite <span>”</span>
@@ -547,7 +547,7 @@ export default function HomePage() {
               key={img.id}
               whileHover={{ y: -10, scale: 1.04, rotateX: 4, rotateY: -4 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="gsap-gallery-item relative h-64 sm:h-72 rounded-[2.2rem] overflow-hidden shadow-lg border border-[#E2E8F0] bg-white group cursor-pointer"
+              className="gsap-gallery-item relative h-64 sm:h-72 rounded-[2.2rem] overflow-hidden shadow-lg border border-[#E1E6DF] bg-white group cursor-pointer"
             >
               <img
                 src={img.url}
@@ -565,12 +565,12 @@ export default function HomePage() {
       {/* =========================================================================
           2. PARTNERSHIPS & COLLABORATION LOGO MARQUEE
           ========================================================================= */}
-      <section className="py-12 border-y border-[#E2E8F0] bg-white">
+      <section className="py-12 border-y border-[#E1E6DF] bg-[#EBF0E8]/60">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-500">
             Trusted by Leading Enterprises, Startups &amp; Clinics Worldwide /
           </span>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-8 sm:gap-12 opacity-80">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-8 sm:gap-12 opacity-85">
             {partnerLogos.map((partner, idx) => (
               <span
                 key={idx}
@@ -596,7 +596,7 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="lg:col-span-7 space-y-8 gsap-scroll-card"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F7ED] text-[#16A34A] text-xs font-bold font-mono uppercase">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F7ED] text-[#16A34A] text-xs font-bold font-mono uppercase border border-[#22C55E]/30">
               <span>✦ ABOUT SKORA DIGITAL ✦</span>
             </div>
 
@@ -613,7 +613,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-6 border-t border-[#E2E8F0]">
+            <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-6 border-t border-[#E1E6DF]">
               <div>
                 <div className="text-3xl sm:text-4xl font-black text-[#0B1310]">200k+</div>
                 <div className="text-xs text-slate-500 font-semibold mt-1">Verified leads generated</div>
@@ -641,7 +641,7 @@ export default function HomePage() {
             transition={{ duration: 0.7 }}
             className="lg:col-span-5 gsap-scroll-card"
           >
-            <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E2E8F0] bg-white group cursor-pointer">
+            <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E1E6DF] bg-white group cursor-pointer">
               <img
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
                 alt="Skora Strategy Session"
@@ -663,7 +663,7 @@ export default function HomePage() {
       {/* =========================================================================
           4. COMPLETE STUDIO SERVICES FOR STARTUPS & ESTABLISHED BUSINESSES
           ========================================================================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E2E8F0]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
             End-to-End Solutions /
@@ -679,9 +679,9 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <motion.div
             whileHover={{ y: -8 }}
-            className="p-8 rounded-[2.5rem] bg-white border border-[#E2E8F0] shadow-xl space-y-6"
+            className="p-8 rounded-[2.5rem] bg-white border border-[#E1E6DF] shadow-xl space-y-6"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center border border-[#22C55E]/30">
               <Rocket size={24} />
             </div>
             <h3 className="text-2xl font-extrabold text-[#0B1310]">For Early-Stage Startups</h3>
@@ -697,7 +697,7 @@ export default function HomePage() {
 
           <motion.div
             whileHover={{ y: -8 }}
-            className="p-8 rounded-[2.5rem] bg-white border border-[#E2E8F0] shadow-xl space-y-6"
+            className="p-8 rounded-[2.5rem] bg-white border border-[#E1E6DF] shadow-xl space-y-6"
           >
             <div className="w-12 h-12 rounded-2xl bg-[#0B1310] text-[#22C55E] flex items-center justify-center">
               <Building2 size={24} />
@@ -718,7 +718,7 @@ export default function HomePage() {
       {/* =========================================================================
           5. LIGHT THEME CORE CAPABILITIES: "WHAT WE'RE UP TO"
           ========================================================================= */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white rounded-[3rem] border border-[#E2E8F0] shadow-xl my-12">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-[#EBF0E8]/70 rounded-[3rem] border border-[#E1E6DF] shadow-xl my-12">
         <div className="text-left mb-16 space-y-2">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
             Complete Services Stack /
@@ -735,7 +735,7 @@ export default function HomePage() {
               <motion.div
                 whileHover={{ y: -8, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="gsap-scroll-card group h-full p-6 rounded-[2.2rem] bg-[#F8F9F6] border border-[#E2E8F0] hover:border-[#22C55E] transition-all duration-300 flex flex-col justify-between overflow-hidden relative shadow-md hover:shadow-2xl cursor-pointer"
+                className="gsap-scroll-card group h-full p-6 rounded-[2.2rem] bg-white border border-[#E1E6DF] hover:border-[#22C55E] transition-all duration-300 flex flex-col justify-between overflow-hidden relative shadow-md hover:shadow-2xl cursor-pointer"
               >
                 <div className="space-y-4">
                   <div className="relative h-48 w-full rounded-2xl overflow-hidden shadow-inner">
@@ -745,7 +745,7 @@ export default function HomePage() {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute top-3 left-3">
-                      <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[10px] font-mono font-bold text-[#16A34A] border border-[#E2E8F0] shadow-sm">
+                      <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[10px] font-mono font-bold text-[#16A34A] border border-[#E1E6DF] shadow-sm">
                         {service.badge}
                       </span>
                     </div>
@@ -759,10 +759,10 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-[#E2E8F0] mt-4 space-y-3">
+                <div className="pt-4 border-t border-[#E1E6DF] mt-4 space-y-3">
                   <div className="flex flex-wrap gap-1.5">
                     {service.features.map((feat, idx) => (
-                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-white text-[10px] font-bold text-slate-700 border border-[#E2E8F0]">
+                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-[#F4F6F1] text-[10px] font-bold text-slate-700 border border-[#E1E6DF]">
                         ✓ {feat}
                       </span>
                     ))}
@@ -820,13 +820,13 @@ export default function HomePage() {
             <motion.div
               key={idx}
               whileHover={{ y: -8, scale: 1.02 }}
-              className="gsap-scroll-card p-6 rounded-[2.2rem] bg-white border border-[#E2E8F0] shadow-lg space-y-4 flex flex-col justify-between"
+              className="gsap-scroll-card p-6 rounded-[2.2rem] bg-white border border-[#E1E6DF] shadow-lg space-y-4 flex flex-col justify-between"
             >
               <div className="space-y-3">
                 <div className="relative h-44 w-full rounded-2xl overflow-hidden">
                   <img src={prod.image} alt={prod.title} className="w-full h-full object-cover" />
                   <div className="absolute top-2 left-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-white/90 text-[9px] font-bold text-[#16A34A] border border-[#E2E8F0]">
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/95 text-[9px] font-bold text-[#16A34A] border border-[#E1E6DF]">
                       {prod.badge}
                     </span>
                   </div>
@@ -843,7 +843,7 @@ export default function HomePage() {
       {/* =========================================================================
           7. WORK PROCESS (4-STEP ENGINE)
           ========================================================================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E2E8F0]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
             Execution Methodology /
@@ -860,10 +860,10 @@ export default function HomePage() {
               <motion.div
                 key={idx}
                 whileHover={{ y: -6 }}
-                className="gsap-scroll-card p-8 rounded-[2.2rem] bg-white border border-[#E2E8F0] shadow-lg space-y-4 relative"
+                className="gsap-scroll-card p-8 rounded-[2.2rem] bg-white border border-[#E1E6DF] shadow-lg space-y-4 relative"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center border border-[#22C55E]/30">
                     <IconComp size={20} />
                   </div>
                   <span className="text-2xl font-black font-mono text-[#16A34A]/40">{proc.step}</span>
@@ -879,7 +879,7 @@ export default function HomePage() {
       {/* =========================================================================
           8. WHY CHOOSE SKORA? (KEY DIFFERENTIATORS)
           ========================================================================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E2E8F0]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
             Our Advantage /
@@ -896,7 +896,7 @@ export default function HomePage() {
               <motion.div
                 key={idx}
                 whileHover={{ y: -6 }}
-                className="gsap-scroll-card p-8 rounded-[2.2rem] bg-white border border-[#E2E8F0] shadow-lg space-y-4"
+                className="gsap-scroll-card p-8 rounded-[2.2rem] bg-white border border-[#E1E6DF] shadow-lg space-y-4"
               >
                 <div className="w-10 h-10 rounded-xl bg-[#E8F7ED] border border-[#22C55E]/40 flex items-center justify-center text-[#16A34A]">
                   <IconComp size={20} />
@@ -910,12 +910,12 @@ export default function HomePage() {
       </section>
 
       {/* Technology Marquee Integration */}
-      <div className="py-12 border-t border-[#E2E8F0]">
+      <div className="py-12 border-t border-[#E1E6DF] bg-[#EBF0E8]/40">
         <TechExpertiseSection />
       </div>
 
       {/* Horizontal Value Proposition Cards */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E2E8F0]">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {valueProps.map((vp, idx) => {
             const IconComp = vp.icon;
@@ -924,7 +924,7 @@ export default function HomePage() {
                 key={idx}
                 whileHover={{ y: -6, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="gsap-scroll-card p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-md space-y-3 hover:border-[#22C55E]/60 transition-colors"
+                className="gsap-scroll-card p-6 rounded-2xl bg-white border border-[#E1E6DF] shadow-md space-y-3 hover:border-[#22C55E]/60 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-[#E8F7ED] border border-[#22C55E]/40 flex items-center justify-center text-[#16A34A]">
                   <IconComp size={20} />
@@ -938,9 +938,9 @@ export default function HomePage() {
       </section>
 
       {/* =========================================================================
-          9. PRICING MATRIX — CONSULTIV DRIBBBLE LIGHT SECTION
+          9. PRICING MATRIX — CONSULTIV DRIBBBLE WARM LIGHT SECTION
           ========================================================================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E2E8F0]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0B1310] uppercase">
             PRICING THAT WORKS FOR YOU
@@ -959,7 +959,7 @@ export default function HomePage() {
               className={`gsap-scroll-card rounded-[2.2rem] p-8 flex flex-col justify-between transition-all duration-300 relative ${
                 pkg.featured
                   ? "bg-gradient-to-br from-[#1E824C] to-[#27AE60] text-white shadow-2xl scale-105 border-0 z-10"
-                  : "bg-white border border-[#E2E8F0] text-[#0B1310] hover:border-[#22C55E]/50 shadow-lg"
+                  : "bg-white border border-[#E1E6DF] text-[#0B1310] hover:border-[#22C55E]/50 shadow-lg"
               }`}
             >
               <div className="space-y-6">
@@ -1077,12 +1077,12 @@ export default function HomePage() {
               key={idx}
               whileHover={{ y: -6 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="gsap-scroll-card p-8 rounded-[2rem] bg-white border border-[#E2E8F0] shadow-lg text-left space-y-6 flex flex-col justify-between hover:border-[#22C55E]/60 transition-colors"
+              className="gsap-scroll-card p-8 rounded-[2rem] bg-white border border-[#E1E6DF] shadow-lg text-left space-y-6 flex flex-col justify-between hover:border-[#22C55E]/60 transition-colors"
             >
               <p className="text-slate-600 text-sm italic font-medium leading-relaxed">
                 “{t.quote}”
               </p>
-              <div className="flex items-center gap-3 pt-4 border-t border-[#E2E8F0]">
+              <div className="flex items-center gap-3 pt-4 border-t border-[#E1E6DF]">
                 <img
                   src={t.image}
                   alt={t.author}

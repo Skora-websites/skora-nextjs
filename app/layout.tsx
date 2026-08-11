@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -10,11 +11,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "SKORA.digital — Next-Gen Digital Marketing & Tech Solutions Enterprise",
-  description: "Enterprise Digital Marketing, Website Design, Mobile Apps, Cloud Services, SaaS Platforms, Project Management Systems & CRM Solutions powered by AI strategy.",
+  description: "Enterprise Digital Marketing, Website Design, Mobile Apps, Cloud Services, SaaS Platforms, Project Management Systems & CRM Solutions.",
   keywords: [
     "Digital Marketing",
     "SEO",
-    "AI SEO",
     "Website Design",
     "Mobile Development",
     "Cloud Services",
@@ -40,8 +40,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} dark scroll-smooth`}>
-      <body className="min-h-screen bg-[#05070E] text-[#F8FAFC] font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col">
+    <html lang="en" className={`${plusJakartaSans.variable} scroll-smooth`}>
+      <body className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans antialiased selection:bg-[#22C55E] selection:text-white flex flex-col">
+        <ScrollToTop />
         {children}
       </body>
     </html>
