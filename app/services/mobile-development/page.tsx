@@ -1,150 +1,212 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ThreeBackground from "@/components/ThreeBackground";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
-import Card3D from "@/components/Card3D";
-import ScrollReveal from "@/components/ScrollReveal";
 import ContactModal from "@/components/ContactModal";
-import {
-  Smartphone,
-  Sparkles,
-  ArrowRight,
-  CheckCircle2,
-  Zap,
-  ShieldCheck,
-  Layers,
-  Globe,
-} from "lucide-react";
+import Card3D from "@/components/Card3D";
+import { Smartphone, ArrowRight, Check } from "lucide-react";
+import { motion } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function MobileDevelopmentPage() {
   const [consultationModalOpen, setConsultationModalOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const capabilities = [
     {
-      title: "Native iOS (Swift) & Android (Kotlin)",
-      desc: "Platform-native mobile applications engineered for peak performance, smooth 120Hz UI frames, and camera/sensor integration.",
-      metrics: "60-120 FPS",
-    },
-    {
       title: "Cross-Platform React Native & Flutter",
-      desc: "Unified single-codebase mobile applications deployed simultaneously to App Store and Google Play with fast iteration.",
-      metrics: "50% Time Saved",
+      desc: "Single codebase efficiency targeting both iOS App Store and Google Play Store with 60FPS native rendering performance.",
+      metrics: "iOS & Android",
     },
     {
-      title: "Biometric Security & Offline Sync",
-      desc: "FaceID/TouchID authentication, encrypted local storage, WebSocket real-time updates, and offline sync engines.",
-      metrics: "SOC2 Security",
+      title: "Offline Storage & Real-Time Syncing",
+      desc: "Robust SQLite / WatermelonDB local databases ensuring full offline availability with background cloud synchronization.",
+      metrics: "Offline First",
     },
     {
-      title: "App Store Optimization (ASO)",
-      desc: "Store listing metadata, keyword targeting, screenshot design, and review management to drive organic app installs.",
-      metrics: "4.9★ Rating",
+      title: "Push Notifications & In-App Engagement",
+      desc: "Automated Firebase / OneSignal push alert sequences for appointment reminders, transactional updates, and promotional triggers.",
+      metrics: "Real-time Push",
+    },
+    {
+      title: "App Store Publishing & Compliance",
+      desc: "End-to-end management of Apple App Store Review Guidelines and Google Play Store Developer Console publishing.",
+      metrics: "Guaranteed Approval",
     },
   ];
 
-  const techStack = [
-    "React Native",
-    "Flutter",
-    "Swift",
-    "Kotlin",
-    "Firebase",
-    "SQLite",
-    "GraphQL",
-    "App Store Connect",
+  const deliverables = [
+    "Native iOS (Swift/React Native) & Android (Kotlin/Flutter) Code",
+    "Figma Mobile UI Design Systems & Icon Packs",
+    "App Store & Google Play Store Submission Setup",
+    "Firebase Analytics, Crashlytics & Push Alert Engine",
+    "Bi-weekly Mobile TestFlight & APK Beta Builds",
+    "Post-Launch Maintenance & Version Upgrades",
   ];
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !containerRef.current) return;
+    const ctx = gsap.context(() => {
+      ScrollTrigger.refresh();
+      gsap.utils.toArray<HTMLElement>(".gsap-scroll-card").forEach((card) => {
+        gsap.fromTo(
+          card,
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 88%",
+            },
+          }
+        );
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <main className="min-h-screen bg-[#05070E] text-[#F8FAFC] flex flex-col relative overflow-hidden">
-      <ThreeBackground />
+    <main ref={containerRef} className="min-h-screen bg-[#F8F9F6] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden">
       <ScrollProgressBar />
       <Navbar onOpenConsultation={() => setConsultationModalOpen(true)} />
 
       {/* Hero Header */}
-      <section className="pt-36 pb-20 relative [perspective:1200px]">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10">
-          <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-pill text-xs font-semibold uppercase tracking-wider">
-              <Smartphone className="w-4 h-4 text-sky-400" />
-              <span>Mobile Engineering</span>
-            </div>
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="max-w-3xl space-y-6"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E2E8F0] shadow-sm text-xs font-semibold">
+            <Smartphone className="w-4 h-4 text-[#22C55E]" />
+            <span className="text-[#0B1310] font-bold">✦ MOBILE APP ENGINEERING ✦</span>
+          </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
-              Mobile Application <br />
-              <span className="text-gradient">iOS & Android Development</span>
-            </h1>
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0B1310] tracking-tight leading-[1.02] uppercase">
+            NATIVE iOS &amp; ANDROID <br />
+            <span className="text-[#22C55E]">MOBILE APPLICATION DEVELOPMENT</span>
+          </h1>
 
-            <p className="text-lg text-[#94A3B8] leading-relaxed">
-              Native and cross-platform mobile apps engineered for fluid 120Hz performance, offline synchronization, biometric encryption, and App Store dominance.
+          <p className="text-lg text-slate-600 font-medium leading-relaxed">
+            High-performance mobile applications engineered with React Native and Flutter for seamless user retention, offline capabilities, and instant push alerts.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 pt-4">
+            <button
+              onClick={() => setConsultationModalOpen(true)}
+              className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+            >
+              <span>Build Mobile App</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Feature Gallery Banner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-16 rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E2E8F0] bg-white group cursor-pointer"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=1200&q=80"
+            alt="Mobile App Development"
+            className="w-full h-[400px] sm:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+        </motion.div>
+      </section>
+
+      {/* Capabilities Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-left mb-12">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+            Mobile Architecture /
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-[#0B1310] uppercase mt-1">
+            MOBILE CAPABILITIES
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {capabilities.map((cap, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              className="gsap-scroll-card"
+            >
+              <Card3D maxTilt={10} className="p-8 rounded-[2.2rem] bg-white border border-[#E2E8F0] shadow-lg space-y-4 h-full">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-[#E8F7ED] text-[#16A34A] text-xs font-bold font-mono">
+                    {cap.metrics}
+                  </span>
+                </div>
+                <h3 className="text-xl font-extrabold text-[#0B1310]">{cap.title}</h3>
+                <p className="text-sm text-slate-600 font-medium leading-relaxed">{cap.desc}</p>
+              </Card3D>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Light Glass Deliverables Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white rounded-[3rem] border border-[#E2E8F0] shadow-xl my-12">
+        <div className="text-left mb-16">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+            Deliverables /
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black uppercase text-[#0B1310] mt-1">
+            APP DELIVERABLES
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {deliverables.map((item, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ y: -6, scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="gsap-scroll-card p-6 rounded-2xl bg-[#F8F9F6] border border-[#E2E8F0] flex items-start gap-4 hover:border-[#22C55E]/60 transition-colors shadow-md"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5 border border-[#22C55E]/30">
+                <Check size={16} />
+              </div>
+              <p className="text-sm font-bold text-slate-800 leading-snug">{item}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Liquid Emerald CTA Banner */}
+        <div className="mt-24 relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E824C] via-[#27AE60] to-[#16A34A] p-10 sm:p-16 text-center text-white border border-[#22C55E]/30 shadow-2xl">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight uppercase">
+              READY TO LAUNCH YOUR MOBILE APP?
+            </h2>
+            <p className="text-white/90 text-sm font-medium">
+              Schedule an architecture call with our mobile software engineers.
             </p>
-
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="pt-4 flex justify-center">
               <button
                 onClick={() => setConsultationModalOpen(true)}
-                className="btn-primary text-base px-8 py-4 rounded-xl shadow-2xl shadow-blue-600/40"
+                className="px-10 py-4 rounded-full bg-white hover:bg-slate-100 text-[#0B1310] font-black text-sm shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
               >
-                <span>Start Mobile Project</span>
-                <ArrowRight className="w-5 h-5" />
+                Schedule Mobile Architecture Call
               </button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Capabilities Grid */}
-      <section className="py-20 relative bg-[#070A12] border-y border-white/5 [perspective:1000px]">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10">
-          <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
-            <span className="text-xs font-mono font-bold text-sky-400 uppercase tracking-widest">
-              MOBILE STACK
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Enterprise <span className="text-gradient">Mobile Capabilities</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {capabilities.map((cap, idx) => (
-              <Card3D key={idx} maxTilt={10} className="glass-card rounded-2xl p-8 border border-white/10 bg-[#0B0F19]">
-                <div className="space-y-4 [transform-style:preserve-3d]">
-                  <div className="flex items-center justify-between [transform:translateZ(30px)]">
-                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                      {cap.metrics}
-                    </span>
-                    <Smartphone className="w-5 h-5 text-indigo-400" />
-                  </div>
-
-                  <h3 className="text-xl font-bold text-white [transform:translateZ(40px)]">
-                    {cap.title}
-                  </h3>
-
-                  <p className="text-sm text-[#94A3B8] leading-relaxed [transform:translateZ(20px)]">
-                    {cap.desc}
-                  </p>
-                </div>
-              </Card3D>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Tech Stack Pills */}
-      <section className="py-20 relative bg-[#05070E]">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10 text-center space-y-8">
-          <h3 className="text-xl font-bold text-white uppercase tracking-wider">
-            Supported Mobile Technologies
-          </h3>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {techStack.map((tech, idx) => (
-              <span
-                key={idx}
-                className="px-5 py-2.5 rounded-xl glass-card border border-white/10 text-sm font-mono text-sky-300 bg-[#0B0F19]/90"
-              >
-                {tech}
-              </span>
-            ))}
           </div>
         </div>
       </section>
@@ -153,7 +215,7 @@ export default function MobileDevelopmentPage() {
       <ContactModal
         isOpen={consultationModalOpen}
         onClose={() => setConsultationModalOpen(false)}
-        initialService="Mobile App Development"
+        defaultService="Mobile App Development"
       />
     </main>
   );

@@ -1,68 +1,222 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ThreeBackground from "@/components/ThreeBackground";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
-import Card3D from "@/components/Card3D";
 import ContactModal from "@/components/ContactModal";
-import { Layers, ArrowRight } from "lucide-react";
+import Card3D from "@/components/Card3D";
+import { Code, ArrowRight, Check } from "lucide-react";
+import { motion } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-export default function SaaSDevelopmentPage() {
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
+export default function SaasDevelopmentPage() {
   const [consultationModalOpen, setConsultationModalOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const capabilities = [
-    { title: "Multi-Tenant Architecture", desc: "Isolated database schemas, tenant routing, and enterprise data security.", metrics: "Infinite Scale" },
-    { title: "Automated Stripe & Billing Engine", desc: "Subscription tiers, usage-based billing, invoicing, and dunning management.", metrics: "Stripe Billing" },
-    { title: "Role-Based Access Control (RBAC)", desc: "Granular permissions, team workspaces, SSO (SAML/OAuth2), and audit logs.", metrics: "Enterprise Security" },
-    { title: "Public Developer API & Webhooks", desc: "Rate-limited REST & GraphQL endpoints with automated developer documentation.", metrics: "Sub-50ms API" },
+    {
+      title: "Multi-Tenant Database Architecture",
+      desc: "Isolated data schemas and tenant-level encryption ensuring absolute security for enterprise B2B SaaS customers.",
+      metrics: "Enterprise Security",
+    },
+    {
+      title: "Stripe & Razorpay Billing Engines",
+      desc: "Automated recurring subscription billing, tier management, dunning workflows, and metered usage invoicing.",
+      metrics: "Automated ARR",
+    },
+    {
+      title: "Role-Based Access (RBAC) & SSO",
+      desc: "OAuth2, SAML, and Google/Microsoft Single Sign-On integration with granular admin permission controls.",
+      metrics: "Enterprise SSO",
+    },
+    {
+      title: "Scalable REST & GraphQL Developer APIs",
+      desc: "Developer-friendly API documentation, webhook triggers, rate limiting, and SDK integrations for third-party tools.",
+      metrics: "Developer Platform",
+    },
   ];
 
+  const deliverables = [
+    "Multi-Tenant PostgreSQL / Supabase Database Architecture",
+    "Stripe Subscription & Tiered Billing Integration",
+    "Next.js 16 SaaS Dashboard with Tailwind CSS UI",
+    "OAuth2, Google SSO & Role-Based RBAC System",
+    "Developer API Portal & Webhook Notification Engine",
+    "Automated CI/CD Pipeline & Vercel Edge Hosting",
+  ];
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !containerRef.current) return;
+    const ctx = gsap.context(() => {
+      ScrollTrigger.refresh();
+      gsap.utils.toArray<HTMLElement>(".gsap-scroll-card").forEach((card) => {
+        gsap.fromTo(
+          card,
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 88%",
+            },
+          }
+        );
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <main className="min-h-screen bg-[#05070E] text-[#F8FAFC] flex flex-col relative overflow-hidden">
-      <ThreeBackground />
+    <main ref={containerRef} className="min-h-screen bg-[#F8F9F6] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden">
       <ScrollProgressBar />
       <Navbar onOpenConsultation={() => setConsultationModalOpen(true)} />
 
-      <section className="pt-36 pb-20 relative [perspective:1200px]">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10">
-          <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-pill text-xs font-semibold uppercase tracking-wider">
-              <Layers className="w-4 h-4 text-purple-400" />
-              <span>SaaS Engineering</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
-              SaaS Platform <br /><span className="text-gradient">Multi-Tenant Development</span>
-            </h1>
-            <p className="text-lg text-[#94A3B8] leading-relaxed">
-              End-to-end cloud software engineering equipped with Stripe recurring billing, RBAC security, developer APIs, and sub-50ms query speeds.
-            </p>
-            <button onClick={() => setConsultationModalOpen(true)} className="btn-primary text-base px-8 py-4 rounded-xl shadow-2xl shadow-blue-600/40">
-              <span>Start SaaS Project</span> <ArrowRight className="w-5 h-5" />
+      {/* Hero Header */}
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="max-w-3xl space-y-6"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E2E8F0] shadow-sm text-xs font-semibold">
+            <Code className="w-4 h-4 text-[#22C55E]" />
+            <span className="text-[#0B1310] font-bold">✦ SAAS PLATFORM ENGINEERING ✦</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0B1310] tracking-tight leading-[1.02] uppercase">
+            SCALABLE B2B &amp; B2C <br />
+            <span className="text-[#22C55E]">SAAS PLATFORM DEVELOPMENT</span>
+          </h1>
+
+          <p className="text-lg text-slate-600 font-medium leading-relaxed">
+            Multi-tenant cloud architectures engineered with automated recurring billing, user RBAC permissions, and scalable developer APIs.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 pt-4">
+            <button
+              onClick={() => setConsultationModalOpen(true)}
+              className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+            >
+              <span>Build SaaS Platform</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+        </motion.div>
+
+        {/* Feature Gallery Banner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-16 rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E2E8F0] bg-white group cursor-pointer"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
+            alt="SaaS Platform Development"
+            className="w-full h-[400px] sm:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+        </motion.div>
+      </section>
+
+      {/* Capabilities Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-left mb-12">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+            SaaS Architecture /
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-[#0B1310] uppercase mt-1">
+            SAAS CAPABILITIES
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {capabilities.map((cap, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              className="gsap-scroll-card"
+            >
+              <Card3D maxTilt={10} className="p-8 rounded-[2.2rem] bg-white border border-[#E2E8F0] shadow-lg space-y-4 h-full">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-[#E8F7ED] text-[#16A34A] text-xs font-bold font-mono">
+                    {cap.metrics}
+                  </span>
+                </div>
+                <h3 className="text-xl font-extrabold text-[#0B1310]">{cap.title}</h3>
+                <p className="text-sm text-slate-600 font-medium leading-relaxed">{cap.desc}</p>
+              </Card3D>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      <section className="py-20 relative bg-[#070A12] border-y border-white/5 [perspective:1000px]">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {capabilities.map((cap, idx) => (
-              <Card3D key={idx} maxTilt={10} className="glass-card rounded-2xl p-8 border border-white/10 bg-[#0B0F19]">
-                <div className="space-y-4 [transform-style:preserve-3d]">
-                  <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">{cap.metrics}</span>
-                  <h3 className="text-xl font-bold text-white">{cap.title}</h3>
-                  <p className="text-sm text-[#94A3B8] leading-relaxed">{cap.desc}</p>
-                </div>
-              </Card3D>
-            ))}
+      {/* Light Glass Deliverables Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white rounded-[3rem] border border-[#E2E8F0] shadow-xl my-12">
+        <div className="text-left mb-16">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+            Deliverables /
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black uppercase text-[#0B1310] mt-1">
+            SAAS DELIVERABLES
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {deliverables.map((item, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ y: -6, scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="gsap-scroll-card p-6 rounded-2xl bg-[#F8F9F6] border border-[#E2E8F0] flex items-start gap-4 hover:border-[#22C55E]/60 transition-colors shadow-md"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5 border border-[#22C55E]/30">
+                <Check size={16} />
+              </div>
+              <p className="text-sm font-bold text-slate-800 leading-snug">{item}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Liquid Emerald CTA Banner */}
+        <div className="mt-24 relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E824C] via-[#27AE60] to-[#16A34A] p-10 sm:p-16 text-center text-white border border-[#22C55E]/30 shadow-2xl">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight uppercase">
+              READY TO BUILD YOUR SAAS PRODUCT?
+            </h2>
+            <p className="text-white/90 text-sm font-medium">
+              Talk to our SaaS architects to scope your database, multi-tenant billing, and launch MVP.
+            </p>
+            <div className="pt-4 flex justify-center">
+              <button
+                onClick={() => setConsultationModalOpen(true)}
+                className="px-10 py-4 rounded-full bg-white hover:bg-slate-100 text-[#0B1310] font-black text-sm shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                Schedule SaaS Blueprint Session
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       <Footer />
-      <ContactModal isOpen={consultationModalOpen} onClose={() => setConsultationModalOpen(false)} initialService="SaaS Platform Development" />
+      <ContactModal
+        isOpen={consultationModalOpen}
+        onClose={() => setConsultationModalOpen(false)}
+        defaultService="SaaS Platform Development"
+      />
     </main>
   );
 }

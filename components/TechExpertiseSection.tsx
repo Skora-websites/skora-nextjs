@@ -29,7 +29,7 @@ const expertiseRow2 = [
   { name: "Instagram", category: "Social Media", icon: "https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" },
   { name: "LinkedIn", category: "Social Media", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" },
   { name: "X", category: "Social Media", icon: "https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg" },
-  { name: "Pinterest", category: "Social Media", icon: "https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.org.svg" },
+  { name: "Pinterest", category: "Social Media", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pinterest/pinterest-original.svg" },
   { name: "Meta", category: "Platform", icon: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg" },
   { name: "Google Ads", category: "Marketing", icon: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Ads_logo.svg" },
   { name: "Google Maps", category: "API & Service", icon: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Google_Maps_icon_%282020%29.svg" },

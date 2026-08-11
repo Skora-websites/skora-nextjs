@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
 import ContactModal from "@/components/ContactModal";
 import Card3D from "@/components/Card3D";
-import { Layers, ArrowRight, Check } from "lucide-react";
+import { Film, ArrowRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -15,40 +15,40 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-export default function PmsPage() {
+export default function VideoProductionPage() {
   const [consultationModalOpen, setConsultationModalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const capabilities = [
     {
-      title: "Agile Project Kanban & Gantt Roadmaps",
-      desc: "Interactive visual project boards with dependency tracking, milestone deadlines, and real-time task status updates.",
-      metrics: "Real-time Roadmaps",
+      title: "Instagram & TikTok Short-Form Reels",
+      desc: "High-converting short-form video reels scripted, edited, and formatted specifically for social media algorithm viral reach.",
+      metrics: "Viral Reach",
     },
     {
-      title: "Resource Allocation & Time Tracking",
-      desc: "Track developer and team billable hours, capacity planning, sprint velocity, and project margin analytics.",
-      metrics: "Capacity Planning",
+      title: "Doctor & Corporate Executive Introductions",
+      desc: "Professional video intros showcasing clinician expertise, facility tours, and corporate leadership messaging.",
+      metrics: "Trust Building",
     },
     {
-      title: "Role-Based Client Portal & Approvals",
-      desc: "Dedicated client-facing portals where clients can review progress, approve deliverables, and access project assets securely.",
-      metrics: "Client Portals",
+      title: "Product Explainer & Promo Videos",
+      desc: "3D animated product walk-throughs, SaaS feature demos, and high-impact commercial promo videos.",
+      metrics: "High Conversion",
     },
     {
-      title: "Automated Slack & Email Integration",
-      desc: "Instant Slack alerts for task updates, status changes, deadline reminders, and milestone completion.",
-      metrics: "Instant Slack Sync",
+      title: "Scriptwriting, Motion Graphics & Sound Design",
+      desc: "Full post-production pipeline including script writing, kinetic typography, color grading, and licensed audio tracks.",
+      metrics: "4K Cinema Quality",
     },
   ];
 
   const deliverables = [
-    "Custom PMS Architecture & Task Workflow Mapping",
-    "Interactive Kanban & Gantt Timeline Interfaces",
-    "Client Portal Access & Asset Approval Module",
-    "Time Tracking & Billable Resource Dashboard",
-    "Slack, Email & Webhook Notification Engine",
-    "Team Capacity & Sprint Velocity Reporting",
+    "Monthly Reel Content Calendar (Scripting + Editing)",
+    "4K Video Shoots & On-Location Filming Direction",
+    "Professional Motion Graphics & Kinetic Subtitles",
+    "Licensed Sound Tracks & Audio Post-Production",
+    "Vertical (9:16) & Horizontal (16:9) Format Exports",
+    "Ad Creative Video Cuts for Meta & YouTube Campaigns",
   ];
 
   useEffect(() => {
@@ -89,17 +89,17 @@ export default function PmsPage() {
           className="max-w-3xl space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E2E8F0] shadow-sm text-xs font-semibold">
-            <Layers className="w-4 h-4 text-[#22C55E]" />
-            <span className="text-[#0B1310] font-bold">✦ PROJECT MANAGEMENT SYSTEMS (PMS) ✦</span>
+            <Film className="w-4 h-4 text-[#22C55E]" />
+            <span className="text-[#0B1310] font-bold">✦ VIDEO PRODUCTION & COMMERCIAL REELS ✦</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0B1310] tracking-tight leading-[1.02] uppercase">
-            STREAMLINING ENTERPRISE <br />
-            <span className="text-[#22C55E]">PROJECTS &amp; TEAM WORKFLOWS</span>
+            HIGH-CONVERTING REELS &amp; <br />
+            <span className="text-[#22C55E]">COMMERCIAL VIDEO PRODUCTION</span>
           </h1>
 
           <p className="text-lg text-slate-600 font-medium leading-relaxed">
-            Custom PMS solutions engineered to align engineering teams, automate sprint delivery, and keep client communication crystal clear.
+            Captivate your audience with cinematic video content, educational Reels, and product commercials that drive engagement and sales.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-4">
@@ -107,7 +107,7 @@ export default function PmsPage() {
               onClick={() => setConsultationModalOpen(true)}
               className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
             >
-              <span>Build Custom PMS Platform</span>
+              <span>Start Video Production</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -121,8 +121,8 @@ export default function PmsPage() {
           className="mt-16 rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E2E8F0] bg-white group cursor-pointer"
         >
           <img
-            src="https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?auto=format&fit=crop&w=1200&q=80"
-            alt="PMS Software"
+            src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80"
+            alt="Video Production Studio"
             className="w-full h-[400px] sm:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
           />
         </motion.div>
@@ -132,10 +132,10 @@ export default function PmsPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-left mb-12">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
-            PMS Architecture /
+            Production Suite /
           </span>
           <h2 className="text-3xl sm:text-4xl font-black text-[#0B1310] uppercase mt-1">
-            WORKFLOW CAPABILITIES
+            VIDEO CAPABILITIES
           </h2>
         </div>
 
@@ -170,7 +170,7 @@ export default function PmsPage() {
             Deliverables /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black uppercase text-[#0B1310] mt-1">
-            PMS DELIVERABLES
+            PRODUCTION DELIVERABLES
           </h2>
         </div>
 
@@ -194,17 +194,17 @@ export default function PmsPage() {
         <div className="mt-24 relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E824C] via-[#27AE60] to-[#16A34A] p-10 sm:p-16 text-center text-white border border-[#22C55E]/30 shadow-2xl">
           <div className="max-w-2xl mx-auto space-y-6">
             <h2 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight uppercase">
-              READY TO OPTIMIZE YOUR PROJECT WORKFLOWS?
+              READY TO PRODUCE VIRAL VIDEO CONTENT?
             </h2>
             <p className="text-white/90 text-sm font-medium">
-              Connect with our software architects to build a custom PMS tailored to your enterprise delivery process.
+              Talk to our creative directors to script and produce your next video campaign.
             </p>
             <div className="pt-4 flex justify-center">
               <button
                 onClick={() => setConsultationModalOpen(true)}
                 className="px-10 py-4 rounded-full bg-white hover:bg-slate-100 text-[#0B1310] font-black text-sm shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
               >
-                Schedule PMS Blueprint Session
+                Book Video Strategy Call
               </button>
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function PmsPage() {
       <ContactModal
         isOpen={consultationModalOpen}
         onClose={() => setConsultationModalOpen(false)}
-        defaultService="Project Management Systems (PMS)"
+        defaultService="Video Production & Commercial Reels"
       />
     </main>
   );

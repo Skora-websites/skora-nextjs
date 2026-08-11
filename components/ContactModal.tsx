@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { X, CheckCircle2, Send, Sparkles, PhoneCall, Building2, User, Mail, DollarSign } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, CheckCircle2, Send, Sparkles, PhoneCall, Building2, User, Mail, DollarSign, ArrowLeft } from "lucide-react";
 
 interface ContactModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialService?: string;
+  defaultService?: string;
 }
 
 export default function ContactModal({
   isOpen,
   onClose,
   initialService = "",
+  defaultService = "",
 }: ContactModalProps) {
+  const activeService = defaultService || initialService;
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,6 +25,13 @@ export default function ContactModal({
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const modalContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeService && !selectedServices.includes(activeService)) {
+      setSelectedServices([activeService]);
+    }
+  }, [activeService]);
 
   const availableServices = [
     "Digital Marketing & AI SEO",
@@ -38,6 +48,17 @@ export default function ContactModal({
       setSelectedServices([initialService]);
     }
   }, [initialService]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      if (modalContainerRef.current) {
+        modalContainerRef.current.scrollTop = 0;
+      }
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -59,15 +80,29 @@ export default function ContactModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl rounded-3xl glass-card border border-blue-500/30 bg-[#0B0F19] p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[#94A3B8] hover:text-white border border-white/10 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 sm:p-6 bg-slate-950/85 backdrop-blur-xl animate-in fade-in duration-200 overflow-y-auto">
+      <div
+        ref={modalContainerRef}
+        className="relative my-auto w-full max-w-2xl rounded-3xl glass-card border border-blue-500/40 bg-[#0B0F19] p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto"
+      >
+        {/* Top Actions Bar: Return Back Button + Close Cross X Button */}
+        <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+          <button
+            onClick={onClose}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 border border-white/15 transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-sky-400" />
+            <span>Return to Previous Page</span>
+          </button>
+
+          <button
+            onClick={onClose}
+            aria-label="Close modal"
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white border border-white/15 transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {submitted ? (
           <div className="py-12 text-center space-y-5 animate-in zoom-in-95 duration-300">
@@ -88,147 +123,147 @@ export default function ContactModal({
                 setSubmitted(false);
                 onClose();
               }}
-              className="btn-primary px-8 py-3 rounded-xl text-sm"
+              className="btn-primary px-8 py-3 rounded-xl text-sm cursor-pointer"
             >
-              Back to Website
+              Return to Website
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-pill text-[11px] font-semibold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-pill text-[11px] font-semibold text-sky-300 border border-sky-500/30">
                 <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                <span>Enterprise Strategy Session</span>
+                <span>Initialize Your Project</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                Book Your Digital & Tech Consultation
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                Schedule Strategy Consultation
               </h2>
-              <p className="text-xs sm:text-sm text-[#94A3B8]">
-                Tell us about your project goals and required service modules.
+              <p className="text-xs text-[#94A3B8]">
+                Select your required capabilities and project scope.
               </p>
             </div>
 
-            {/* Service Module Checkboxes */}
+            {/* Service Multi-Select */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white uppercase tracking-wider block">
-                Select Required Services
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#94A3B8] block">
+                Required Capabilities
               </label>
               <div className="flex flex-wrap gap-2">
                 {availableServices.map((svc) => {
-                  const isChecked = selectedServices.includes(svc);
+                  const isSelected = selectedServices.includes(svc);
                   return (
                     <button
-                      type="button"
                       key={svc}
+                      type="button"
                       onClick={() => toggleService(svc)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                        isChecked
-                          ? "bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-600/30"
-                          : "bg-white/[0.03] border-white/10 text-[#94A3B8] hover:text-white"
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                        isSelected
+                          ? "bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20"
+                          : "bg-white/5 text-[#94A3B8] border-white/10 hover:border-white/20 hover:text-white"
                       }`}
                     >
-                      {isChecked ? `✓ ${svc}` : `+ ${svc}`}
+                      {svc}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Inputs Grid */}
+            {/* Input Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-[#94A3B8] block mb-1.5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#94A3B8]">
                   Full Name *
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
                     required
-                    placeholder="John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-blue-500"
+                    placeholder="John Doe"
+                    className="w-full bg-[#05070E] border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#94A3B8] block mb-1.5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#94A3B8]">
                   Work Email *
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="email"
                     required
-                    placeholder="john@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-blue-500"
+                    placeholder="john@company.com"
+                    className="w-full bg-[#05070E] border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#94A3B8] block mb-1.5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#94A3B8]">
                   Company / Organization
                 </label>
                 <div className="relative">
-                  <Building2 className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
-                    placeholder="Apex Innovations Inc."
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-blue-500"
+                    placeholder="Acme Corp"
+                    className="w-full bg-[#05070E] border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#94A3B8] block mb-1.5">
-                  Target Budget
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#94A3B8]">
+                  Estimated Budget
                 </label>
                 <div className="relative">
-                  <DollarSign className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <select
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#05070E] border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white appearance-none focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
                   >
-                    <option value="< $2,500">&lt; $2,500 (Starter)</option>
-                    <option value="$2,500 - $5,000">$2,500 - $5,000 (Growth)</option>
-                    <option value="$5,000 - $15,000">$5,000 - $15,000 (Scale)</option>
-                    <option value="$15,000+">$15,000+ (Enterprise)</option>
+                    <option value="< $2,500">Under $2,500</option>
+                    <option value="$2,500 - $5,000">$2,500 - $5,000</option>
+                    <option value="$5,000 - $15,000">$5,000 - $15,000</option>
+                    <option value="$15,000+">$15,000+ Enterprise</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-[#94A3B8] block mb-1.5">
-                Project Details & Timeline
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#94A3B8]">
+                Project Brief / Requirements
               </label>
               <textarea
                 rows={3}
-                placeholder="Briefly describe your objectives, key features, or expected launch date..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-blue-500"
-              ></textarea>
+                placeholder="Tell us about your goals, timelines, and technical requirements..."
+                className="w-full bg-[#05070E] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary justify-center py-3.5 rounded-xl text-sm font-semibold shadow-xl shadow-blue-600/30"
+              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
-                <span>Submitting Request...</span>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Submit Consultation Request</span>
+                  <span>Dispatch Consultation Request</span>
                   <Send className="w-4 h-4" />
                 </>
               )}
