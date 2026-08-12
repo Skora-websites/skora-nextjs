@@ -89,7 +89,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Call or WhatsApp</span>
-                    <p className="text-base font-bold text-[#0B1310] mt-0.5">+91 92173 75831</p>
+                    <p className="text-base font-bold text-[#0B1310] mt-0.5">+91 92173 75835</p>
                     <p className="text-xs text-slate-500 font-medium">Mon - Sat: 9:00 AM - 8:00 PM IST</p>
                   </div>
                 </div>

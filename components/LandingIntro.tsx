@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { Sparkles, Zap, ShieldCheck } from "lucide-react";
 
 interface LandingIntroProps {
   onComplete?: () => void;
@@ -10,104 +9,92 @@ interface LandingIntroProps {
 
 export default function LandingIntro({ onComplete }: LandingIntroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const topShutterRef = useRef<HTMLDivElement>(null);
-  const bottomShutterRef = useRef<HTMLDivElement>(null);
-  const laserRef = useRef<HTMLDivElement>(null);
-  const textContainerRef = useRef<HTMLDivElement>(null);
+  const sMonogramRef = useRef<HTMLDivElement>(null);
+  const textStageRef = useRef<HTMLDivElement>(null);
+  const curtainRef = useRef<HTMLDivElement>(null);
+  const laserBeamRef = useRef<HTMLDivElement>(null);
 
-  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [typedText, setTypedText] = useState("S");
   const [visible, setVisible] = useState(true);
 
-  const phrases = [
-    { main: "DOMINATE SEARCH & AI", sub: "150+ Battle-Tested SEO & GEO Strategies" },
-    { main: "ENGINEER WEB & MOBILE", sub: "Next.js 16 • Swift • Kotlin • Cross-Platform" },
-    { main: "SCALE CLOUD & CRM", sub: "AWS DevOps • Multi-Tenant SaaS • PMS Automations" },
-  ];
-
   useEffect(() => {
-    // Check if intro played in this session to prevent repeating on refresh unless forced
-    const hasSeenIntro = sessionStorage.getItem("skora_cinematic_intro_v2");
+    // Check if user has seen intro in this session to prevent repeating
+    const hasSeenIntro = sessionStorage.getItem("skora_cinematic_intro_v4");
     if (hasSeenIntro) {
       setVisible(false);
       if (onComplete) onComplete();
       return;
     }
 
+    const fullWord = "SKORA.digital";
+
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         onComplete: () => {
-          sessionStorage.setItem("skora_cinematic_intro_v2", "true");
+          sessionStorage.setItem("skora_cinematic_intro_v4", "true");
           setVisible(false);
           if (onComplete) onComplete();
         },
       });
 
-      // Step 1: Laser Horizon Line Ignition
+      // 1. Electric Blue Laser Horizon Ignition
       tl.fromTo(
-        laserRef.current,
+        laserBeamRef.current,
         { scaleX: 0, opacity: 0 },
-        { scaleX: 1, opacity: 1, duration: 0.8, ease: "expo.out" }
-      )
-        .to(laserRef.current, {
-          scaleY: 12,
-          opacity: 0.3,
-          duration: 0.5,
-          ease: "power2.inOut",
-        });
-
-      // Step 2: Phrase 1 Reveal (Zoom in 3D)
-      tl.fromTo(
-        ".gsap-phrase-0",
-        { opacity: 0, scale: 0.6, z: -300, rotateX: 30 },
-        { opacity: 1, scale: 1, z: 0, rotateX: 0, duration: 0.8, ease: "power3.out" }
-      ).to(".gsap-phrase-0", {
-        opacity: 0,
-        scale: 1.2,
-        z: 200,
-        duration: 0.5,
-        delay: 0.4,
-        ease: "power2.in",
-        onComplete: () => setPhraseIndex(1),
-      });
-
-      // Step 3: Phrase 2 Reveal
-      tl.fromTo(
-        ".gsap-phrase-1",
-        { opacity: 0, scale: 0.6, z: -300, rotateX: -30 },
-        { opacity: 1, scale: 1, z: 0, rotateX: 0, duration: 0.8, ease: "power3.out" }
-      ).to(".gsap-phrase-1", {
-        opacity: 0,
-        scale: 1.2,
-        z: 200,
-        duration: 0.5,
-        delay: 0.4,
-        ease: "power2.in",
-        onComplete: () => setPhraseIndex(2),
-      });
-
-      // Step 4: Phrase 3 Reveal (Final Brand Emblem)
-      tl.fromTo(
-        ".gsap-phrase-2",
-        { opacity: 0, scale: 0.5, rotateY: 45 },
-        { opacity: 1, scale: 1, rotateY: 0, duration: 0.9, ease: "back.out(1.8)" }
+        { scaleX: 1, opacity: 1, duration: 0.5, ease: "expo.out" }
       );
 
-      // Step 5: Cinematic Shutter Iris Split Reveal
-      tl.to(topShutterRef.current, {
-        yPercent: -100,
-        duration: 1.0,
-        ease: "expo.inOut",
-        delay: 0.5,
-      })
-        .to(
-          bottomShutterRef.current,
-          {
-            yPercent: 100,
-            duration: 1.0,
-            ease: "expo.inOut",
+      // 2. Netflix-Inspired Monogram "S" Prism Zoom Entrance
+      tl.fromTo(
+        sMonogramRef.current,
+        { opacity: 0, scale: 0.3, z: -400, rotateY: 45 },
+        {
+          opacity: 1,
+          scale: 1,
+          z: 0,
+          rotateY: 0,
+          duration: 1.0,
+          ease: "expo.out",
+        }
+      );
+
+      // 3. Typewriter Animation ("S" -> "SK" -> "SKO" -> "SKOR" -> "SKORA" -> "SKORA.digital")
+      tl.to(
+        {},
+        {
+          duration: 1.2,
+          ease: "none",
+          onUpdate: function () {
+            const progress = this.progress();
+            const charCount = Math.floor(progress * fullWord.length) + 1;
+            setTypedText(fullWord.substring(0, Math.min(charCount, fullWord.length)));
           },
-          "<"
-        );
+        }
+      );
+
+      // 4. Fade Monogram S out & Expand Text Stage
+      tl.to(sMonogramRef.current, {
+        opacity: 0,
+        scale: 1.4,
+        duration: 0.4,
+        ease: "power2.in",
+      });
+
+      tl.fromTo(
+        textStageRef.current,
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.4)" },
+        "<"
+      );
+
+      // 5. Clean Final Dissolve Curtain Reveal (Entire Intro Container Scales Up & Dissolves)
+      tl.to(curtainRef.current, {
+        opacity: 0,
+        scale: 1.08,
+        duration: 0.7,
+        delay: 0.5,
+        ease: "power3.inOut",
+      });
     }, containerRef);
 
     return () => ctx.revert();
@@ -118,81 +105,60 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[100] overflow-hidden pointer-events-auto [perspective:1000px]"
+      className="fixed inset-0 z-[1000] overflow-hidden pointer-events-none [perspective:1200px]"
     >
-      {/* Top Shutter Panel */}
+      {/* Black & Deep Blue Backdrop Curtain */}
       <div
-        ref={topShutterRef}
-        className="absolute top-0 left-0 right-0 h-1/2 bg-[#04060B] z-20 flex flex-col justify-end items-center border-b border-blue-500/30"
+        ref={curtainRef}
+        className="absolute inset-0 bg-[#03050B] z-20 flex flex-col items-center justify-center p-6 text-center"
       >
-        {/* Laser Beam Horizon */}
+        {/* Ambient Electric Blue Glowing Bloom Spheres */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-blue-600/30 via-sky-500/20 to-transparent rounded-full blur-[160px] pointer-events-none animate-pulse" />
+
+        {/* Laser Horizon Beam */}
         <div
-          ref={laserRef}
-          className="w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_25px_#38bdf8] origin-center"
+          ref={laserBeamRef}
+          className="absolute top-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#38BDF8] to-transparent shadow-[0_0_30px_#38bdf8] origin-center -translate-y-1/2 pointer-events-none"
         />
-      </div>
 
-      {/* Bottom Shutter Panel */}
-      <div
-        ref={bottomShutterRef}
-        className="absolute bottom-0 left-0 right-0 h-1/2 bg-[#04060B] z-20 flex flex-col justify-start items-center border-t border-blue-500/30"
-      />
+        {/* Phase 1: Netflix-Inspired Holographic Monogram "S" */}
+        <div
+          ref={sMonogramRef}
+          className="relative z-30 flex flex-col items-center justify-center space-y-4 [transform-style:preserve-3d]"
+        >
+          <div className="relative flex items-center justify-center">
+            {/* Holographic Glowing S Ribbon */}
+            <span className="text-8xl sm:text-9xl font-black font-serif italic text-transparent bg-clip-text bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-200 tracking-wider drop-shadow-[0_0_40px_rgba(56,189,248,0.8)] select-none">
+              S
+            </span>
 
-      {/* Center Cinematic Stage */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center">
-        {/* Dynamic Glowing Cyber Grid */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.25)_0%,transparent_70%)] pointer-events-none blur-3xl animate-pulse"></div>
+            {/* Radiant Spectrum Beam Lines */}
+            <div className="absolute -inset-8 rounded-full border border-sky-400/30 blur-sm animate-ping pointer-events-none" />
+          </div>
 
-        {/* Phrases 3D Sequence Container */}
-        <div ref={textContainerRef} className="relative z-40 max-w-3xl space-y-6 [transform-style:preserve-3d]">
-          {phraseIndex === 0 && (
-            <div className="gsap-phrase-0 space-y-3">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-pill text-xs font-mono font-bold text-cyan-400 border border-cyan-500/30">
-                <Sparkles className="w-4 h-4 animate-spin" />
-                <span>CINEMATIC EXPERIENCE • PHASE 01</span>
-              </div>
-              <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_35px_rgba(37,99,235,0.8)]">
-                {phrases[0].main}
-              </h1>
-              <p className="text-sm sm:text-lg font-mono text-[#94A3B8]">
-                {phrases[0].sub}
-              </p>
-            </div>
-          )}
+          <span className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-sky-400">
+            ✦ SKORA STUDIOS ✦
+          </span>
+        </div>
 
-          {phraseIndex === 1 && (
-            <div className="gsap-phrase-1 space-y-3">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-pill text-xs font-mono font-bold text-blue-400 border border-blue-500/30">
-                <Zap className="w-4 h-4 animate-bounce" />
-                <span>CINEMATIC EXPERIENCE • PHASE 02</span>
-              </div>
-              <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter uppercase drop-shadow-[0_0_35px_rgba(56,189,248,0.8)]">
-                {phrases[1].main}
-              </h1>
-              <p className="text-sm sm:text-lg font-mono text-[#94A3B8]">
-                {phrases[1].sub}
-              </p>
-            </div>
-          )}
+        {/* Phase 2: Typewriter Sequence Stage */}
+        <div
+          ref={textStageRef}
+          className="absolute z-40 flex flex-col items-center justify-center space-y-4 opacity-0 pointer-events-none"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-950/80 border border-blue-500/40 text-xs font-mono font-bold text-sky-300 shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
+            <span>ENTERPRISE DIGITAL SOLUTIONS</span>
+          </div>
 
-          {phraseIndex === 2 && (
-            <div className="gsap-phrase-2 space-y-5">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 via-cyan-400 to-indigo-600 p-[2px] mx-auto shadow-[0_0_50px_rgba(37,99,235,0.6)]">
-                <div className="w-full h-full bg-[#0B0F19] rounded-[22px] flex items-center justify-center">
-                  <Sparkles className="w-10 h-10 text-cyan-400 animate-pulse" />
-                </div>
-              </div>
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white uppercase drop-shadow-[0_0_50px_rgba(37,99,235,0.9)] font-sans">
+            {typedText}
+            <span className="text-sky-400 animate-pulse">|</span>
+          </h1>
 
-              <div>
-                <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight">
-                  SKORA<span className="text-blue-500 font-black">.digital</span>
-                </h1>
-                <p className="text-xs sm:text-sm font-mono text-cyan-400 tracking-widest uppercase mt-2">
-                  ENTERPRISE DIGITAL & TECH SOLUTIONS
-                </p>
-              </div>
-            </div>
-          )}
+          <p className="text-xs sm:text-sm font-mono text-slate-400 tracking-widest uppercase">
+            DOMINATE SEARCH • ENGINEER SAAS • SCALE CLOUD
+          </p>
         </div>
       </div>
     </div>

@@ -2,128 +2,50 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import {
-  ArrowUp,
-  Sparkles,
-  Send,
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  Calendar,
-  Layers,
-  Globe,
-  Zap,
-  Activity,
-  Volume2,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import Card3D from "./Card3D";
+import { ArrowUpRight, CheckCircle2, ArrowUp, Send, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Card3D from "./Card3D";
 
-// Web Audio API Synthesizer Chime for Pluckable Strings
-const playPluckSound = (frequency = 440) => {
-  try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(frequency, ctx.currentTime);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.6);
-  } catch (e) {
-    // Ignore audio policy restrictions
-  }
-};
-
-// 3D Animated Background Sparkle Particles for Footer
-const Footer3DParticles = () => {
+// Interactive 3D Bioluminescent Floating Petal Particles
+const BioluminescentPetals = () => {
   const [mounted, setMounted] = useState(false);
+
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
-  const particles = Array.from({ length: 28 });
+  const petals = Array.from({ length: 20 });
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {particles.map((_, i) => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
+      {petals.map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_12px_#38bdf8]"
+          className="absolute w-2 h-3 rounded-full bg-gradient-to-tr from-purple-500 via-pink-400 to-cyan-300 opacity-60 shadow-[0_0_15px_rgba(216,180,254,0.8)]"
           initial={{
             x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1200),
-            y: Math.random() * 600,
-            opacity: Math.random() * 0.7 + 0.2,
-            scale: Math.random() * 2 + 0.5,
+            y: Math.random() * 800,
+            rotate: Math.random() * 360,
+            scale: Math.random() * 1.5 + 0.5,
           }}
           animate={{
-            y: [null, Math.random() * -300 - 50],
-            opacity: [null, Math.random() * 0.9 + 0.3, 0],
-            scale: [null, 1.8, 0.5],
+            y: [null, Math.random() * -400 - 100],
+            x: [null, "+=60", "-=60"],
+            rotate: [null, 720],
+            opacity: [null, 0.8, 0],
           }}
           transition={{
-            duration: Math.random() * 8 + 8,
+            duration: Math.random() * 10 + 10,
             repeat: Infinity,
-            ease: "linear",
+            ease: "easeInOut",
           }}
         />
       ))}
-    </div>
-  );
-};
-
-// TRIONN Style Interactive Pluckable Strings Logo
-const TRIONNPluckableLogo = () => {
-  const [activeLine, setActiveLine] = useState<number | null>(null);
-  const frequencies = [329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99];
-
-  const handlePluck = (index: number) => {
-    setActiveLine(index);
-    playPluckSound(frequencies[index % frequencies.length]);
-    setTimeout(() => setActiveLine(null), 400);
-  };
-
-  return (
-    <div className="relative py-8 flex flex-col items-center justify-center select-none group/logo cursor-pointer">
-      <div className="flex items-center gap-2 mb-2">
-        <Volume2 size={14} className="text-cyan-400 animate-pulse" />
-        <span className="text-[11px] font-mono font-bold text-cyan-300 uppercase tracking-widest">
-          ✦ Hover & Pluck Strings For Interactive Audio ✦
-        </span>
-      </div>
-
-      <div className="relative w-full max-w-4xl h-28 flex items-center justify-between px-4 border-y border-white/10 my-4 bg-gradient-to-r from-transparent via-cyan-950/20 to-transparent">
-        {[1, 2, 3, 4, 5, 6, 7].map((num, i) => (
-          <motion.div
-            key={i}
-            onMouseEnter={() => handlePluck(i)}
-            animate={{
-              scaleY: activeLine === i ? [1, 1.4, 0.8, 1] : 1,
-              skewX: activeLine === i ? [0, 15, -15, 0] : 0,
-            }}
-            transition={{ duration: 0.4 }}
-            className={`h-full w-2 sm:w-3 rounded-full cursor-pointer transition-colors duration-200 ${
-              activeLine === i
-                ? "bg-cyan-400 shadow-[0_0_25px_#38bdf8]"
-                : "bg-gradient-to-b from-blue-600/40 via-cyan-400/20 to-blue-600/40 hover:bg-cyan-400"
-            }`}
-          />
-        ))}
-
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-6xl sm:text-8xl lg:text-9xl font-black tracking-[0.15em] text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-blue-400 opacity-90 drop-shadow-[0_0_35px_rgba(56,189,248,0.5)]">
-            SKORA
-          </span>
-        </div>
-      </div>
     </div>
   );
 };
@@ -133,261 +55,449 @@ interface FooterProps {
 }
 
 export default function Footer({ onOpenConsultation }: FooterProps) {
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
-  const [timeString, setTimeString] = useState("");
+  // Form State
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [selectedInterest, setSelectedInterest] = useState<string>("WEB-DESIGN");
+  const [selectedBudget, setSelectedBudget] = useState<string>("5-10K");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const footerRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeString(
-        now.toLocaleTimeString("en-US", {
-          timeZone: "Asia/Kolkata",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }) + " GMT+5:30"
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const interests = [
+    "WEB-DESIGN",
+    "WEB-DEVELOPMENT",
+    "BRANDING",
+    "MARKETING",
+    "OTHER",
+  ];
 
+  const budgets = ["<5K", "5-10K", "10-20K", ">20K", "I DON'T KNOW YET"];
+
+  // GSAP ScrollTrigger On-Scroll Animations Setup
   useEffect(() => {
-    if (!footerRef.current) return;
+    if (typeof window === "undefined" || !footerRef.current) return;
 
     const ctx = gsap.context(() => {
+      ScrollTrigger.refresh();
+
+      // 1. Title Reveal Animation
       gsap.fromTo(
-        ".gsap-trionn-footer",
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.9, stagger: 0.1, ease: "power3.out" }
+        ".gsap-footer-title",
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 1.0,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ".gsap-footer-title",
+            start: "top 85%",
+          },
+        }
+      );
+
+      // 2. Form Card 3D Entrance
+      gsap.fromTo(
+        ".gsap-footer-form",
+        { y: 60, opacity: 0, scale: 0.95 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 1.1,
+          ease: "back.out(1.2)",
+          scrollTrigger: {
+            trigger: ".gsap-footer-form",
+            start: "top 85%",
+          },
+        }
+      );
+
+      // 3. Footer Links Stagger Reveal
+      gsap.fromTo(
+        ".gsap-footer-row",
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: ".gsap-footer-row",
+            start: "top 90%",
+          },
+        }
       );
     }, footerRef);
 
     return () => ctx.revert();
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email) return;
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSubmitted(true);
+    }, 1000);
   };
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newsletterEmail) return;
-    setNewsletterSubmitted(true);
-    setTimeout(() => {
-      setNewsletterSubmitted(false);
-      setNewsletterEmail("");
-    }, 4000);
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <footer
       ref={footerRef}
-      className="relative text-white pt-20 pb-12 overflow-hidden bg-gradient-to-b from-[#02040A] via-[#050814] to-[#010206] border-t border-cyan-500/30 [perspective:1200px]"
+      className="relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden border-t border-white/10 selection:bg-purple-500 selection:text-white"
     >
-      {/* 3D Animated Background Particles */}
-      <Footer3DParticles />
+      {/* 3D Bioluminescent Floating Petals */}
+      <BioluminescentPetals />
 
-      {/* TRIONN Ambient Light & Grid */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[500px] bg-gradient-to-b from-blue-600/20 via-cyan-500/10 to-transparent rounded-[100%] blur-[140px] pointer-events-none" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "linear-gradient(#38bdf8 1px, transparent 1px), linear-gradient(90deg, #38bdf8 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
+      {/* Bioluminescent Flowers Artwork Overlay & Atmospheric Light Rays */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        {/* High-Res Bioluminescent Flowers Backdrop */}
+        <div
+          className="absolute inset-0 mix-blend-screen opacity-35 bg-cover bg-center bg-no-repeat transition-all duration-1000 scale-105"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80')",
+          }}
+        />
 
-      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* 1. TRIONN PLUCKABLE STRINGS BRAND EMBLEM */}
-        <TRIONNPluckableLogo />
+        {/* Ambient Purple/Magenta Gradient Glow Spheres */}
+        <div className="absolute top-10 left-10 w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/40 via-fuchsia-900/30 to-transparent rounded-full blur-[160px] animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-[650px] h-[650px] bg-gradient-to-bl from-pink-900/30 via-indigo-950/40 to-transparent rounded-full blur-[150px]" />
+        <div className="absolute top-0 right-1/4 w-[350px] h-[800px] bg-gradient-to-b from-purple-500/15 via-pink-500/10 to-transparent blur-[120px] transform -rotate-45" />
+      </div>
 
-        {/* 2. 4-COLUMN 3D GLASS CARDS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 py-12 border-y border-white/10">
-          {/* Brand & Telemetry Card */}
-          <div className="gsap-trionn-footer">
-            <Card3D maxTilt={8} className="h-full p-6 rounded-2xl bg-[#090D1A]/90 border border-white/10 backdrop-blur-xl shadow-xl space-y-4">
-              <Link href="/" className="text-3xl font-extrabold tracking-tight flex items-center gap-2 text-white">
-                <span>SKORA</span>
-                <span className="text-blue-500 font-black">.digital</span>
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_20px_#22d3ee] animate-pulse" />
-              </Link>
-              <p className="text-[#94A3B8] text-sm leading-relaxed font-medium">
-                Architecting mission-critical enterprise platforms, healthcare IT systems, and high-converting AI digital marketing engines.
-              </p>
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-400">
-                  <Globe size={14} />
-                  <span>MUMBAI, IN • {timeString}</span>
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
+        {/* =========================================================================
+            TOP SECTION: BRAND LOGO, LET'S CONNECT & 3D GLASSMORPHIC CONTACT CARD
+            ========================================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* Left Column: Brand Emblem, Headline & Mail CTA */}
+          <div className="lg:col-span-5 space-y-10">
+            {/* Top Serif Logo */}
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: -3 }}
+              className="text-4xl font-serif italic text-slate-200 tracking-wider inline-block cursor-pointer"
+            >
+              s.
+            </motion.div>
+
+            <div className="space-y-6 gsap-footer-title">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block">
+                NOW IT'S TIME TO TELL THE WHOLE WORLD ABOUT YOUR BUSINESS
+              </span>
+              <h2 className="text-5xl sm:text-7xl lg:text-8xl font-serif text-white tracking-tight leading-[1.02]">
+                Let's connect
+              </h2>
+            </div>
+
+            <div className="gsap-footer-title">
+              <a
+                href="mailto:info@skora.digital"
+                className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-white text-[#0B1310] font-bold text-xs uppercase tracking-wider shadow-2xl hover:bg-slate-100 transition-all transform hover:scale-105 cursor-pointer group border border-white/20"
+              >
+                <span>SEND A MAIL</span>
+                <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:rotate-45">
+                  <ArrowUpRight size={14} />
                 </div>
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-emerald-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>99.99% Cloud Uptime</span>
-                </div>
-              </div>
-            </Card3D>
+              </a>
+            </div>
           </div>
 
-          {/* Core Divisions Card */}
-          <div className="gsap-trionn-footer">
-            <Card3D maxTilt={8} className="h-full p-6 rounded-2xl bg-[#090D1A]/90 border border-white/10 backdrop-blur-xl shadow-xl space-y-3">
-              <h4 className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest border-b border-white/10 pb-2">
-                Core Divisions
-              </h4>
-              <ul className="space-y-2 text-xs font-medium text-[#94A3B8]">
-                {[
-                  { name: "Digital Marketing & AI SEO", link: "/services/digital-marketing" },
-                  { name: "Website Design & Web Apps", link: "/services/website-design" },
-                  { name: "Mobile Applications", link: "/services/mobile-development" },
-                  { name: "Cloud Services & DevOps", link: "/services/cloud-services" },
-                  { name: "SaaS Platform Engineering", link: "/services/saas-development" },
-                  { name: "Project Management (PMS)", link: "/services/pms" },
-                  { name: "CRM Automations", link: "/services/crm" },
-                ].map((item, idx) => (
-                  <li key={idx} className="hover:text-cyan-300 transition-colors">
-                    <Link href={item.link} className="flex items-center gap-2">
-                      <ArrowRight size={12} className="text-blue-500 shrink-0" />
-                      <span className="truncate">{item.name}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Card3D>
-          </div>
-
-          {/* Specialized IT & Doctor Agency Card */}
-          <div className="gsap-trionn-footer">
-            <Card3D maxTilt={8} className="h-full p-6 rounded-2xl bg-[#090D1A]/90 border border-white/10 backdrop-blur-xl shadow-xl space-y-3">
-              <h4 className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest border-b border-white/10 pb-2">
-                Specialized Solutions
-              </h4>
-              <ul className="space-y-2.5 text-xs font-medium text-[#94A3B8]">
-                <li className="hover:text-emerald-400 transition-colors">
-                  <Link href="/healthcare" className="flex items-center gap-2 text-emerald-400 font-bold">
-                    <Activity size={14} />
-                    <span>Healthcare Division for Doctors</span>
-                  </Link>
-                </li>
-                <li>
-                  <button onClick={() => onOpenConsultation?.()} className="hover:text-cyan-300 transition-colors text-left flex items-center gap-2">
-                    <ShieldCheck size={14} className="text-cyan-400" />
-                    <span>Request Free SKORA Audit</span>
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => onOpenConsultation?.()} className="hover:text-cyan-300 transition-colors text-left flex items-center gap-2">
-                    <Calendar size={14} className="text-blue-400" />
-                    <span>Schedule Consultation</span>
-                  </button>
-                </li>
-                <li>
-                  <a href="#capabilities" className="hover:text-cyan-300 transition-colors flex items-center gap-2">
-                    <Layers size={14} className="text-purple-400" />
-                    <span>Explore Capabilities</span>
-                  </a>
-                </li>
-              </ul>
-            </Card3D>
-          </div>
-
-          {/* Intelligence Wire Newsletter Card */}
-          <div className="gsap-trionn-footer">
-            <Card3D maxTilt={8} className="h-full p-6 rounded-2xl bg-[#090D1A]/90 border border-white/10 backdrop-blur-xl shadow-xl space-y-3">
-              <h4 className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest border-b border-white/10 pb-2">
-                Intelligence Wire
-              </h4>
-              <p className="text-xs text-[#94A3B8] font-medium leading-relaxed">
-                Get tech architecture dispatches & growth blueprints weekly.
-              </p>
-              <form onSubmit={handleNewsletterSubmit} className="space-y-2.5">
-                <input
-                  type="email"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  placeholder="Enter work email"
-                  required
-                  className="w-full bg-[#05070E] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                />
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(34,211,238,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  {newsletterSubmitted ? (
-                    <>
-                      <CheckCircle2 size={14} className="text-emerald-300" />
-                      <span>Subscribed!</span>
-                    </>
+          {/* Right Column: 3D Interactive Glassmorphic Contact Card */}
+          <div className="lg:col-span-7 gsap-footer-form">
+            <Card3D maxTilt={6} className="w-full">
+              <div className="rounded-[2.5rem] bg-[#0E111F]/85 border border-white/15 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.8)] space-y-8 relative overflow-hidden">
+                <AnimatePresence mode="wait">
+                  {submitted ? (
+                    <motion.div
+                      key="submitted"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="py-16 text-center space-y-6"
+                    >
+                      <div className="w-20 h-20 rounded-full bg-purple-500/20 border border-purple-400 text-purple-300 flex items-center justify-center mx-auto shadow-2xl shadow-purple-500/30">
+                        <CheckCircle2 size={40} />
+                      </div>
+                      <h3 className="text-3xl font-serif text-white">
+                        Journey Initialized!
+                      </h3>
+                      <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed font-medium">
+                        Thank you, <strong className="text-white">{name}</strong>. Our strategy director will respond to <strong className="text-white">{email}</strong> shortly to begin your digital transformation.
+                      </p>
+                      <button
+                        onClick={() => setSubmitted(false)}
+                        className="px-8 py-3.5 rounded-full bg-white text-[#0B1310] font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-slate-100 transition-all cursor-pointer"
+                      >
+                        Send Another Message
+                      </button>
+                    </motion.div>
                   ) : (
-                    <>
-                      <span>Join Intelligence Network</span>
-                      <Send size={12} />
-                    </>
+                    <motion.form
+                      key="form"
+                      onSubmit={handleSubmit}
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-8"
+                    >
+                      {/* Section 1: Contact Info */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
+                          CONTACT INFO*
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            required
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="YOUR NAME*"
+                            className="w-full rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-xs text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:bg-white/10 transition-all uppercase font-mono font-bold shadow-inner"
+                          />
+                          <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="YOUR E-MAIL*"
+                            className="w-full rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-xs text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:bg-white/10 transition-all uppercase font-mono font-bold shadow-inner"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Section 2: Interest Pills */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
+                          YOU ARE INTERESTED IN*
+                        </label>
+                        <div className="flex flex-wrap gap-2.5">
+                          {interests.map((item) => {
+                            const active = selectedInterest === item;
+                            return (
+                              <motion.button
+                                key={item}
+                                type="button"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setSelectedInterest(item)}
+                                className={`px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-wider transition-all cursor-pointer border ${
+                                  active
+                                    ? "bg-white text-[#0B1310] border-white shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                                    : "bg-white/5 text-slate-300 border-white/15 hover:border-white/40 hover:text-white"
+                                }`}
+                              >
+                                {item}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Section 3: Budget Pills */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
+                          Your budget in USD*
+                        </label>
+                        <div className="flex flex-wrap gap-2.5">
+                          {budgets.map((b) => {
+                            const active = selectedBudget === b;
+                            return (
+                              <motion.button
+                                key={b}
+                                type="button"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setSelectedBudget(b)}
+                                className={`px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-wider transition-all cursor-pointer border ${
+                                  active
+                                    ? "bg-white text-[#0B1310] border-white shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                                    : "bg-white/5 text-slate-300 border-white/15 hover:border-white/40 hover:text-white"
+                                }`}
+                              >
+                                {b}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Submit Action Button */}
+                      <motion.button
+                        type="submit"
+                        disabled={loading}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-4 rounded-full bg-[#E2E8F0] hover:bg-white text-[#0B1310] font-black text-xs uppercase tracking-widest shadow-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/40"
+                      >
+                        {loading ? (
+                          <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        ) : (
+                          <span>START A JOURNEY</span>
+                        )}
+                      </motion.button>
+                    </motion.form>
                   )}
-                </button>
-              </form>
+                </AnimatePresence>
+              </div>
             </Card3D>
           </div>
         </div>
 
-        {/* 3. TRIONN BOTTOM BAR WITH FLOATING MAGNETIC SOCIAL SPHERES & TOP BUTTON */}
-        <div className="flex flex-col md:flex-row items-center justify-between pt-8 gap-6 text-xs font-medium text-[#64748B] relative z-20">
-          <p>© {new Date().getFullYear()} SKORA Technologies Inc. All rights reserved.</p>
+        {/* =========================================================================
+            BOTTOM FOOTER ROW: KEEP IN TOUCH, FIND US, CONTACT US (SOCIAL ICONS) & POLICIES
+            ========================================================================= */}
+        <div className="pt-12 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 text-xs text-slate-400 font-medium">
+          {/* Column 1: Keep in touch */}
+          <div className="space-y-3 gsap-footer-row">
+            <h4 className="text-sm font-bold text-white tracking-wide">
+              Keep in touch
+            </h4>
+            <p className="text-slate-300 font-mono">info@skora.digital</p>
+            <p className="text-slate-500 pt-4">
+              © {new Date().getFullYear()} SKORA Digital. All Rights Reserved.
+            </p>
+          </div>
 
-          <div className="flex items-center gap-3">
-            {/* Facebook Orb */}
-            <motion.a
-              whileHover={{ y: -4, scale: 1.1 }}
-              href="https://facebook.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Facebook"
-              className="w-10 h-10 bg-[#090D1A] hover:bg-[#1877F2] hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-            >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.597 1.323-1.324V1.325C24 .597 23.403 0 22.675 0z" />
-              </svg>
-            </motion.a>
+          {/* Column 2: FIND US HERE */}
+          <div className="space-y-3 gsap-footer-row">
+            <h4 className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
+              FIND US HERE
+            </h4>
+            <p className="text-slate-300 leading-relaxed font-medium">
+              Skora Digital Studio,<br />
+              Gaur City 2, Greater Noida,<br />
+              Uttar Pradesh 201308, India
+            </p>
+          </div>
 
-            {/* Instagram Orb */}
-            <motion.a
-              whileHover={{ y: -4, scale: 1.1 }}
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Instagram"
-              className="w-10 h-10 bg-[#090D1A] hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-            >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-              </svg>
-            </motion.a>
+          {/* Column 3: CONTACT US (Social Media Icons for Facebook, Instagram, X, LinkedIn, WhatsApp) */}
+          <div className="space-y-4 gsap-footer-row">
+            <h4 className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
+              CONTACT US
+            </h4>
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Facebook Icon */}
+              <motion.a
+                whileHover={{ y: -4, scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Facebook"
+                className="w-11 h-11 bg-white/5 hover:bg-[#1877F2] hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-200 shadow-lg cursor-pointer"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.597 1.323-1.324V1.325C24 .597 23.403 0 22.675 0z" />
+                </svg>
+              </motion.a>
 
-            {/* LinkedIn Orb */}
-            <motion.a
-              whileHover={{ y: -4, scale: 1.1 }}
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="LinkedIn"
-              className="w-10 h-10 bg-[#090D1A] hover:bg-[#0A66C2] hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-            >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-              </svg>
-            </motion.a>
+              {/* Instagram Icon */}
+              <motion.a
+                whileHover={{ y: -4, scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                className="w-11 h-11 bg-white/5 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-200 shadow-lg cursor-pointer"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                </svg>
+              </motion.a>
 
-            {/* Glowing Back-to-Top Button */}
-            <button
-              onClick={scrollToTop}
-              className="group flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600/30 to-cyan-500/30 border border-cyan-400/50 hover:border-cyan-300 rounded-full text-xs font-mono font-bold text-white transition-all shadow-[0_0_25px_rgba(34,211,238,0.35)] hover:shadow-[0_0_40px_rgba(56,189,248,0.7)] cursor-pointer ml-4 backdrop-blur-md"
-            >
-              <span>TOP</span>
-              <ArrowUp size={14} className="group-hover:-translate-y-1 transition-transform text-cyan-400" />
-            </button>
+              {/* X (Twitter) Icon */}
+              <motion.a
+                whileHover={{ y: -4, scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://x.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="X Twitter"
+                className="w-11 h-11 bg-white/5 hover:bg-slate-800 hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-200 shadow-lg cursor-pointer"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </motion.a>
+
+              {/* LinkedIn Icon */}
+              <motion.a
+                whileHover={{ y: -4, scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn"
+                className="w-11 h-11 bg-white/5 hover:bg-[#0A66C2] hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-200 shadow-lg cursor-pointer"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                </svg>
+              </motion.a>
+
+              {/* WhatsApp Icon */}
+              <motion.a
+                whileHover={{ y: -4, scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://wa.me/919217375835"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="WhatsApp"
+                className="w-11 h-11 bg-white/5 hover:bg-[#25D366] hover:text-white rounded-full flex items-center justify-center transition-all border border-white/15 text-slate-200 shadow-lg cursor-pointer"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.205 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+                </svg>
+              </motion.a>
+            </div>
+          </div>
+
+          {/* Column 4: TERMS & CONDITIONS + PRIVACY POLICY */}
+          <div className="space-y-4 gsap-footer-row relative">
+            <h4 className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
+              LEGAL &amp; POLICIES
+            </h4>
+            <ul className="space-y-2.5 text-slate-300 font-medium">
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-white transition-colors inline-block hover:translate-x-1 duration-200 transform"
+                >
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="hover:text-white transition-colors inline-block hover:translate-x-1 duration-200 transform"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+            </ul>
+
+            {/* Back to Top Floating Button */}
+            <div className="pt-4">
+              <motion.button
+                whileHover={{ y: -3, scale: 1.05 }}
+                onClick={scrollToTop}
+                aria-label="Scroll to top"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/20 bg-white/5 hover:bg-white/15 text-white font-mono text-[11px] transition-all cursor-pointer shadow-lg"
+              >
+                <span>TOP</span>
+                <ArrowUp size={12} />
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>

@@ -13,23 +13,40 @@ export default function ScrollToTop() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Disable auto scroll restoration by browser
+    // 1. Force manual scroll restoration across all browsers
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
 
-    // Force instant scroll to top on route change
-    window.scrollTo(0, 0);
-
-    // Refresh GSAP ScrollTrigger to recalculate accurate positions from top
-    const timer = setTimeout(() => {
+    // 2. Instant scroll reset to top (0,0)
+    const resetScroll = () => {
       window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    resetScroll();
+
+    // 3. Re-run scroll reset & refresh GSAP triggers after DOM settles
+    const timer1 = setTimeout(() => {
+      resetScroll();
+      if (typeof window !== "undefined") {
+        ScrollTrigger.clearScrollMemory();
+        ScrollTrigger.refresh();
+      }
+    }, 50);
+
+    const timer2 = setTimeout(() => {
+      resetScroll();
       if (typeof window !== "undefined") {
         ScrollTrigger.refresh();
       }
-    }, 80);
+    }, 150);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, [pathname]);
 
   return null;
