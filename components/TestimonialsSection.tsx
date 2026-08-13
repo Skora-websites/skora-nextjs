@@ -48,7 +48,14 @@ export default function TestimonialsSection() {
               <p className="mt-5 min-h-28 text-[15px] font-medium leading-relaxed text-slate-700">&ldquo;{item.quote}&rdquo;</p>
               <div className="mt-7 flex items-center justify-between border-t border-slate-100 pt-5">
                 <div className="flex items-center gap-3">
-                  <img src={item.avatar} alt={item.name} className="h-11 w-11 rounded-full object-cover" />
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80";
+                    }}
+                    className="h-11 w-11 rounded-full object-cover"
+                  />
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">{item.role}</p>

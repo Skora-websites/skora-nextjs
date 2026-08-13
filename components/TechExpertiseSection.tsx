@@ -4,36 +4,36 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const expertiseRow1 = [
-  { name: "HTML5", category: "Frontend", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" },
-  { name: "CSS3", category: "Styling", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" },
-  { name: "JavaScript", category: "Language", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" },
-  { name: "TypeScript", category: "Language", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" },
-  { name: "React", category: "Frontend", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" },
-  { name: "Node.js", category: "Backend", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" },
-  { name: "Python", category: "Language", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" },
-  { name: "PHP", category: "Backend", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" },
-  { name: "Laravel", category: "Backend", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/laravel/laravel-original.svg" },
-  { name: "Angular", category: "Frontend", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/angularjs/angularjs-original.svg" },
-  { name: "Vue.js", category: "Frontend", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" },
-  { name: "WordPress", category: "CMS", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/wordpress/wordpress-original.svg" },
-  { name: "Bootstrap", category: "Styling", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bootstrap/bootstrap-original.svg" },
-  { name: "Tailwind CSS", category: "Styling", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-original.svg" },
+  { name: "HTML5", category: "Frontend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original.svg" },
+  { name: "CSS3", category: "Styling", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/css3/css3-original.svg" },
+  { name: "JavaScript", category: "Language", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" },
+  { name: "TypeScript", category: "Language", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-original.svg" },
+  { name: "React", category: "Frontend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" },
+  { name: "Node.js", category: "Backend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original.svg" },
+  { name: "Python", category: "Language", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" },
+  { name: "PHP", category: "Backend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/php/php-original.svg" },
+  { name: "Laravel", category: "Backend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/laravel/laravel-original.svg" },
+  { name: "Angular", category: "Frontend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/angularjs/angularjs-original.svg" },
+  { name: "Vue.js", category: "Frontend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/vuejs/vuejs-original.svg" },
+  { name: "WordPress", category: "CMS", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/wordpress/wordpress-original.svg" },
+  { name: "Bootstrap", category: "Styling", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/bootstrap/bootstrap-original.svg" },
+  { name: "Tailwind CSS", category: "Styling", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/tailwindcss/tailwindcss-original.svg" },
 ];
 
 const expertiseRow2 = [
-  { name: "AWS", category: "Cloud", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" },
-  { name: "Docker", category: "DevOps", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" },
-  { name: "Figma", category: "Design", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg" },
-  { name: "GitHub", category: "DevOps", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" },
-  { name: "Facebook", category: "Social Media", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/facebook/facebook-original.svg" },
-  { name: "Instagram", category: "Social Media", icon: "https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" },
-  { name: "LinkedIn", category: "Social Media", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" },
-  { name: "X", category: "Social Media", icon: "https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg" },
-  { name: "Pinterest", category: "Social Media", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pinterest/pinterest-original.svg" },
-  { name: "Meta", category: "Platform", icon: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg" },
-  { name: "Google Ads", category: "Marketing", icon: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Ads_logo.svg" },
-  { name: "Google Maps", category: "API & Service", icon: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Google_Maps_icon_%282020%29.svg" },
-  { name: "Canva", category: "Design", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/canva/canva-original.svg" },
+  { name: "AWS", category: "Cloud", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" },
+  { name: "Docker", category: "DevOps", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" },
+  { name: "Figma", category: "Design", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/figma/figma-original.svg" },
+  { name: "GitHub", category: "DevOps", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg" },
+  { name: "Facebook", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/facebook/facebook-original.svg" },
+  { name: "Instagram", category: "Social Media", icon: "https://cdn.simpleicons.org/instagram/E4405F" },
+  { name: "LinkedIn", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/linkedin/linkedin-original.svg" },
+  { name: "X", category: "Social Media", icon: "https://cdn.simpleicons.org/x/000000" },
+  { name: "Pinterest", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/pinterest/pinterest-original.svg" },
+  { name: "Meta", category: "Platform", icon: "https://cdn.simpleicons.org/meta/0467DF" },
+  { name: "Google Ads", category: "Marketing", icon: "https://cdn.simpleicons.org/googleads/4285F4" },
+  { name: "Google Maps", category: "API & Service", icon: "https://cdn.simpleicons.org/googlemaps/4285F4" },
+  { name: "Canva", category: "Design", icon: "https://cdn.simpleicons.org/canva/00C4CC" },
 ];
 
 export default function TechExpertiseSection() {
@@ -56,7 +56,7 @@ export default function TechExpertiseSection() {
 
       <div className="relative mx-auto mb-10 max-w-4xl px-4 text-center">
         <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-950">
-          Our <span className="text-blue-600">Tech & Media Expertise</span>
+          Our <span className="text-blue-600">Tech &amp; Media Expertise</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-base sm:text-lg font-medium text-slate-600">
           Empowering scalable digital ecosystems with industry-standard development frameworks, cloud solutions, and media platforms.
@@ -79,6 +79,9 @@ export default function TechExpertiseSection() {
                 <img
                   src={item.icon}
                   alt={item.name}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg";
+                  }}
                   className="max-h-11 max-w-11 object-contain transition-transform duration-300 group-hover:scale-110"
                 />
               </div>
@@ -111,6 +114,9 @@ export default function TechExpertiseSection() {
                 <img
                   src={item.icon}
                   alt={item.name}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg";
+                  }}
                   className="max-h-11 max-w-11 object-contain transition-transform duration-300 group-hover:scale-110"
                 />
               </div>

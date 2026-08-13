@@ -20,14 +20,21 @@ export default function ScrollToTop() {
 
     // 2. Instant scroll reset to top (0,0)
     const resetScroll = () => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
     };
 
     resetScroll();
 
-    // 3. Re-run scroll reset & refresh GSAP triggers after DOM settles
+    // 3. RequestAnimationFrame scroll reset to catch post-render layout shifts
+    const rafId = requestAnimationFrame(() => {
+      resetScroll();
+    });
+
+    // 4. Re-run scroll reset & refresh GSAP triggers after DOM settles
     const timer1 = setTimeout(() => {
       resetScroll();
       if (typeof window !== "undefined") {
@@ -44,6 +51,7 @@ export default function ScrollToTop() {
     }, 150);
 
     return () => {
+      cancelAnimationFrame(rafId);
       clearTimeout(timer1);
       clearTimeout(timer2);
     };

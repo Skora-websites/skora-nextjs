@@ -143,7 +143,13 @@ export default function LaptopSlider() {
                     <div className="macbook-lid">
                       <div className="dim-overlay"></div>
                       <div className="macbook-screen">
-                        <img src={slide.image} alt={slide.title} />
+                        <img
+                          src={slide.image}
+                          alt={slide.title}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80";
+                          }}
+                        />
                         <div className="screen-glare"></div>
                       </div>
                     </div>

@@ -1021,6 +1021,9 @@ export default function HealthcarePortal() {
                   <img
                     src={rev.avatar}
                     alt={rev.doctor}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80";
+                    }}
                     className="w-12 h-12 rounded-full object-cover border-2 border-[#1F6B43] shadow-sm"
                   />
                   <div>

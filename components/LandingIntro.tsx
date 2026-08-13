@@ -26,7 +26,7 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
       return;
     }
 
-    const fullWord = "SKORA.digital";
+    const fullWord = "SKORA.info";
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({

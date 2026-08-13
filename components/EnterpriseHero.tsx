@@ -183,6 +183,9 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
                     <img
                       src={card.img}
                       alt={card.title}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80";
+                      }}
                       className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                     />
                     <span className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#071a42]/90 border border-white/30 text-sky-200 backdrop-blur-md">
