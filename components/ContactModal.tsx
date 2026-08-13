@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { X, CheckCircle2, Send, Sparkles, User, Mail, Building2, DollarSign, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, CheckCircle2, Sparkles, Send, Building2, User, Mail, DollarSign } from "lucide-react";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -16,107 +16,82 @@ export default function ContactModal({
   initialService = "",
   defaultService = "",
 }: ContactModalProps) {
-  const activeService = defaultService || initialService;
+  const serviceToPreselect = initialService || defaultService;
+
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
-  const [budget, setBudget] = useState("$2,500 - $5,000");
+  const [budget, setBudget] = useState("₹25,000 - ₹50,000");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const modalContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (activeService && !selectedServices.includes(activeService)) {
-      setSelectedServices([activeService]);
-    }
-  }, [activeService]);
 
   const availableServices = [
-    "Digital Marketing & Local SEO",
-    "Website Design & Web Apps",
+    "Website Design & Dev",
     "Branding & Visual Identity",
-    "Video Production & Reels",
+    "SaaS Architecture",
     "Mobile App Development",
     "Cloud Services & DevOps",
-    "SaaS Platform Development",
-    "Project Management System (PMS)",
-    "Custom CRM & Automations",
+    "CRM System Engineering",
+    "Digital Marketing & SEO",
+    "Property Mgmt System",
+    "Video Production & Reels",
   ];
 
   useEffect(() => {
-    if (initialService && !selectedServices.includes(initialService)) {
-      setSelectedServices([initialService]);
-    }
-  }, [initialService]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      if (modalContainerRef.current) {
-        modalContainerRef.current.scrollTop = 0;
+    if (serviceToPreselect) {
+      const match = availableServices.find(
+        (s) => s.toLowerCase() === serviceToPreselect.toLowerCase()
+      );
+      if (match && !selectedServices.includes(match)) {
+        setSelectedServices([match]);
+      } else if (!selectedServices.includes(serviceToPreselect)) {
+        setSelectedServices([serviceToPreselect]);
       }
-    } else {
-      document.body.style.overflow = "unset";
     }
-  }, [isOpen]);
+  }, [serviceToPreselect, isOpen]);
 
   if (!isOpen) return null;
 
-  const toggleService = (svc: string) => {
-    if (selectedServices.includes(svc)) {
-      setSelectedServices(selectedServices.filter((s) => s !== svc));
+  const toggleService = (serviceName: string) => {
+    if (selectedServices.includes(serviceName)) {
+      setSelectedServices(selectedServices.filter((s) => s !== serviceName));
     } else {
-      setSelectedServices([...selectedServices, svc]);
+      setSelectedServices([...selectedServices, serviceName]);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     setTimeout(() => {
       setLoading(false);
       setSubmitted(true);
-    }, 1000);
+    }, 1200);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div
-        ref={modalContainerRef}
-        className="relative my-auto w-full max-w-2xl rounded-3xl border border-[#E2E8F0] bg-white p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto text-[#0B1310]"
-      >
-        {/* Top Actions Bar: Return Back Button + Close Cross X Button */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0] mb-6">
-          <button
-            onClick={onClose}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F8F9F6] hover:bg-[#E8F7ED] text-xs font-bold text-slate-700 border border-[#E2E8F0] transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#16A34A]" />
-            <span>Return to Previous Page</span>
-          </button>
-
-          <button
-            onClick={onClose}
-            aria-label="Close modal"
-            className="p-2 rounded-xl bg-[#F8F9F6] hover:bg-slate-200 text-slate-500 hover:text-[#0B1310] border border-[#E2E8F0] transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-xl bg-white border border-[#E1E6DF] rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden text-[#0B1310] max-h-[90vh] overflow-y-auto">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-[#F4F6F1] hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
         {submitted ? (
-          <div className="py-12 text-center space-y-5 animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 rounded-full bg-[#E8F7ED] border border-[#22C55E] text-[#16A34A] flex items-center justify-center mx-auto shadow-xl">
+          <div className="py-12 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center mx-auto shadow-md border border-[#2563EB]/20">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-
-            <h3 className="text-2xl font-extrabold text-[#0B1310]">
-              Consultation Request Received!
+            <h3 className="text-2xl font-black text-[#0B1310] uppercase">
+              Consultation Dispatched!
             </h3>
-
-            <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
               Thank you, <strong className="text-[#0B1310]">{fullName}</strong>. Our senior strategy consultant will reach out to <strong className="text-[#0B1310]">{email}</strong> within 4 business hours with your custom proposal.
             </p>
 
@@ -125,7 +100,7 @@ export default function ContactModal({
                 setSubmitted(false);
                 onClose();
               }}
-              className="px-8 py-3 rounded-xl bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-sm transition-all cursor-pointer shadow-lg"
+              className="px-8 py-3 rounded-xl bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-sm transition-all cursor-pointer shadow-lg"
             >
               Return to Website
             </button>
@@ -133,8 +108,8 @@ export default function ContactModal({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F7ED] text-[11px] font-bold text-[#16A34A] border border-[#22C55E]/30">
-                <Sparkles className="w-3.5 h-3.5 text-[#16A34A]" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EFF6FF] text-[11px] font-bold text-[#2563EB] border border-[#2563EB]/30">
+                <Sparkles className="w-3.5 h-3.5 text-[#2563EB]" />
                 <span>Initialize Your Project</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-[#0B1310] tracking-tight uppercase">
@@ -160,8 +135,8 @@ export default function ContactModal({
                       onClick={() => toggleService(svc)}
                       className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
-                          ? "bg-[#22C55E] text-white border-[#16A34A] shadow-md"
-                          : "bg-[#F8F9F6] text-slate-600 border-[#E2E8F0] hover:border-[#22C55E] hover:text-[#0B1310]"
+                          ? "bg-[#2563EB] text-white border-blue-700 shadow-md"
+                          : "bg-[#F8F9F6] text-slate-600 border-[#E2E8F0] hover:border-[#2563EB] hover:text-[#0B1310]"
                       }`}
                     >
                       {svc}
@@ -185,7 +160,7 @@ export default function ContactModal({
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors font-medium"
+                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
                   />
                 </div>
               </div>
@@ -202,7 +177,7 @@ export default function ContactModal({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="john@company.com"
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors font-medium"
+                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
                   />
                 </div>
               </div>
@@ -218,7 +193,7 @@ export default function ContactModal({
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     placeholder="Acme Corp"
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors font-medium"
+                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
                   />
                 </div>
               </div>
@@ -232,12 +207,12 @@ export default function ContactModal({
                   <select
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] appearance-none focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors cursor-pointer font-medium"
+                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] appearance-none focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors cursor-pointer font-medium"
                   >
-                    <option value="< $2,500">Under $2,500</option>
-                    <option value="$2,500 - $5,000">$2,500 - $5,000</option>
-                    <option value="$5,000 - $15,000">$5,000 - $15,000</option>
-                    <option value="$15,000+">$15,000+ Enterprise</option>
+                    <option value="< ₹25,000">Under ₹25,000</option>
+                    <option value="₹25,000 - ₹50,000">₹25,000 - ₹50,000</option>
+                    <option value="₹50,000 - ₹1,50,000">₹50,000 - ₹1,50,000</option>
+                    <option value="₹1,50,000+">₹1,50,000+ Enterprise</option>
                   </select>
                 </div>
               </div>
@@ -252,14 +227,14 @@ export default function ContactModal({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tell us about your goals, timelines, and technical requirements..."
-                className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl p-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors resize-none font-medium"
+                className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl p-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors resize-none font-medium"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-xs rounded-xl transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-4 bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-xs rounded-xl transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

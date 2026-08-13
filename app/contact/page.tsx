@@ -28,7 +28,7 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden">
+    <main className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans selection:bg-[#2563EB] selection:text-white relative overflow-x-hidden">
       <ScrollProgressBar />
       <Navbar onOpenConsultation={() => setModalOpen(true)} />
 
@@ -41,13 +41,13 @@ export default function ContactPage() {
           className="text-center max-w-3xl mx-auto space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E1E6DF] shadow-sm text-xs font-semibold">
-            <Mail className="w-4 h-4 text-[#22C55E]" />
+            <Mail className="w-4 h-4 text-[#2563EB]" />
             <span className="text-[#0B1310] font-bold">✦ CONTACT SKORA DIGITAL ENTERPRISE ✦</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0B1310] tracking-tight leading-[1.02] uppercase">
             LET'S BUILD SOMETHING <br />
-            <span className="text-[#22C55E]">EXTRAORDINARY TOGETHER</span>
+            <span className="text-[#2563EB]">EXTRAORDINARY TOGETHER</span>
           </h1>
 
           <p className="text-lg text-slate-600 font-medium leading-relaxed">
@@ -73,7 +73,7 @@ export default function ContactPage() {
 
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center shrink-0 border border-[#22C55E]/30">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 border border-[#2563EB]/30">
                     <Mail size={20} />
                   </div>
                   <div>
@@ -84,7 +84,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center shrink-0 border border-[#22C55E]/30">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 border border-[#2563EB]/30">
                     <Phone size={20} />
                   </div>
                   <div>
@@ -95,7 +95,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center shrink-0 border border-[#22C55E]/30">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 border border-[#2563EB]/30">
                     <MapPin size={20} />
                   </div>
                   <div>
@@ -108,11 +108,11 @@ export default function ContactPage() {
 
               <div className="pt-6 border-t border-[#E1E6DF] space-y-4">
                 <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-[#16A34A]" />
+                  <Clock className="w-5 h-5 text-[#2563EB]" />
                   <span className="text-xs font-bold text-slate-700">Rapid 4-Hour Response Guarantee</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-5 h-5 text-[#16A34A]" />
+                  <ShieldCheck className="w-5 h-5 text-[#2563EB]" />
                   <span className="text-xs font-bold text-slate-700">Strict Non-Disclosure &amp; Data Privacy</span>
                 </div>
               </div>
@@ -129,7 +129,7 @@ export default function ContactPage() {
             <div className="p-8 sm:p-12 rounded-[2.5rem] bg-white border border-[#E1E6DF] shadow-xl space-y-8">
               {submitted ? (
                 <div className="py-16 text-center space-y-6">
-                  <div className="w-20 h-20 rounded-full bg-[#E8F7ED] border border-[#22C55E] text-[#16A34A] flex items-center justify-center mx-auto shadow-xl">
+                  <div className="w-20 h-20 rounded-full bg-[#EFF6FF] border border-[#2563EB] text-[#2563EB] flex items-center justify-center mx-auto shadow-xl">
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <h2 className="text-3xl font-black text-[#0B1310] uppercase">
@@ -140,7 +140,7 @@ export default function ContactPage() {
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
-                    className="px-8 py-3.5 rounded-full bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-xs shadow-xl transition-all cursor-pointer"
+                    className="px-8 py-3.5 rounded-full bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-xs shadow-xl transition-all cursor-pointer"
                   >
                     Send Another Message
                   </button>
@@ -148,16 +148,17 @@ export default function ContactPage() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#16A34A]">
-                      Project Brief /
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-black text-[#0B1310] uppercase">
-                      SEND US A MESSAGE
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EFF6FF] text-[11px] font-bold text-[#2563EB] border border-[#2563EB]/30">
+                      <Sparkles className="w-3.5 h-3.5 text-[#2563EB]" />
+                      <span>Start A Project Brief</span>
+                    </div>
+                    <h2 className="text-2xl font-black text-[#0B1310] uppercase tracking-tight">
+                      TELL US ABOUT YOUR PROJECT
                     </h2>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
                       <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
                         Full Name *
                       </label>
@@ -167,11 +168,11 @@ export default function ContactPage() {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="John Doe"
-                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors font-medium"
+                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
                         Work Email *
                       </label>
@@ -181,65 +182,65 @@ export default function ContactPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="john@company.com"
-                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors font-medium"
+                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
                       <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
-                        Company / Organization
+                        Company / Brand Name
                       </label>
                       <input
                         type="text"
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder="Acme Corp"
-                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors font-medium"
+                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
-                        Primary Service Needed
+                        Primary Capability Needed
                       </label>
                       <select
                         value={service}
                         onChange={(e) => setService(e.target.value)}
-                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] appearance-none focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors cursor-pointer font-medium"
+                        className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-xs text-[#0B1310] appearance-none focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors cursor-pointer font-medium"
                       >
-                        <option value="Website Design & Web Apps">Website Design &amp; Web Apps</option>
-                        <option value="Digital Marketing & Local SEO">Digital Marketing &amp; Local SEO</option>
-                        <option value="Branding & Visual Identity">Branding &amp; Visual Identity</option>
-                        <option value="Video Production & Reels">Video Production &amp; Reels</option>
+                        <option value="Website Design & Web Apps">Website Design & Web Apps</option>
+                        <option value="Branding & Identity System">Branding & Identity System</option>
+                        <option value="SaaS Architecture Engineering">SaaS Architecture Engineering</option>
                         <option value="Mobile App Development">Mobile App Development</option>
-                        <option value="Cloud Services & DevOps">Cloud Services &amp; DevOps</option>
-                        <option value="SaaS Platform Development">SaaS Platform Development</option>
-                        <option value="Project Management System (PMS)">Project Management System (PMS)</option>
-                        <option value="Custom CRM & Automations">Custom CRM &amp; Automations</option>
+                        <option value="Cloud Infrastructure & DevOps">Cloud Infrastructure & DevOps</option>
+                        <option value="Custom CRM Engineering">Custom CRM Engineering</option>
+                        <option value="Digital Marketing & Performance SEO">Digital Marketing & Performance SEO</option>
+                        <option value="Property Mgmt Systems">Property Mgmt Systems</option>
+                        <option value="High-Impact Video Reels Studio">High-Impact Video Reels Studio</option>
                       </select>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
-                      Message / Project Details *
+                      Project Requirements &amp; Goals
                     </label>
                     <textarea
                       rows={4}
                       required
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Tell us about your project goals, timelines, and technical requirements..."
-                      className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl p-4 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#22C55E] focus:bg-white transition-colors resize-none font-medium"
+                      placeholder="Share details about target goals, deliverables, and deadline expectations..."
+                      className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl p-4 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors resize-none font-medium"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-xs rounded-xl transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-4 bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-xs rounded-xl transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -257,7 +258,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer onOpenConsultation={() => setModalOpen(true)} />
       <ContactModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

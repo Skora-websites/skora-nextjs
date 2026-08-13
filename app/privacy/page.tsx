@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <main className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden">
+    <main className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans selection:bg-[#2563EB] selection:text-white relative overflow-x-hidden">
       <ScrollProgressBar />
       <Navbar onOpenConsultation={() => setModalOpen(true)} />
 
@@ -25,12 +25,12 @@ export default function PrivacyPage() {
           className="text-center max-w-3xl mx-auto space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E1E6DF] shadow-sm text-xs font-semibold">
-            <Lock className="w-4 h-4 text-[#22C55E]" />
+            <Lock className="w-4 h-4 text-[#2563EB]" />
             <span className="text-[#0B1310] font-bold">✦ DATA PROTECTION &amp; PRIVACY ✦</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black text-[#0B1310] tracking-tight uppercase leading-[1.05]">
-            PRIVACY <span className="text-[#22C55E]">POLICY</span>
+            PRIVACY <span className="text-[#2563EB]">POLICY</span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed">
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
           {/* Clause 1 */}
           <div className="space-y-3">
             <h2 className="text-xl font-extrabold text-[#0B1310] uppercase flex items-center gap-2">
-              <span className="text-[#22C55E]">01.</span> Information We Collect
+              <span className="text-[#2563EB]">01.</span> Information We Collect
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
               SKORA Digital collects personal and technical data required to deliver our services, including name, corporate email, phone number, company name, project brief parameters, server telemetry, and cookie performance analytics when interacting with our digital portals.
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
           {/* Clause 2 */}
           <div className="space-y-3 pt-6 border-t border-[#E1E6DF]">
             <h2 className="text-xl font-extrabold text-[#0B1310] uppercase flex items-center gap-2">
-              <span className="text-[#22C55E]">02.</span> How We Use Your Data
+              <span className="text-[#2563EB]">02.</span> How We Use Your Data
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
               Your data is strictly utilized to execute software developments, configure AWS cloud infrastructure, dispatch strategy proposals, communicate sprint updates, and optimize your digital marketing campaigns. We never sell, rent, or trade your personal data to third parties.
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
           {/* Clause 3 */}
           <div className="space-y-3 pt-6 border-t border-[#E1E6DF]">
             <h2 className="text-xl font-extrabold text-[#0B1310] uppercase flex items-center gap-2">
-              <span className="text-[#22C55E]">03.</span> Non-Disclosure &amp; Enterprise Security
+              <span className="text-[#2563EB]">03.</span> Non-Disclosure &amp; Enterprise Security
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
               All client code, database architectures, patient data (for Healthcare IT solutions), and business strategies are protected under strict Non-Disclosure Agreements (NDA). All infrastructure utilizes AES-256 bit encryption in transit and at rest on AWS/Azure ISO-certified data centers.
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
           {/* Clause 4 */}
           <div className="space-y-3 pt-6 border-t border-[#E1E6DF]">
             <h2 className="text-xl font-extrabold text-[#0B1310] uppercase flex items-center gap-2">
-              <span className="text-[#22C55E]">04.</span> Cookies &amp; Tracking Technologies
+              <span className="text-[#2563EB]">04.</span> Cookies &amp; Tracking Technologies
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
               Our website uses essential performance cookies to manage user sessions and anonymous analytics cookies (Google Analytics 4) to monitor website traffic and user engagement. You can modify your browser settings to disable non-essential cookies at any time.
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
           {/* Clause 5 */}
           <div className="space-y-3 pt-6 border-t border-[#E1E6DF]">
             <h2 className="text-xl font-extrabold text-[#0B1310] uppercase flex items-center gap-2">
-              <span className="text-[#22C55E]">05.</span> Your GDPR &amp; CCPA Data Rights
+              <span className="text-[#2563EB]">05.</span> Your GDPR &amp; CCPA Data Rights
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
               Under applicable privacy laws (GDPR, CCPA), you have the right to request access to your personal data, request correction of inaccurate data, or request permanent deletion ("Right to be Forgotten") from our systems by emailing privacy@skora.digital.
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer onOpenConsultation={() => setModalOpen(true)} />
       <ContactModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

@@ -297,9 +297,9 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             <div className="flex w-full items-center justify-between mx-auto max-w-[90rem]">
               <button
                 onClick={closeServices}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-[#E8F7ED] text-[#0B1310] text-xs font-bold transition-all border border-[#E2E8F0] shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-[#EFF6FF] text-[#0B1310] text-xs font-bold transition-all border border-[#E2E8F0] shadow-sm cursor-pointer"
               >
-                <ArrowLeft size={16} className="text-[#16A34A]" />
+                <ArrowLeft size={16} className="text-[#2563EB]" />
                 <span>Return to Previous Page</span>
               </button>
 
@@ -320,7 +320,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               >
                 <h2 className="text-4xl font-black tracking-tight text-[#0B1310] md:text-5xl lg:text-6xl uppercase">
                   Our{" "}
-                  <span className="text-[#22C55E]">
+                  <span className="text-[#2563EB]">
                     Expertise
                   </span>
                 </h2>
@@ -340,7 +340,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     <Link
                       href={item.link}
                       onClick={closeServices}
-                      className="group relative flex h-[350px] lg:h-[420px] w-full flex-col justify-end overflow-hidden rounded-[2.2rem] border border-[#E2E8F0] bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#22C55E] cursor-pointer"
+                      className="group relative flex h-[350px] lg:h-[420px] w-full flex-col justify-end overflow-hidden rounded-[2.2rem] border border-[#E2E8F0] bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#2563EB] cursor-pointer"
                     >
                       <img
                         src={item.img}
@@ -349,12 +349,12 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-white via-white/85 to-transparent opacity-95 transition-opacity group-hover:opacity-90"></div>
                       <div className="relative z-10 p-8">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8F7ED] text-[#16A34A] border border-[#22C55E]/30 backdrop-blur-md transition-colors group-hover:bg-[#22C55E] group-hover:text-white">
+                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#2563EB] border border-[#2563EB]/30 backdrop-blur-md transition-colors group-hover:bg-[#2563EB] group-hover:text-white">
                           <item.icon size={28} />
                         </div>
                         <h3 className="text-2xl font-extrabold text-[#0B1310] mb-2">{item.name}</h3>
                         <p className="text-slate-600 font-medium mb-6 text-sm leading-relaxed">{item.desc}</p>
-                        <div className="flex items-center gap-2 text-sm font-bold text-[#16A34A]">
+                        <div className="flex items-center gap-2 text-sm font-bold text-[#2563EB]">
                           <span>Explore Division</span>
                           <ArrowRight
                             size={16}

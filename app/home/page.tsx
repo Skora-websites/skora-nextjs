@@ -472,7 +472,7 @@ export default function HomePage() {
   return (
     <main
       ref={containerRef}
-      className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden"
+      className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans selection:bg-[#2563EB] selection:text-white relative overflow-x-hidden"
     >
       <ScrollProgressBar />
       <Navbar onOpenConsultation={handleOpenConsultation} />
@@ -492,7 +492,7 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
           className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white border border-[#E1E6DF] shadow-sm text-xs font-semibold mb-8"
         >
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E8F7ED] text-[#16A34A] font-bold text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] font-bold text-[11px]">
             <span>“</span> Guest favorite <span>”</span>
           </span>
           <div className="flex -space-x-2">
@@ -519,7 +519,7 @@ export default function HomePage() {
         <h1 className="gsap-hero-title text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.02] uppercase text-[#0B1310] max-w-5xl mx-auto">
           DRIVING BUSINESS
           <br />
-          <span className="text-[#22C55E]">GROWTH &amp; SUCCESS</span>
+          <span className="text-[#2563EB]">GROWTH &amp; SUCCESS</span>
         </h1>
 
         {/* Subtitle */}
@@ -531,7 +531,7 @@ export default function HomePage() {
         <div className="gsap-hero-sub mt-8 flex justify-center">
           <button
             onClick={() => handleOpenConsultation("Request a Strategy Session")}
-            className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
+            className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
           >
             Request a Strategy Session
           </button>
@@ -574,7 +574,7 @@ export default function HomePage() {
             {partnerLogos.map((partner, idx) => (
               <span
                 key={idx}
-                className="text-lg sm:text-xl font-black font-mono tracking-widest uppercase text-slate-700 hover:text-[#22C55E] transition-colors cursor-pointer"
+                className="text-lg sm:text-xl font-black font-mono tracking-widest uppercase text-slate-700 hover:text-[#2563EB] transition-colors cursor-pointer"
               >
                 ✦ {partner.name}
               </span>
@@ -596,7 +596,7 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="lg:col-span-7 space-y-8 gsap-scroll-card"
           >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F7ED] text-[#16A34A] text-xs font-bold font-mono uppercase border border-[#22C55E]/30">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFF6FF] text-[#2563EB] text-xs font-bold font-mono uppercase border border-[#2563EB]/30">
               <span>✦ ABOUT SKORA DIGITAL ✦</span>
             </div>
 
@@ -619,7 +619,7 @@ export default function HomePage() {
                 <div className="text-xs text-slate-500 font-semibold mt-1">Verified leads generated</div>
               </div>
               <div>
-                <div className="text-3xl sm:text-4xl font-black text-[#22C55E]">250+</div>
+                <div className="text-3xl sm:text-4xl font-black text-[#2563EB]">250+</div>
                 <div className="text-xs text-slate-500 font-semibold mt-1">Products &amp; apps built</div>
               </div>
               <div>
@@ -627,7 +627,7 @@ export default function HomePage() {
                 <div className="text-xs text-slate-500 font-semibold mt-1">Client retention rate</div>
               </div>
               <div>
-                <div className="text-3xl sm:text-4xl font-black text-[#22C55E]">15+</div>
+                <div className="text-3xl sm:text-4xl font-black text-[#2563EB]">15+</div>
                 <div className="text-xs text-slate-500 font-semibold mt-1">Global markets served</div>
               </div>
             </div>
@@ -649,7 +649,7 @@ export default function HomePage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-8">
                 <div className="text-white space-y-1">
-                  <span className="px-3 py-1 rounded-full bg-[#22C55E] text-[10px] font-bold uppercase tracking-wider">
+                  <span className="px-3 py-1 rounded-full bg-[#2563EB] text-[10px] font-bold uppercase tracking-wider">
                     ✦ FULL-STACK STUDIO &amp; LABS ✦
                   </span>
                   <h3 className="text-xl font-extrabold pt-2">Engineering &amp; Growth Marketing</h3>
@@ -665,7 +665,7 @@ export default function HomePage() {
           ========================================================================= */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             End-to-End Solutions /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black text-[#0B1310] uppercase tracking-tight">
@@ -681,7 +681,7 @@ export default function HomePage() {
             whileHover={{ y: -8 }}
             className="p-8 rounded-[2.5rem] bg-white border border-[#E1E6DF] shadow-xl space-y-6"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center border border-[#22C55E]/30">
+            <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center border border-[#2563EB]/30">
               <Rocket size={24} />
             </div>
             <h3 className="text-2xl font-extrabold text-[#0B1310]">For Early-Stage Startups</h3>
@@ -689,9 +689,9 @@ export default function HomePage() {
               Fast prototyping, high-converting landing pages, custom visual branding, and scalable Next.js MVPs built to secure early user traction and venture funding.
             </p>
             <ul className="space-y-2.5 text-xs font-bold text-slate-700">
-              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#22C55E]" /> Sub-second Next.js MVP Launch</li>
-              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#22C55E]" /> Brand Identity &amp; Logo System</li>
-              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#22C55E]" /> Initial GMB Local SEO &amp; Meta Ads</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#2563EB]" /> Sub-second Next.js MVP Launch</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#2563EB]" /> Brand Identity &amp; Logo System</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#2563EB]" /> Initial GMB Local SEO &amp; Meta Ads</li>
             </ul>
           </motion.div>
 
@@ -699,7 +699,7 @@ export default function HomePage() {
             whileHover={{ y: -8 }}
             className="p-8 rounded-[2.5rem] bg-white border border-[#E1E6DF] shadow-xl space-y-6"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#0B1310] text-[#22C55E] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#0B1310] text-[#2563EB] flex items-center justify-center">
               <Building2 size={24} />
             </div>
             <h3 className="text-2xl font-extrabold text-[#0B1310]">For Established Enterprises</h3>
@@ -707,9 +707,9 @@ export default function HomePage() {
               Multi-tenant SaaS architectures, complex CRM/PMS workflows, AWS cloud migrations, 99.99% uptime SLAs, and multi-channel performance marketing scale.
             </p>
             <ul className="space-y-2.5 text-xs font-bold text-slate-700">
-              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#22C55E]" /> Multi-Tenant Cloud Architecture</li>
-              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#22C55E]" /> Custom WhatsApp CRM Pipelines</li>
-              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#22C55E]" /> High-Volume Video Reels Studio</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#2563EB]" /> Multi-Tenant Cloud Architecture</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#2563EB]" /> Custom WhatsApp CRM Pipelines</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#2563EB]" /> High-Volume Video Reels Studio</li>
             </ul>
           </motion.div>
         </div>
@@ -720,7 +720,7 @@ export default function HomePage() {
           ========================================================================= */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-[#EBF0E8]/70 rounded-[3rem] border border-[#E1E6DF] shadow-xl my-12">
         <div className="text-left mb-16 space-y-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Complete Services Stack /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight uppercase text-[#0B1310]">
@@ -735,7 +735,7 @@ export default function HomePage() {
               <motion.div
                 whileHover={{ y: -8, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="gsap-scroll-card group h-full p-6 rounded-[2.2rem] bg-white border border-[#E1E6DF] hover:border-[#22C55E] transition-all duration-300 flex flex-col justify-between overflow-hidden relative shadow-md hover:shadow-2xl cursor-pointer"
+                className="gsap-scroll-card group h-full p-6 rounded-[2.2rem] bg-white border border-[#E1E6DF] hover:border-[#2563EB] transition-all duration-300 flex flex-col justify-between overflow-hidden relative shadow-md hover:shadow-2xl cursor-pointer"
               >
                 <div className="space-y-4">
                   <div className="relative h-48 w-full rounded-2xl overflow-hidden shadow-inner">
@@ -745,13 +745,13 @@ export default function HomePage() {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute top-3 left-3">
-                      <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[10px] font-mono font-bold text-[#16A34A] border border-[#E1E6DF] shadow-sm">
+                      <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[10px] font-mono font-bold text-[#2563EB] border border-[#E1E6DF] shadow-sm">
                         {service.badge}
                       </span>
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-extrabold text-[#0B1310] group-hover:text-[#22C55E] transition-colors leading-snug">
+                  <h3 className="text-xl font-extrabold text-[#0B1310] group-hover:text-[#2563EB] transition-colors leading-snug">
                     {service.title}
                   </h3>
                   <p className="text-xs text-slate-600 font-medium leading-relaxed">
@@ -768,7 +768,7 @@ export default function HomePage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between text-xs font-bold text-[#16A34A] group-hover:translate-x-1 transition-transform pt-1">
+                  <div className="flex items-center justify-between text-xs font-bold text-[#2563EB] group-hover:translate-x-1 transition-transform pt-1">
                     <span>Explore Service</span>
                     <ArrowRight size={14} />
                   </div>
@@ -779,9 +779,9 @@ export default function HomePage() {
         </div>
 
         {/* Specialisation Division Banner (Healthcare Portal Highlight) */}
-        <div className="mt-20 gsap-scroll-card rounded-[2.5rem] bg-gradient-to-r from-[#E8F7ED] via-white to-[#E8F7ED] border border-[#22C55E]/40 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
+        <div className="mt-20 gsap-scroll-card rounded-[2.5rem] bg-gradient-to-r from-[#E8F7ED] via-white to-[#E8F7ED] border border-[#2563EB]/40 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
           <div className="space-y-4 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#16A34A]/20 border border-[#22C55E]/30 text-xs font-mono font-bold text-[#16A34A]">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2563EB]/20 border border-[#2563EB]/30 text-xs font-mono font-bold text-[#2563EB]">
               <Stethoscope size={14} />
               <span>✦ HEALTHCARE &amp; CLINIC PRACTICE GROWTH ✦</span>
             </div>
@@ -794,7 +794,7 @@ export default function HomePage() {
           </div>
           <Link
             href="/healthcare"
-            className="shrink-0 px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-sm shadow-xl flex items-center gap-2 transition-all cursor-pointer"
+            className="shrink-0 px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-sm shadow-xl flex items-center gap-2 transition-all cursor-pointer"
           >
             <span>Explore Healthcare Portal</span>
             <ArrowRight size={16} />
@@ -807,7 +807,7 @@ export default function HomePage() {
           ========================================================================= */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-left mb-16 space-y-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Software Innovations /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0B1310] uppercase">
@@ -826,12 +826,12 @@ export default function HomePage() {
                 <div className="relative h-44 w-full rounded-2xl overflow-hidden">
                   <img src={prod.image} alt={prod.title} className="w-full h-full object-cover" />
                   <div className="absolute top-2 left-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-white/95 text-[9px] font-bold text-[#16A34A] border border-[#E1E6DF]">
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/95 text-[9px] font-bold text-[#2563EB] border border-[#E1E6DF]">
                       {prod.badge}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-[#16A34A] uppercase">{prod.category}</span>
+                <span className="text-[10px] font-mono font-bold text-[#2563EB] uppercase">{prod.category}</span>
                 <h3 className="text-lg font-extrabold text-[#0B1310]">{prod.title}</h3>
                 <p className="text-xs text-slate-600 font-medium leading-relaxed">{prod.desc}</p>
               </div>
@@ -845,7 +845,7 @@ export default function HomePage() {
           ========================================================================= */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Execution Methodology /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0B1310] uppercase">
@@ -863,10 +863,10 @@ export default function HomePage() {
                 className="gsap-scroll-card p-8 rounded-[2.2rem] bg-white border border-[#E1E6DF] shadow-lg space-y-4 relative"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center border border-[#22C55E]/30">
+                  <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center border border-[#2563EB]/30">
                     <IconComp size={20} />
                   </div>
-                  <span className="text-2xl font-black font-mono text-[#16A34A]/40">{proc.step}</span>
+                  <span className="text-2xl font-black font-mono text-[#2563EB]/40">{proc.step}</span>
                 </div>
                 <h3 className="text-base font-extrabold text-[#0B1310]">{proc.title}</h3>
                 <p className="text-xs text-slate-600 font-medium leading-relaxed">{proc.desc}</p>
@@ -881,7 +881,7 @@ export default function HomePage() {
           ========================================================================= */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Our Advantage /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0B1310] uppercase">
@@ -898,7 +898,7 @@ export default function HomePage() {
                 whileHover={{ y: -6 }}
                 className="gsap-scroll-card p-8 rounded-[2.2rem] bg-white border border-[#E1E6DF] shadow-lg space-y-4"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#E8F7ED] border border-[#22C55E]/40 flex items-center justify-center text-[#16A34A]">
+                <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] border border-[#2563EB]/40 flex items-center justify-center text-[#2563EB]">
                   <IconComp size={20} />
                 </div>
                 <h3 className="text-lg font-extrabold text-[#0B1310]">{why.title}</h3>
@@ -924,9 +924,9 @@ export default function HomePage() {
                 key={idx}
                 whileHover={{ y: -6, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="gsap-scroll-card p-6 rounded-2xl bg-white border border-[#E1E6DF] shadow-md space-y-3 hover:border-[#22C55E]/60 transition-colors"
+                className="gsap-scroll-card p-6 rounded-2xl bg-white border border-[#E1E6DF] shadow-md space-y-3 hover:border-[#2563EB]/60 transition-colors"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#E8F7ED] border border-[#22C55E]/40 flex items-center justify-center text-[#16A34A]">
+                <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] border border-[#2563EB]/40 flex items-center justify-center text-[#2563EB]">
                   <IconComp size={20} />
                 </div>
                 <h4 className="text-sm font-black text-[#0B1310] uppercase tracking-wider">{vp.title}</h4>
@@ -959,12 +959,12 @@ export default function HomePage() {
               className={`gsap-scroll-card rounded-[2.2rem] p-8 flex flex-col justify-between transition-all duration-300 relative ${
                 pkg.featured
                   ? "bg-gradient-to-br from-[#1E824C] to-[#27AE60] text-white shadow-2xl scale-105 border-0 z-10"
-                  : "bg-white border border-[#E1E6DF] text-[#0B1310] hover:border-[#22C55E]/50 shadow-lg"
+                  : "bg-white border border-[#E1E6DF] text-[#0B1310] hover:border-[#2563EB]/50 shadow-lg"
               }`}
             >
               <div className="space-y-6">
                 <div>
-                  <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${pkg.featured ? "text-white/80" : "text-[#16A34A]"}`}>
+                  <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${pkg.featured ? "text-white/80" : "text-[#2563EB]"}`}>
                     {pkg.name}
                   </span>
                   <div className="flex items-baseline gap-1 mt-2">
@@ -984,7 +984,7 @@ export default function HomePage() {
                   <ul className="space-y-2.5 pt-2">
                     {pkg.features.map((feat, fIdx) => (
                       <li key={fIdx} className="flex items-center gap-2 text-xs font-medium">
-                        <CheckCircle2 size={14} className={pkg.featured ? "text-white" : "text-[#16A34A]"} />
+                        <CheckCircle2 size={14} className={pkg.featured ? "text-white" : "text-[#2563EB]"} />
                         <span className={pkg.featured ? "text-white" : "text-slate-700"}>{feat}</span>
                       </li>
                     ))}
@@ -998,7 +998,7 @@ export default function HomePage() {
                   className={`w-full py-3.5 rounded-full font-extrabold text-xs transition-all duration-300 cursor-pointer ${
                     pkg.featured
                       ? "bg-white text-[#0B1310] hover:bg-slate-100 shadow-lg"
-                      : "bg-[#0B1310] hover:bg-[#22C55E] text-white shadow-md"
+                      : "bg-[#0B1310] hover:bg-[#2563EB] text-white shadow-md"
                   }`}
                 >
                   Get Started
@@ -1013,7 +1013,7 @@ export default function HomePage() {
           10. LIQUID EMERALD CTA BANNER ("READY TO TRANSFORM YOUR BUSINESS?")
           ========================================================================= */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E824C] via-[#27AE60] to-[#16A34A] p-10 sm:p-16 text-center text-white border border-[#22C55E]/30 shadow-2xl">
+        <div className="relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#0284C7] p-10 sm:p-16 text-center text-white border border-[#2563EB]/30 shadow-2xl">
           {/* Floating Tilted Photo Cards Left & Right */}
           <motion.div
             animate={{ rotate: [-6, -2, -6], y: [-5, 5, -5] }}
@@ -1063,7 +1063,7 @@ export default function HomePage() {
           ========================================================================= */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
         <div className="max-w-2xl mx-auto mb-16 space-y-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#16A34A]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Client Reviews /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0B1310] uppercase">
@@ -1077,7 +1077,7 @@ export default function HomePage() {
               key={idx}
               whileHover={{ y: -6 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="gsap-scroll-card p-8 rounded-[2rem] bg-white border border-[#E1E6DF] shadow-lg text-left space-y-6 flex flex-col justify-between hover:border-[#22C55E]/60 transition-colors"
+              className="gsap-scroll-card p-8 rounded-[2rem] bg-white border border-[#E1E6DF] shadow-lg text-left space-y-6 flex flex-col justify-between hover:border-[#2563EB]/60 transition-colors"
             >
               <p className="text-slate-600 text-sm italic font-medium leading-relaxed">
                 “{t.quote}”
@@ -1086,11 +1086,11 @@ export default function HomePage() {
                 <img
                   src={t.image}
                   alt={t.author}
-                  className="w-12 h-12 rounded-full object-cover border border-[#22C55E]"
+                  className="w-12 h-12 rounded-full object-cover border border-[#2563EB]"
                 />
                 <div>
                   <div className="text-sm font-bold text-[#0B1310]">{t.author}</div>
-                  <div className="text-xs text-[#16A34A] font-medium">{t.role}</div>
+                  <div className="text-xs text-[#2563EB] font-medium">{t.role}</div>
                 </div>
               </div>
             </motion.div>
@@ -1098,7 +1098,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer onOpenConsultation={handleOpenConsultation} />
 
       {/* Consultation Modal */}
       <ContactModal

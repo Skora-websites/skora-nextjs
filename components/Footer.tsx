@@ -73,7 +73,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
     "OTHER",
   ];
 
-  const budgets = ["<5K", "5-10K", "10-20K", ">20K", "I DON'T KNOW YET"];
+  const budgets = ["<25K", "25K-50K", "50K-1.5L", ">1.5L", "NEED GUIDANCE"];
 
   // GSAP ScrollTrigger On-Scroll Animations Setup
   useEffect(() => {
@@ -158,21 +158,19 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
       {/* 3D Bioluminescent Floating Petals */}
       <BioluminescentPetals />
 
-      {/* Bioluminescent Flowers Artwork Overlay & Atmospheric Light Rays */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        {/* High-Res Bioluminescent Flowers Backdrop */}
-        <div
-          className="absolute inset-0 mix-blend-screen opacity-35 bg-cover bg-center bg-no-repeat transition-all duration-1000 scale-105"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80')",
-          }}
+      {/* Crisp HD Bioluminescent Flowers Artwork Backdrop */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=2000&q=90"
+          alt="Bioluminescent Flowers Artwork"
+          className="w-full h-full object-cover opacity-60 scale-105 transition-transform duration-1000"
         />
+        {/* Subtle Dark Gradient Shield for 100% Text Legibility without Blurring */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05060A]/50 via-transparent to-[#05060A]/80" />
 
-        {/* Ambient Purple/Magenta Gradient Glow Spheres */}
-        <div className="absolute top-10 left-10 w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/40 via-fuchsia-900/30 to-transparent rounded-full blur-[160px] animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-[650px] h-[650px] bg-gradient-to-bl from-pink-900/30 via-indigo-950/40 to-transparent rounded-full blur-[150px]" />
-        <div className="absolute top-0 right-1/4 w-[350px] h-[800px] bg-gradient-to-b from-purple-500/15 via-pink-500/10 to-transparent blur-[120px] transform -rotate-45" />
+        {/* Ambient Purple/Magenta Glow Accents */}
+        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-purple-900/30 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-pink-900/20 rounded-full blur-[140px] pointer-events-none" />
       </div>
 
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
@@ -202,6 +200,11 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
             <div className="gsap-footer-title">
               <a
                 href="mailto:info@skora.digital"
+                onClick={(e) => {
+                  if (onOpenConsultation) {
+                    onOpenConsultation("Direct Email Inquiry");
+                  }
+                }}
                 className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-white text-[#0B1310] font-bold text-xs uppercase tracking-wider shadow-2xl hover:bg-slate-100 transition-all transform hover:scale-105 cursor-pointer group border border-white/20"
               >
                 <span>SEND A MAIL</span>
@@ -305,7 +308,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
                       {/* Section 3: Budget Pills */}
                       <div className="space-y-3">
                         <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
-                          Your budget in USD*
+                          Your budget in INR (₹)*
                         </label>
                         <div className="flex flex-wrap gap-2.5">
                           {budgets.map((b) => {

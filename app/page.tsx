@@ -71,7 +71,7 @@ export default function Home() {
       </ScrollReveal>
 
       {/* 7. FOOTER */}
-      <Footer />
+      <Footer onOpenConsultation={handleOpenConsultation} />
 
       {/* Consultation Lead Modal */}
       <ContactModal

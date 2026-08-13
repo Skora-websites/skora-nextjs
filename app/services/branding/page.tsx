@@ -76,7 +76,7 @@ export default function BrandingPage() {
   }, []);
 
   return (
-    <main ref={containerRef} className="min-h-screen bg-[#F8F9F6] text-[#0B1310] font-sans selection:bg-[#22C55E] selection:text-white relative overflow-x-hidden">
+    <main ref={containerRef} className="min-h-screen bg-[#F8F9F6] text-[#0B1310] font-sans selection:bg-[#2563EB] selection:text-white relative overflow-x-hidden">
       <ScrollProgressBar />
       <Navbar onOpenConsultation={() => setConsultationModalOpen(true)} />
 
@@ -89,13 +89,13 @@ export default function BrandingPage() {
           className="max-w-3xl space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E2E8F0] shadow-sm text-xs font-semibold">
-            <Palette className="w-4 h-4 text-[#22C55E]" />
+            <Palette className="w-4 h-4 text-[#2563EB]" />
             <span className="text-[#0B1310] font-bold">✦ BRANDING & VISUAL IDENTITY ✦</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0B1310] tracking-tight leading-[1.02] uppercase">
             CRAFTING ICONIC BRAND <br />
-            <span className="text-[#22C55E]">POSITIONING &amp; VISUAL IDENTITY</span>
+            <span className="text-[#2563EB]">POSITIONING &amp; VISUAL IDENTITY</span>
           </h1>
 
           <p className="text-lg text-slate-600 font-medium leading-relaxed">
@@ -105,7 +105,7 @@ export default function BrandingPage() {
           <div className="flex flex-wrap items-center gap-4 pt-4">
             <button
               onClick={() => setConsultationModalOpen(true)}
-              className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#22C55E] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+              className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
             >
               <span>Start Branding Project</span>
               <ArrowRight className="w-4 h-4" />
@@ -131,7 +131,7 @@ export default function BrandingPage() {
       {/* Capabilities Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-left mb-12">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Brand Excellence /
           </span>
           <h2 className="text-3xl sm:text-4xl font-black text-[#0B1310] uppercase mt-1">
@@ -151,7 +151,7 @@ export default function BrandingPage() {
             >
               <Card3D maxTilt={10} className="p-8 rounded-[2.2rem] bg-white border border-[#E2E8F0] shadow-lg space-y-4 h-full">
                 <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-[#E8F7ED] text-[#16A34A] text-xs font-bold font-mono">
+                  <span className="px-3 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] text-xs font-bold font-mono">
                     {cap.metrics}
                   </span>
                 </div>
@@ -166,7 +166,7 @@ export default function BrandingPage() {
       {/* Light Glass Deliverables Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white rounded-[3rem] border border-[#E2E8F0] shadow-xl my-12">
         <div className="text-left mb-16">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#22C55E]">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Deliverables /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black uppercase text-[#0B1310] mt-1">
@@ -180,9 +180,9 @@ export default function BrandingPage() {
               key={idx}
               whileHover={{ y: -6, scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="gsap-scroll-card p-6 rounded-2xl bg-[#F8F9F6] border border-[#E2E8F0] flex items-start gap-4 hover:border-[#22C55E]/60 transition-colors shadow-md"
+              className="gsap-scroll-card p-6 rounded-2xl bg-[#F8F9F6] border border-[#E2E8F0] flex items-start gap-4 hover:border-[#2563EB]/60 transition-colors shadow-md"
             >
-              <div className="w-8 h-8 rounded-full bg-[#E8F7ED] text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5 border border-[#22C55E]/30">
+              <div className="w-8 h-8 rounded-full bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 mt-0.5 border border-[#2563EB]/30">
                 <Check size={16} />
               </div>
               <p className="text-sm font-bold text-slate-800 leading-snug">{item}</p>
@@ -191,7 +191,7 @@ export default function BrandingPage() {
         </div>
 
         {/* Liquid Emerald CTA Banner */}
-        <div className="mt-24 relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E824C] via-[#27AE60] to-[#16A34A] p-10 sm:p-16 text-center text-white border border-[#22C55E]/30 shadow-2xl">
+        <div className="mt-24 relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#0284C7] p-10 sm:p-16 text-center text-white border border-[#2563EB]/30 shadow-2xl">
           <div className="max-w-2xl mx-auto space-y-6">
             <h2 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight uppercase">
               READY TO REINVENT YOUR BRAND IDENTITY?
@@ -211,7 +211,7 @@ export default function BrandingPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer onOpenConsultation={() => setConsultationModalOpen(true)} />
       <ContactModal
         isOpen={consultationModalOpen}
         onClose={() => setConsultationModalOpen(false)}

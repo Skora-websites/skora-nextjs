@@ -71,7 +71,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
     "BRANDING",
   ];
 
-  const budgets = ["<2.5K", "2.5K-5K", "5K-15K", ">15K", "NEED GUIDANCE"];
+  const budgets = ["<25K", "25K-50K", "50K-1.5L", ">1.5L", "NEED GUIDANCE"];
 
   // GSAP ScrollTrigger On-Scroll Animations Setup
   useEffect(() => {
@@ -156,19 +156,18 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
       {/* 3D Medical Emerald Floating Particles */}
       <HealthcarePetals />
 
-      {/* Medical Botanical & Laboratory Background Image Overlay (Analogous to Flower Reference) */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div
-          className="absolute inset-0 opacity-45 bg-cover bg-center bg-no-repeat transition-all duration-1000 scale-105"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1600&q=80')",
-          }}
+      {/* Crisp HD Healthcare Clinical & Botanical Background Image Overlay */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=2000&q=90"
+          alt="Healthcare Medical Background"
+          className="w-full h-full object-cover opacity-50 scale-105 transition-transform duration-1000"
         />
+        {/* Subtle Fresh Mint Shield for 100% Sharp Text Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F4FBF7]/60 via-[#F4FBF7]/30 to-[#F4FBF7]/75" />
 
-        {/* Soft Fresh Mint Ambient Background Glow */}
-        <div className="absolute top-10 left-10 w-[600px] h-[600px] bg-gradient-to-tr from-[#22C55E]/20 via-emerald-100/40 to-transparent rounded-full blur-[150px] animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-[650px] h-[650px] bg-gradient-to-bl from-teal-100/40 via-emerald-50/50 to-transparent rounded-full blur-[140px]" />
+        {/* Ambient Fresh Mint Glow Accents */}
+        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-[#22C55E]/15 rounded-full blur-[130px] pointer-events-none" />
       </div>
 
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
@@ -199,6 +198,11 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
             <div className="gsap-doc-footer-title">
               <a
                 href="mailto:healthcare@skora.digital"
+                onClick={(e) => {
+                  if (onOpenConsultation) {
+                    onOpenConsultation("Healthcare Email Inquiry");
+                  }
+                }}
                 className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-[#11261D] text-white font-bold text-xs uppercase tracking-wider shadow-xl hover:bg-[#16A34A] transition-all transform hover:scale-105 cursor-pointer group"
               >
                 <span>SEND A MAIL</span>
@@ -302,7 +306,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
                       {/* Section 3: Budget Pills */}
                       <div className="space-y-3">
                         <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block">
-                          Your budget in USD*
+                          Your budget in INR (₹)*
                         </label>
                         <div className="flex flex-wrap gap-2.5">
                           {budgets.map((b) => {

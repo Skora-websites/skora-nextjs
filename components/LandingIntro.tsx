@@ -137,7 +137,7 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
           </div>
 
           <span className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-sky-400">
-            ✦ SKORA STUDIOS ✦
+            ✦ SKORA INFO ✦
           </span>
         </div>
 
