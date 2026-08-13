@@ -231,14 +231,19 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 />
               </Link>
 
-              <button
-                type="button"
-                onClick={() => onOpenConsultation?.()}
-                className={`group relative flex h-full cursor-pointer items-center text-[15px] font-semibold transition-colors duration-300 ${textClass}`}
+              <Link
+                href="/contact"
+                className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${
+                  pathname === "/contact" ? "text-blue-600 font-extrabold" : textClass
+                }`}
               >
-                Contact
-                <span className="absolute bottom-0 left-0 h-[3px] w-full origin-left scale-x-0 bg-blue-600 transition-transform duration-300 ease-out group-hover:scale-x-100" />
-              </button>
+                <span>Contact</span>
+                <span
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-blue-600 transition-transform duration-300 ease-out ${
+                    pathname === "/contact" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
+              </Link>
             </nav>
 
             <div className="hidden items-center gap-4 lg:flex">
@@ -445,7 +450,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
       {/* FREE AUDIT MODAL */}
       <AnimatePresence>
         {isAuditOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -458,7 +463,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="relative z-10 my-auto flex max-h-[90vh] w-full max-w-2xl flex-col overflow-y-auto rounded-3xl shadow-2xl bg-white"
+              className="relative z-10 my-auto flex max-h-[85vh] sm:max-h-[88vh] w-full max-w-2xl flex-col overflow-y-auto rounded-3xl shadow-2xl bg-white"
             >
               {/* Top Navigation Bar inside Modal */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">

@@ -40,6 +40,17 @@ export default function ContactModal({
   ];
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (serviceToPreselect) {
       const match = availableServices.find(
         (s) => s.toLowerCase() === serviceToPreselect.toLowerCase()
@@ -73,12 +84,18 @@ export default function ContactModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-xl bg-white border border-[#E1E6DF] rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden text-[#0B1310] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
+      {/* Backdrop Click to Close */}
+      <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
+
+      {/* Modal Content Box */}
+      <div className="relative my-auto w-full max-w-xl bg-white border border-[#E1E6DF] rounded-3xl p-6 sm:p-8 shadow-2xl text-[#0B1310] max-h-[85vh] sm:max-h-[88vh] overflow-y-auto z-[100000]">
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-[#F4F6F1] hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+          aria-label="Close Modal"
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-[#F4F6F1] hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer z-20 shadow-sm"
         >
           <X className="w-5 h-5" />
         </button>

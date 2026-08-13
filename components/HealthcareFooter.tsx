@@ -156,18 +156,18 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
       {/* 3D Medical Emerald Floating Particles */}
       <HealthcarePetals />
 
-      {/* Crisp HD Healthcare Clinical & Botanical Background Image Overlay */}
+      {/* Crisp HD Healthcare Clinical & Botanical Background Image Overlay with Soft Blur & Gentle Fade */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=2000&q=90"
           alt="Healthcare Medical Background"
-          className="w-full h-full object-cover opacity-50 scale-105 transition-transform duration-1000"
+          className="w-full h-full object-cover opacity-30 blur-[3px] scale-105 transition-transform duration-1000"
         />
-        {/* Subtle Fresh Mint Shield for 100% Sharp Text Legibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F4FBF7]/60 via-[#F4FBF7]/30 to-[#F4FBF7]/75" />
+        {/* Soft Mint Shield for 100% Sharp Text Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F4FBF7]/75 via-[#F4FBF7]/50 to-[#F4FBF7]/85" />
 
         {/* Ambient Fresh Mint Glow Accents */}
-        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-[#22C55E]/15 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-[#22C55E]/10 rounded-full blur-[130px] pointer-events-none" />
       </div>
 
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
@@ -363,7 +363,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
               Keep in touch
             </h4>
             <p className="text-slate-700 font-mono">healthcare@skora.digital</p>
-            <p className="text-slate-500 pt-4">
+            <p className="text-slate-500 pt-4" suppressHydrationWarning>
               © {new Date().getFullYear()} SKORA Healthcare IT Division. All Rights Reserved.
             </p>
           </div>
@@ -486,19 +486,6 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
                 </Link>
               </li>
             </ul>
-
-            {/* Back to Top Floating Button */}
-            <div className="pt-4">
-              <motion.button
-                whileHover={{ y: -3, scale: 1.05 }}
-                onClick={scrollToTop}
-                aria-label="Scroll to top"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#DCFCE7] bg-white hover:bg-[#E8F7ED] text-[#11261D] font-mono text-[11px] font-bold transition-all cursor-pointer shadow-md"
-              >
-                <span>TOP</span>
-                <ArrowUp size={12} className="text-[#16A34A]" />
-              </motion.button>
-            </div>
           </div>
         </div>
       </div>

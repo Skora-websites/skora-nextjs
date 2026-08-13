@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   MessageCircle,
@@ -108,6 +108,12 @@ const iceCubes = [
 ];
 
 export default function FeelTheMarket() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-[#05070E] via-[#081226] to-[#05070E] flex items-center justify-center border-t border-blue-900/30">
       {/* Radial Blue Light Mesh Overlay */}
@@ -115,14 +121,15 @@ export default function FeelTheMarket() {
 
       {/* 3D RUSTY/FROSTY DROPPING ICE CUBES LOOP WITH MELTING DRIP PARTICLES */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
-        {iceCubes.map((cube) => (
-          <motion.div
-            key={cube.name}
-            animate={{
-              y: ["-100vh", `${Math.random() * 20 - 10}vh`, `${Math.random() * 30 + 10}vh`, "100vh"],
-              rotate: [0, Math.random() * 25 - 12, Math.random() * -25 + 12, Math.random() * 50],
-              opacity: [0, 1, 1, 0],
-            }}
+        {mounted &&
+          iceCubes.map((cube) => (
+            <motion.div
+              key={cube.name}
+              animate={{
+                y: ["-100vh", `${Math.random() * 20 - 10}vh`, `${Math.random() * 30 + 10}vh`, "100vh"],
+                rotate: [0, Math.random() * 25 - 12, Math.random() * -25 + 12, Math.random() * 50],
+                opacity: [0, 1, 1, 0],
+              }}
             transition={{
               duration: 8.5,
               repeat: Infinity,

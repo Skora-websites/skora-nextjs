@@ -12,21 +12,21 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// Interactive 3D Bioluminescent Floating Petal Particles
-const BioluminescentPetals = () => {
+// Interactive 3D Cyber Tech Floating Particles
+const TechCyberParticles = () => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
-  const petals = Array.from({ length: 20 });
+  const particles = Array.from({ length: 20 });
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
-      {petals.map((_, i) => (
+      {particles.map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-2 h-3 rounded-full bg-gradient-to-tr from-purple-500 via-pink-400 to-cyan-300 opacity-60 shadow-[0_0_15px_rgba(216,180,254,0.8)]"
+          className="absolute w-2 h-2 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-sky-300 opacity-60 shadow-[0_0_15px_rgba(56,189,248,0.8)]"
           initial={{
             x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1200),
             y: Math.random() * 800,
@@ -55,15 +55,14 @@ interface FooterProps {
 }
 
 export default function Footer({ onOpenConsultation }: FooterProps) {
-  // Form State
+  const [selectedInterest, setSelectedInterest] = useState<string>("SOFTWARE / SAAS");
+  const [selectedBudget, setSelectedBudget] = useState<string>("₹25K - ₹50K");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [selectedInterest, setSelectedInterest] = useState<string>("WEB-DESIGN");
-  const [selectedBudget, setSelectedBudget] = useState<string>("5-10K");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const footerRef = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const interests = [
     "WEB-DESIGN",
@@ -80,50 +79,45 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
     if (typeof window === "undefined" || !footerRef.current) return;
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.refresh();
-
-      // 1. Title Reveal Animation
       gsap.fromTo(
         ".gsap-footer-title",
-        { y: 50, opacity: 0 },
+        { opacity: 0, y: 40 },
         {
-          y: 0,
           opacity: 1,
-          duration: 1.0,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: ".gsap-footer-title",
-            start: "top 85%",
-          },
-        }
-      );
-
-      // 2. Form Card 3D Entrance
-      gsap.fromTo(
-        ".gsap-footer-form",
-        { y: 60, opacity: 0, scale: 0.95 },
-        {
           y: 0,
-          opacity: 1,
-          scale: 1,
-          duration: 1.1,
-          ease: "back.out(1.2)",
-          scrollTrigger: {
-            trigger: ".gsap-footer-form",
-            start: "top 85%",
-          },
-        }
-      );
-
-      // 3. Footer Links Stagger Reveal
-      gsap.fromTo(
-        ".gsap-footer-row",
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
           duration: 0.8,
           stagger: 0.15,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: footerRef.current,
+            start: "top 80%",
+          },
+        }
+      );
+
+      gsap.fromTo(
+        ".gsap-footer-form",
+        { opacity: 0, scale: 0.95 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: footerRef.current,
+            start: "top 75%",
+          },
+        }
+      );
+
+      gsap.fromTo(
+        ".gsap-footer-row",
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.1,
           ease: "power2.out",
           scrollTrigger: {
             trigger: ".gsap-footer-row",
@@ -147,30 +141,32 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
   };
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   return (
     <footer
       ref={footerRef}
-      className="relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden border-t border-white/10 selection:bg-purple-500 selection:text-white"
+      className="relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden border-t border-white/10 selection:bg-[#2563EB] selection:text-white"
     >
-      {/* 3D Bioluminescent Floating Petals */}
-      <BioluminescentPetals />
+      {/* 3D Cyber Tech Network Floating Particles */}
+      <TechCyberParticles />
 
-      {/* Crisp HD Bioluminescent Flowers Artwork Backdrop */}
+      {/* Crisp HD Cyber Tech Network Backdrop with Soft Blur & Elegant Dark Fade */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=2000&q=90"
-          alt="Bioluminescent Flowers Artwork"
-          className="w-full h-full object-cover opacity-60 scale-105 transition-transform duration-1000"
+          src="/images/tech_footer_bg.jpg"
+          alt="High-Tech Cyber Network Backdrop"
+          className="w-full h-full object-cover opacity-25 blur-[3px] scale-105 transition-transform duration-1000"
         />
-        {/* Subtle Dark Gradient Shield for 100% Text Legibility without Blurring */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#05060A]/50 via-transparent to-[#05060A]/80" />
+        {/* Deep Ambient Dark Fade Shield for Ultra Crisp Contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05060A]/85 via-[#05060A]/65 to-[#05060A]/95" />
 
-        {/* Ambient Purple/Magenta Glow Accents */}
-        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-purple-900/30 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-pink-900/20 rounded-full blur-[140px] pointer-events-none" />
+        {/* Muted Ambient Electric Blue / Cyan Glow Accents */}
+        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-blue-950/20 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-cyan-950/15 rounded-full blur-[140px] pointer-events-none" />
       </div>
 
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
@@ -365,7 +361,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
               Keep in touch
             </h4>
             <p className="text-slate-300 font-mono">info@skora.digital</p>
-            <p className="text-slate-500 pt-4">
+            <p className="text-slate-500 pt-4" suppressHydrationWarning>
               © {new Date().getFullYear()} SKORA Digital. All Rights Reserved.
             </p>
           </div>
@@ -488,19 +484,6 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
                 </Link>
               </li>
             </ul>
-
-            {/* Back to Top Floating Button */}
-            <div className="pt-4">
-              <motion.button
-                whileHover={{ y: -3, scale: 1.05 }}
-                onClick={scrollToTop}
-                aria-label="Scroll to top"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/20 bg-white/5 hover:bg-white/15 text-white font-mono text-[11px] transition-all cursor-pointer shadow-lg"
-              >
-                <span>TOP</span>
-                <ArrowUp size={12} />
-              </motion.button>
-            </div>
           </div>
         </div>
       </div>

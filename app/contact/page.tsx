@@ -78,7 +78,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Email Us</span>
-                    <p className="text-base font-bold text-[#0B1310] mt-0.5">info@skora.digital</p>
+                    <a href="mailto:info@skora.digital" className="block text-base font-bold text-[#0B1310] hover:text-[#2563EB] transition-colors mt-0.5">info@skora.digital</a>
                     <p className="text-xs text-slate-500 font-medium">Direct response within 4 business hours</p>
                   </div>
                 </div>
@@ -89,7 +89,10 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Call or WhatsApp</span>
-                    <p className="text-base font-bold text-[#0B1310] mt-0.5">+91 92173 75835</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <a href="tel:+919217375835" className="text-base font-bold text-[#0B1310] hover:text-[#2563EB] transition-colors">+91 92173 75835</a>
+                      <a href="https://wa.me/919217375835" target="_blank" rel="noreferrer" className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold font-mono hover:bg-emerald-200 transition-colors">WhatsApp</a>
+                    </div>
                     <p className="text-xs text-slate-500 font-medium">Mon - Sat: 9:00 AM - 8:00 PM IST</p>
                   </div>
                 </div>
