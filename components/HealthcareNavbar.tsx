@@ -46,17 +46,17 @@ export default function HealthcareNavbar({ onOpenConsultation }: HealthcareNavba
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center p-3 sm:p-5 transition-all duration-300 pointer-events-none">
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5 rounded-full bg-[#FDFBF7]/90 backdrop-blur-xl border border-[#DCE8E0] shadow-xl pointer-events-auto transition-all">
-        {/* Brand Logo - Oral Care Style */}
+        {/* Brand Logo - Healthcare IT Style */}
         <Link
           href="/healthcare"
-          className="flex items-center gap-2 text-xl sm:text-2xl font-black text-[#11261D] tracking-tight group"
+          className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold text-[#11261D] tracking-tight group"
         >
-          <div className="w-9 h-9 rounded-full bg-[#1F6B43] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-            <Stethoscope size={18} />
+          <div className="w-8 h-8 rounded-lg bg-[#1F6B43] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
+            <Stethoscope size={16} />
           </div>
           <span>SKORA</span>
           <span className="text-[#1F6B43]">.health</span>
-          <span className="w-2 h-2 rounded-full bg-[#1F6B43] shadow-[0_0_10px_#1f6b43] animate-ping" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#1F6B43]" />
         </Link>
 
         {/* Center Desktop Navigation Links */}

@@ -73,14 +73,31 @@ export default function ContactModal({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName,
+          email,
+          phone: "+91 92173 75835",
+          company,
+          service: selectedServices.join(", ") || "General Strategy Consultation",
+          budget,
+          message,
+          source: "Contact Consultation Modal",
+        }),
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
       setSubmitted(true);
-    }, 1200);
+    }
   };
 
   return (

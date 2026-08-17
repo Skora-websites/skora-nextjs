@@ -1,0 +1,26 @@
+import { MongoClient } from "mongodb";
+
+const uri = process.env.MONGODB_URI;
+const isPlaceholder = !uri || uri.includes("username:password") || uri.includes("<username>");
+
+let clientPromise: Promise<MongoClient> | undefined;
+
+if (uri && !isPlaceholder) {
+  const options = {};
+  if (process.env.NODE_ENV === "development") {
+    const globalWithMongo = global as typeof globalThis & {
+      _mongoClientPromise?: Promise<MongoClient>;
+    };
+
+    if (!globalWithMongo._mongoClientPromise) {
+      const client = new MongoClient(uri, options);
+      globalWithMongo._mongoClientPromise = client.connect();
+    }
+    clientPromise = globalWithMongo._mongoClientPromise;
+  } else {
+    const client = new MongoClient(uri, options);
+    clientPromise = client.connect();
+  }
+}
+
+export default clientPromise;

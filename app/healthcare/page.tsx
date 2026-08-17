@@ -592,8 +592,20 @@ export default function HealthcarePortal() {
   const [activeCardModal, setActiveCardModal] = useState<typeof doctorServices[0] | null>(null);
   const [activeNewsModal, setActiveNewsModal] = useState<typeof doctorNews[0] | null>(null);
   const [packageModalOpen, setPackageModalOpen] = useState<typeof packages[0] | null>(null);
+  const [displayedPackages, setDisplayedPackages] = useState(packages);
 
   const heroRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    fetch("/api/content")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.content && data.content.packages && data.content.packages.length > 0) {
+          setDisplayedPackages(data.content.packages);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!heroRef.current) return;
@@ -925,7 +937,7 @@ export default function HealthcarePortal() {
         </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-          {packages.map((pkg, idx) => (
+          {displayedPackages.map((pkg, idx) => (
             <AnimatedSection key={idx}>
               <Card3D maxTilt={8} className={`relative p-8 sm:p-10 rounded-[2.5rem] h-full transition-all duration-300 flex flex-col justify-between border ${
                 pkg.popular

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
+import { AdminEditProvider } from "@/context/AdminEditContext";
+import AdminEditBar from "@/components/AdminEditBar";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -42,8 +44,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakartaSans.variable}`}>
       <body className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans antialiased selection:bg-[#2563EB] selection:text-white flex flex-col">
-        <ScrollToTop />
-        {children}
+        <AdminEditProvider>
+          <ScrollToTop />
+          <AdminEditBar />
+          {children}
+        </AdminEditProvider>
       </body>
     </html>
   );

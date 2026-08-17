@@ -110,14 +110,14 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
   const isTransparentNav = isLandingPage && !isScrolled;
 
   const textClass = isTransparentNav
-    ? "text-white hover:text-sky-300"
-    : "text-gray-800 hover:text-blue-600";
-  const logoTextClass = isTransparentNav ? "text-white" : "text-gray-900";
+    ? "text-slate-800 hover:text-[#0B1310]"
+    : "text-[#0B1310]/80 hover:text-[#0B1310]";
+  const logoTextClass = "text-[#0B1310]";
   const headerBgClass = isTransparentNav
     ? "bg-transparent border-transparent"
-    : "bg-white/90 border-b border-gray-200/80 shadow-sm backdrop-blur-xl";
+    : "bg-[#F4F6F1]/90 border-b border-[#E1E6DF] backdrop-blur-md";
 
-  const whatsappNumber = "919999999999";
+  const whatsappNumber = "919217375835";
   const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     "Hi Skora Analytics Team, I would like to discuss my digital and technology requirements."
   )}`;
@@ -155,27 +155,23 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               className={`relative z-50 flex items-center gap-1.5 text-2xl font-extrabold tracking-tight transition-colors duration-300 ${logoTextClass}`}
             >
               Skora{" "}
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${
-                  isTransparentNav ? "bg-sky-400 shadow-[0_0_8px_#38bdf8]" : "bg-blue-600"
-                }`}
-              />
+              <span className="h-2 w-2 rounded-full bg-[#22C55E]" />
             </Link>
 
             <nav className="hidden h-full items-center gap-8 lg:flex">
               {/* Home Link -> Highlighted if on /home */}
               <Link
                 href="/home"
-                className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${
-                  isHomePage ? "text-blue-600 font-extrabold" : textClass
+                className={`group relative flex h-full items-center text-[15px] font-medium transition-colors duration-300 ${
+                  isHomePage ? "text-[#0B1310] font-bold" : textClass
                 }`}
               >
                 <span>Home</span>
                 {isHomePage && (
-                  <span className="ml-1.5 w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                  <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
                 )}
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-blue-600 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[2px] w-full origin-left bg-[#22C55E] transition-transform duration-300 ease-out ${
                     isHomePage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -185,8 +181,8 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setIsServicesOpen(true)}
-                className={`group relative flex h-full cursor-pointer items-center text-[15px] font-semibold transition-colors duration-300 gap-1 ${
-                  isServicesPage ? "text-blue-600 font-extrabold" : textClass
+                className={`group relative flex h-full cursor-pointer items-center text-[15px] font-medium transition-colors duration-300 gap-1 ${
+                  isServicesPage ? "text-[#0B1310] font-bold" : textClass
                 }`}
               >
                 <span>Services</span>
@@ -197,35 +193,33 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   }`}
                 />
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-blue-600 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[2px] w-full origin-left bg-[#22C55E] transition-transform duration-300 ease-out ${
                     isServicesPage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
               </button>
 
-              {/* Healthcare IT Link -> Highlighted if on /healthcare */}
+              {/* Healthcare IT Link */}
               <Link
                 href="/healthcare"
-                className={`group relative flex h-full items-center gap-1.5 text-[15px] font-semibold transition-colors duration-300 ${
+                className={`group relative flex h-full items-center gap-1.5 text-[15px] font-medium transition-colors duration-300 ${
                   isHealthcarePage
-                    ? "text-emerald-600 font-extrabold"
-                    : isTransparentNav
-                    ? "text-emerald-300 hover:text-emerald-200"
-                    : "text-emerald-600 hover:text-emerald-500"
+                    ? "text-[#22C55E] font-bold"
+                    : "text-[#0B1310]/80 hover:text-[#22C55E]"
                 }`}
               >
                 <Activity
-                  size={16}
-                  className={isHealthcarePage ? "animate-spin text-emerald-500" : ""}
+                  size={15}
+                  className={isHealthcarePage ? "text-[#22C55E]" : ""}
                 />
                 <span>Healthcare IT</span>
                 {isHealthcarePage && (
-                  <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">
+                  <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20">
                     ACTIVE
                   </span>
                 )}
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-emerald-500 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[2px] w-full origin-left bg-[#22C55E] transition-transform duration-300 ease-out ${
                     isHealthcarePage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -233,13 +227,13 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
 
               <Link
                 href="/contact"
-                className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${
-                  pathname === "/contact" ? "text-blue-600 font-extrabold" : textClass
+                className={`group relative flex h-full items-center text-[15px] font-medium transition-colors duration-300 ${
+                  pathname === "/contact" ? "text-[#0B1310] font-bold" : textClass
                 }`}
               >
                 <span>Contact</span>
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-blue-600 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[2px] w-full origin-left bg-[#22C55E] transition-transform duration-300 ease-out ${
                     pathname === "/contact" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -250,23 +244,15 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setIsAuditOpen(true)}
-                className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-bold transition-all cursor-pointer ${
-                  isTransparentNav
-                    ? "border border-white/30 text-white hover:bg-white/10"
-                    : "border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 hover:text-blue-600 shadow-sm"
-                }`}
+                className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-[14px] font-bold transition-all cursor-pointer border border-[#E1E6DF] bg-white text-[#0B1310] hover:bg-slate-50 shadow-sm"
               >
-                <ShieldCheck size={16} /> Free SKORA Audit
+                <ShieldCheck size={16} className="text-[#22C55E]" /> Free SKORA Audit
               </button>
 
               <button
                 type="button"
                 onClick={() => onOpenConsultation?.()}
-                className={`group flex items-center gap-2 rounded-xl px-6 py-2.5 text-[14px] font-bold shadow-md transition-all cursor-pointer ${
-                  isTransparentNav
-                    ? "bg-white text-gray-900 hover:bg-gray-100"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
+                className="btn-primary text-sm font-semibold px-6 py-2.5 rounded-lg cursor-pointer"
               >
                 <span>Start Project</span>
                 <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
