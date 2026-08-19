@@ -11,7 +11,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Username and password are required." }, { status: 400 });
     }
 
-    if (username.toLowerCase().trim() !== "admin") {
+    const expectedUsername = process.env.ADMIN_USERNAME || "admin";
+    if (username.toLowerCase().trim() !== expectedUsername.toLowerCase().trim()) {
       return NextResponse.json({ error: "Invalid admin credentials." }, { status: 401 });
     }
 

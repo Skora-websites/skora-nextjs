@@ -198,7 +198,7 @@ export default function AdminSettingsPage() {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Leave blank to keep skora2026!"
+                placeholder="Leave blank to keep current password"
                 className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
               />
             </div>

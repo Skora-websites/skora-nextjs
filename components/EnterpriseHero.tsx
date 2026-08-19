@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Calendar, ArrowRight, Layers, Sparkles, CheckCircle2, Zap } from "lucide-react";
 import Card3D from "./Card3D";
-import EditableText from "./EditableText";
 import gsap from "gsap";
 
 const socialIconsSvg = {
@@ -66,13 +65,16 @@ const profileCards = [
 ];
 
 export const EnterpriseBackground = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden bg-[#080A0F]" aria-hidden="true">
-    <div className="absolute inset-0 bg-gradient-to-b from-[#080A0F] via-[#0E121B]/60 to-[#080A0F] z-10 pointer-events-none" />
+  <div className="absolute inset-0 z-0 overflow-hidden bg-[#071a42]" aria-hidden="true">
+    <motion.div animate={{ opacity: [0.12, 0.94, 0.12], scale: [0.96, 1.1, 0.96] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-28 bg-[radial-gradient(ellipse_at_50%_40%,rgba(82,145,239,.82)_0%,rgba(28,82,171,.72)_31%,rgba(7,26,66,0)_70%)] blur-[42px]" />
+    <motion.div animate={{ x: ["-32%", "32%", "-32%"], opacity: [0.04, 0.48, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-[35%] -left-[42%] h-[145%] w-[118%] rotate-[14deg] bg-gradient-to-r from-transparent via-sky-300/45 to-transparent blur-[48px]" />
+    <motion.div animate={{ opacity: [0.6, 0.14, 0.6], x: [0, -28, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-64 -left-48 h-[40rem] w-[40rem] rounded-full bg-[#0b3578] blur-[145px]" />
+    <motion.div animate={{ opacity: [0.04, 0.46, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(147,197,253,.42)_0%,rgba(7,26,66,0)_58%)]" />
 
-    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" className="absolute -inset-[2%] h-[104%] w-[104%] opacity-15">
+    <motion.svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" animate={{ x: [0, -24, 0], y: [0, 12, 0], opacity: [0.08, 0.32, 0.08], filter: ["blur(4px)", "blur(1.4px)", "blur(4px)"] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-[8%] h-[116%] w-[116%]">
       <defs>
         <pattern id="socialPlatformPattern" width="248" height="158" patternUnits="userSpaceOnUse">
-          <g fill="#A1A1AA" stroke="#A1A1AA" strokeLinecap="round" strokeLinejoin="round">
+          <g fill="#dbeafe" stroke="#dbeafe" strokeLinecap="round" strokeLinejoin="round">
             <g transform="translate(18 16) scale(.78)">{socialIconsSvg.facebook}</g>
             <g transform="translate(103 13) scale(.82)">{socialIconsSvg.instagram}</g>
             <g transform="translate(189 16) scale(.78)">{socialIconsSvg.linkedin}</g>
@@ -80,12 +82,12 @@ export const EnterpriseBackground = () => (
             <g transform="translate(104 86)"><circle cx="12" cy="12" r="11" fill="none" strokeWidth="2" /><text x="12" y="17" textAnchor="middle" stroke="none" fontFamily="Arial, sans-serif" fontSize="16" fontWeight="700">P</text></g>
             <g transform="translate(159 86)"><circle cx="14" cy="12" r="12" fill="none" strokeWidth="2" /><text x="14" y="17" textAnchor="middle" stroke="none" fontFamily="Georgia, serif" fontSize="16" fontWeight="700">W</text></g>
             <g transform="translate(207 87) scale(.7)">{socialIconsSvg.x}</g>
-            <g transform="translate(63 127)"><rect x="0" y="0" width="37" height="21" rx="4" fill="none" strokeWidth="2" /><path d="M10 21l-4 5 9-5" fill="none" strokeWidth="2" /><text x="18.5" y="15" textAnchor="middle" stroke="none" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700">AI</text></g>
+            <g transform="translate(63 127)"><rect x="0" y="0" width="37" height="21" rx="8" fill="none" strokeWidth="2" /><path d="M10 21l-4 5 9-5" fill="none" strokeWidth="2" /><text x="18.5" y="15" textAnchor="middle" stroke="none" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700">AI</text></g>
           </g>
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#socialPlatformPattern)" />
-    </svg>
+    </motion.svg>
   </div>
 );
 
@@ -103,22 +105,22 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
       // Kinetic Title entrance
       gsap.fromTo(
         ".gsap-hero-title",
-        { opacity: 0, y: 35 },
-        { opacity: 1, y: 0, duration: 0.9, stagger: 0.1, ease: "power3.out" }
+        { opacity: 0, y: 45, rotateX: -25 },
+        { opacity: 1, y: 0, rotateX: 0, duration: 1.0, stagger: 0.12, ease: "power3.out" }
       );
 
       // Buttons animation
       gsap.fromTo(
         ".gsap-hero-btn",
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.7, stagger: 0.1, delay: 0.25, ease: "power2.out" }
+        { opacity: 0, scale: 0.88, y: 20 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.8, stagger: 0.1, delay: 0.3, ease: "back.out(1.5)" }
       );
 
       // Service Showcase Cards Stagger Zoom
       gsap.fromTo(
         ".gsap-card-item",
-        { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.7, stagger: 0.06, delay: 0.35, ease: "power2.out" }
+        { opacity: 0, y: 40, scale: 0.88 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.08, delay: 0.45, ease: "back.out(1.3)" }
       );
     }, heroRef);
 
@@ -128,71 +130,72 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
   return (
     <section
       ref={heroRef}
-      className="relative min-h-[700px] overflow-hidden border-b border-white/10 pt-24 lg:pt-28 pb-16"
+      className="relative min-h-[720px] overflow-hidden border-b border-white/10 pt-20 lg:pt-24 pb-12 [perspective:1200px]"
     >
       {/* SVG Social & Tech Icon Pattern Background */}
       <EnterpriseBackground />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
 
-        {/* Kinetic Hero Title */}
-        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-[5rem]">
-          <EditableText id="hero.title" defaultText="Innovation doesn't wait." /><br />
-          Neither does <span className="text-[#22C55E]">Skora.</span>
+        {/* Kinetic Hero Title (Top pill badge removed per user request) */}
+        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-white sm:text-6xl lg:text-[5.4rem] drop-shadow-[0_10px_35px_rgba(0,0,0,0.5)]">
+          Innovation doesn&apos;t wait.<br />
+          Neither does <span className="text-sky-300 drop-shadow-[0_0_30px_rgba(125,211,252,0.6)]">Skora.</span>
         </h1>
 
         {/* Subtitle */}
-        <div className="gsap-hero-title mx-auto mt-6 max-w-2xl text-base sm:text-lg lg:text-xl font-normal leading-relaxed text-neutral-400">
-          <EditableText id="hero.subtitle" multiline defaultText="We architect custom enterprise platforms, dedicated healthcare IT solutions, high-converting digital marketing, and scalable cloud architectures." />
+        <div className="gsap-hero-title mx-auto mt-5 max-w-2xl text-base sm:text-lg lg:text-xl font-medium leading-relaxed text-slate-200">
+          We architect custom enterprise platforms, dedicated healthcare IT solutions, high-converting digital marketing, and scalable cloud architectures.
         </div>
 
-        {/* Animated Refined Buttons */}
+        {/* Animated Premium Re-Designed Buttons */}
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           {/* Schedule Consultation Button */}
           <button
             onClick={() => onOpenConsultation()}
-            className="gsap-hero-btn btn-emerald text-sm font-semibold px-7 py-3.5 rounded-lg inline-flex items-center gap-2 cursor-pointer"
+            className="gsap-hero-btn group relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-r from-white via-sky-100 to-white px-7 py-4 text-base font-extrabold text-[#071a42] shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_45px_rgba(255,255,255,0.7)] hover:bg-sky-200 cursor-pointer overflow-hidden"
           >
-            <Calendar size={16} />
-            <span>Schedule Strategy Session</span>
-            <ArrowRight size={16} />
+            <div className="absolute inset-0 bg-sky-400/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            <Calendar size={18} className="relative z-10 text-[#071a42] group-hover:rotate-12 transition-transform duration-300" />
+            <span className="relative z-10">Schedule Consultation</span>
+            <ArrowRight size={17} className="relative z-10 text-[#071a42] group-hover:translate-x-1.5 transition-transform duration-300" />
           </button>
 
           {/* Explore Capabilities Button */}
           <a
             href="#capabilities"
-            className="gsap-hero-btn btn-secondary text-sm font-semibold px-7 py-3.5 rounded-lg inline-flex items-center gap-2 cursor-pointer"
+            className="gsap-hero-btn group inline-flex items-center gap-3 rounded-xl border border-white/40 bg-white/10 px-7 py-4 text-base font-bold text-white shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white hover:bg-white/20 cursor-pointer"
           >
-            <Layers size={16} className="text-[#22C55E]" />
+            <Layers size={18} className="text-sky-300 group-hover:scale-110 transition-transform" />
             <span>Explore Capabilities</span>
           </a>
         </div>
 
-        {/* 5 SERVICE SHOWCASE CARDS */}
-        <div className="mt-14 w-full overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* 5 SERVICE SHOWCASE CARDS — VISIBLE ABOVE THE FOLD AT INITIAL LANDING VIEW */}
+        <div className="mt-10 w-full overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex min-w-max items-stretch justify-center gap-3 px-2 lg:min-w-0 lg:flex-wrap">
-            {profileCards.map((card) => (
+            {profileCards.map((card, index) => (
               <a href={card.link} key={card.title} className="gsap-card-item block">
                 <Card3D
-                  maxTilt={10}
-                  className="w-[178px] overflow-hidden rounded-lg border border-white/10 bg-[#0E121B] p-2.5 text-left transition duration-200 hover:border-white/25"
+                  maxTilt={14}
+                  className={`w-[178px] overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-2.5 text-left shadow-[0_14px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl transition duration-300 hover:border-sky-200/80 hover:bg-white/15 ${card.glow}`}
                 >
-                  <div className="h-26 overflow-hidden rounded-md relative">
+                  <div className="h-26 overflow-hidden rounded-xl relative">
                     <img
                       src={card.img}
                       alt={card.title}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80";
                       }}
-                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105 filter grayscale-[25%]"
+                      className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                     />
-                    <span className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-semibold bg-[#080A0F]/90 border border-white/10 text-neutral-300">
+                    <span className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#071a42]/90 border border-white/30 text-sky-200 backdrop-blur-md">
                       {card.badge}
                     </span>
                   </div>
                   <div className="px-1 pb-1 pt-3">
                     <h2 className="text-sm font-bold text-white truncate">{card.title}</h2>
-                    <p className="mt-0.5 text-[11px] font-medium text-neutral-400 truncate">{card.role}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-sky-200 truncate">{card.role}</p>
                   </div>
                 </Card3D>
               </a>

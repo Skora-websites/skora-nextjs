@@ -97,15 +97,6 @@ export default function AdminEditBar() {
             <CheckCircle2 size={14} /> Published Live!
           </span>
         )}
-
-        {/* Admin Dashboard Link */}
-        <Link
-          href="/admin"
-          className="ml-auto p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
-          title="Open Full Admin Panel"
-        >
-          <LayoutDashboard size={16} />
-        </Link>
       </motion.div>
     </div>
   );

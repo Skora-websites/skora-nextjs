@@ -118,7 +118,7 @@ const defaultSiteContent: SiteContent = {
   healthcareEmail: "ashish17427@gmail.com",
   address: "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India",
   responseGuarantee: "Rapid 4-Hour Response Guarantee",
-  adminPasswordHash: "skora2026!",
+  adminPasswordHash: process.env.ADMIN_PASSWORD || "",
   packages: defaultPackages,
   services: defaultServices,
   textOverrides: {},
@@ -209,12 +209,22 @@ export async function getLeads(): Promise<Lead[]> {
   if (clientPromise) {
     try {
       const client = await clientPromise;
-      const db = client.db("skora_db");
-      const collection = db.collection<Lead>("leads");
-      const leads = await collection.find({}).sort({ createdAt: -1 }).toArray();
-      return leads.map(({ _id, ...l }) => l as Lead);
+      if (client) {
+        const db = client.db("skora_db");
+        const collection = db.collection<Lead>("leads");
+        const leads = await collection.find({}).sort({ createdAt: -1 }).toArray();
+        if (leads.length > 0) {
+          return leads.map(({ _id, ...l }) => l as Lead);
+        }
+        // Auto-seed MongoDB with initial leads if collection is empty
+        const localDb = ensureLocalDbFile();
+        if (localDb.leads && localDb.leads.length > 0) {
+          await collection.insertMany(localDb.leads as any);
+          return localDb.leads;
+        }
+      }
     } catch (e) {
-      console.error("MongoDB Atlas error, falling back to local storage:", e);
+      console.error("MongoDB error, falling back to local storage:", e);
     }
   }
 
@@ -233,10 +243,12 @@ export async function createLead(leadData: Omit<Lead, "id" | "createdAt" | "stat
   if (clientPromise) {
     try {
       const client = await clientPromise;
-      const db = client.db("skora_db");
-      const collection = db.collection<Lead>("leads");
-      await collection.insertOne(newLead);
-      return newLead;
+      if (client) {
+        const db = client.db("skora_db");
+        const collection = db.collection<Lead>("leads");
+        await collection.insertOne(newLead);
+        return newLead;
+      }
     } catch (e) {
       console.error("MongoDB Atlas error, saving locally:", e);
     }
@@ -252,16 +264,18 @@ export async function updateLeadStatus(id: string, status: Lead["status"]): Prom
   if (clientPromise) {
     try {
       const client = await clientPromise;
-      const db = client.db("skora_db");
-      const collection = db.collection<Lead>("leads");
-      const result = await collection.findOneAndUpdate(
-        { id },
-        { $set: { status } },
-        { returnDocument: "after" }
-      );
-      if (result) {
-        const { _id, ...updatedLead } = result as any;
-        return updatedLead as Lead;
+      if (client) {
+        const db = client.db("skora_db");
+        const collection = db.collection<Lead>("leads");
+        const result = await collection.findOneAndUpdate(
+          { id },
+          { $set: { status } },
+          { returnDocument: "after" }
+        );
+        if (result) {
+          const { _id, ...updatedLead } = result as any;
+          return updatedLead as Lead;
+        }
       }
     } catch (e) {
       console.error("MongoDB Atlas error, updating locally:", e);
@@ -281,10 +295,12 @@ export async function deleteLead(id: string): Promise<boolean> {
   if (clientPromise) {
     try {
       const client = await clientPromise;
-      const db = client.db("skora_db");
-      const collection = db.collection<Lead>("leads");
-      const res = await collection.deleteOne({ id });
-      return res.deletedCount > 0;
+      if (client) {
+        const db = client.db("skora_db");
+        const collection = db.collection<Lead>("leads");
+        const res = await collection.deleteOne({ id });
+        return res.deletedCount > 0;
+      }
     } catch (e) {
       console.error("MongoDB Atlas error, deleting locally:", e);
     }
@@ -302,18 +318,29 @@ export async function getSiteContent(): Promise<SiteContent> {
   if (clientPromise) {
     try {
       const client = await clientPromise;
-      const db = client.db("skora_db");
-      const collection = db.collection<SiteContent>("content");
-      const content = await collection.findOne({ key: "global_site_content" });
-      if (content) {
-        const { _id, ...cleanContent } = content as any;
-        return {
-          ...defaultSiteContent,
-          ...cleanContent,
-        };
+      if (client) {
+        const db = client.db("skora_db");
+        const collection = db.collection<SiteContent>("content");
+        const content = await collection.findOne({ key: "global_site_content" });
+        if (content) {
+          const { _id, ...cleanContent } = content as any;
+          return {
+            ...defaultSiteContent,
+            ...cleanContent,
+          };
+        }
+        // Auto-seed MongoDB with initial site content if collection is empty
+        const localDb = ensureLocalDbFile();
+        const seedContent = localDb.content || defaultSiteContent;
+        await collection.updateOne(
+          { key: "global_site_content" },
+          { $set: { key: "global_site_content", ...seedContent } },
+          { upsert: true }
+        );
+        return seedContent;
       }
     } catch (e) {
-      console.error("MongoDB Atlas error, loading local content:", e);
+      console.error("MongoDB error, loading local content:", e);
     }
   }
 
@@ -345,28 +372,33 @@ export async function updateSiteContent(partialContent: Partial<SiteContent>): P
   if (clientPromise) {
     try {
       const client = await clientPromise;
-      const db = client.db("skora_db");
-      const collection = db.collection("content");
-      await collection.updateOne(
-        { key: "global_site_content" },
-        { $set: { key: "global_site_content", ...updatedContent } },
-        { upsert: true }
-      );
-      return updatedContent;
+      if (client) {
+        const db = client.db("skora_db");
+        const collection = db.collection("content");
+        await collection.updateOne(
+          { key: "global_site_content" },
+          { $set: { key: "global_site_content", ...updatedContent } },
+          { upsert: true }
+        );
+      }
     } catch (e) {
       console.error("MongoDB Atlas error, updating local content:", e);
     }
   }
 
-  const db = ensureLocalDbFile();
-  db.content = updatedContent;
-  writeLocalDb(db);
-  return db.content;
+  // Always sync and write to local codebase JSON file (data/skora_db.json)
+  const localDb = ensureLocalDbFile();
+  localDb.content = updatedContent;
+  writeLocalDb(localDb);
+  return updatedContent;
 }
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
+  const envPassword = process.env.ADMIN_PASSWORD;
   const content = await getSiteContent();
-  return password === content.adminPasswordHash || password === "skora2026!";
+  const currentPassword = content.adminPasswordHash || envPassword || "";
+  if (!currentPassword) return false;
+  return password === currentPassword;
 }
 
 export async function updateAdminPassword(newPassword: string): Promise<boolean> {

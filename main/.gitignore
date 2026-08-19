@@ -1,0 +1,115 @@
+# ──────────────────────────────────────────────
+# Dependencies
+# ──────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ──────────────────────────────────────────────
+# Next.js Build & Output
+# ──────────────────────────────────────────────
+.next/
+out/
+build/
+dist/
+
+# ──────────────────────────────────────────────
+# Environment & Secrets
+# ──────────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging.local
+
+# ──────────────────────────────────────────────
+# IDE / Editor
+# ──────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.sublime-workspace
+.vs/
+
+# ──────────────────────────────────────────────
+# OS Files
+# ──────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+nul
+
+# ──────────────────────────────────────────────
+# Logs & Crash Reports
+# ──────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# ──────────────────────────────────────────────
+# TypeScript & Build Artifacts
+# ──────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ──────────────────────────────────────────────
+# Testing & Coverage
+# ──────────────────────────────────────────────
+coverage/
+.nyc_output/
+reports/
+
+# ──────────────────────────────────────────────
+# Database & Cache
+# ──────────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+prisma/*.db
+prisma/*.db-journal
+.cache/
+.turbo/
+
+# ──────────────────────────────────────────────
+# Uploaded & Generated Assets
+# ──────────────────────────────────────────────
+uploads/
+public/uploads/
+generated/
+
+# ──────────────────────────────────────────────
+# Docker & Container files
+# ──────────────────────────────────────────────
+.docker/
+
+# ──────────────────────────────────────────────
+# Package manager lock files — keep only ONE
+# ──────────────────────────────────────────────
+# Uncomment the line below if using yarn or pnpm:
+# package-lock.json
+
+# ──────────────────────────────────────────────
+# Prisma Generated Client
+# ──────────────────────────────────────────────
+prisma/generated/
+
+# ──────────────────────────────────────────────
+# Project-specific
+# ──────────────────────────────────────────────
+# keep design docs and agent rules in the repo (they're useful for AI agents)
+# AGENTS.md, CLAUDE.md, DESIGN.md — tracked

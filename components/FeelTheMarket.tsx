@@ -115,44 +115,61 @@ export default function FeelTheMarket() {
   }, []);
 
   return (
-    <section className="relative h-[700px] w-full overflow-hidden bg-[#080A0F] flex items-center justify-center border-t border-white/10">
-      {/* Floating Tech Badges Loop */}
-      <div className="absolute inset-0 pointer-events-none hidden md:block opacity-40">
+    <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-[#05070E] via-[#081226] to-[#05070E] flex items-center justify-center border-t border-blue-900/30">
+      {/* Radial Blue Light Mesh Overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.25)_0%,rgba(5,7,14,1)_80%)] pointer-events-none" />
+
+      {/* 3D RUSTY/FROSTY DROPPING ICE CUBES LOOP WITH MELTING DRIP PARTICLES */}
+      <div className="absolute inset-0 pointer-events-none hidden md:block">
         {mounted &&
           iceCubes.map((cube) => (
             <motion.div
               key={cube.name}
               animate={{
                 y: ["-100vh", `${Math.random() * 20 - 10}vh`, `${Math.random() * 30 + 10}vh`, "100vh"],
-                opacity: [0, 0.7, 0.7, 0],
+                rotate: [0, Math.random() * 25 - 12, Math.random() * -25 + 12, Math.random() * 50],
+                opacity: [0, 1, 1, 0],
               }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: cube.delay,
-                times: [0, 0.15, 0.85, 1],
-              }}
-              className={`absolute ${cube.size} flex flex-col items-center justify-center rounded-xl bg-[#0E121B] border border-white/10 pointer-events-auto cursor-pointer`}
-              style={{ left: cube.left }}
-              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+            transition={{
+              duration: 8.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: cube.delay,
+              times: [0, 0.15, 0.85, 1],
+            }}
+            className={`absolute ${cube.size} flex flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-100/25 via-blue-900/40 to-slate-900/80 border-2 border-cyan-300/50 shadow-[inset_0_4px_25px_rgba(255,255,255,0.45),0_20px_45px_rgba(0,0,0,0.8)] backdrop-blur-xl pointer-events-auto cursor-pointer group`}
+            style={{ left: cube.left }}
+            whileHover={{ scale: 1.18, zIndex: 50, transition: { duration: 0.2 } }}
+          >
+            {/* Frost & Rust Crystal Detail */}
+            <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.3)_0%,transparent_60%)] pointer-events-none" />
+            
+            {/* Icon Inside Ice Cube */}
+            <div className="relative z-10">{cube.icon}</div>
+
+            {/* Melting Water Drip Animation */}
+            <motion.div
+              animate={{ y: [0, 24, 48], opacity: [1, 0.7, 0] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "easeIn" }}
+              className="absolute -bottom-4 text-cyan-400 flex items-center justify-center"
             >
-              <div className="relative z-10 filter grayscale">{cube.icon}</div>
+              <Droplets className="w-3.5 h-3.5 fill-cyan-400 animate-bounce" />
             </motion.div>
-          ))}
+          </motion.div>
+        ))}
       </div>
 
       {/* Slogan Content */}
       <div className="relative z-10 mx-auto max-w-5xl px-4 text-center pointer-events-none">
         <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-[3.5rem] font-extrabold tracking-tight text-white sm:text-7xl md:text-8xl lg:text-[6.5rem] leading-[0.98]"
+          className="text-[3.5rem] font-extrabold tracking-tight text-white sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.95]"
         >
           feel the market <br />
-          <span className="text-[#22C55E]">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 drop-shadow-[0_0_35px_rgba(56,189,248,0.6)]">
             in your favour.
           </span>
         </motion.h2>
@@ -161,7 +178,7 @@ export default function FeelTheMarket() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="mx-auto mt-8 max-w-2xl text-lg font-normal leading-relaxed text-neutral-400"
+          className="mx-auto mt-8 max-w-2xl text-lg font-medium leading-relaxed text-[#94A3B8]"
         >
           Dominate every channel. Our engineered digital strategies align your enterprise with the platforms that drive absolute, quantifiable scale.
         </motion.p>

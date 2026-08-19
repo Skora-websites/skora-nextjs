@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Card3D from "./Card3D";
+import { useSiteContent } from "@/context/SiteContentContext";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -53,6 +54,7 @@ interface HealthcareFooterProps {
 }
 
 export default function HealthcareFooter({ onOpenConsultation }: HealthcareFooterProps) {
+  const siteContent = useSiteContent();
   // Form State
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -162,89 +164,125 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <footer
       ref={footerRef}
-      className="relative bg-[#080A0F] text-white pt-24 pb-12 overflow-hidden border-t border-white/10"
+      className="relative bg-[#F4FBF7] text-[#11261D] pt-24 pb-12 overflow-hidden border-t-2 border-[#22C55E]/30 selection:bg-[#22C55E] selection:text-white"
     >
-      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
-        {/* TOP SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {/* Left Column */}
-          <div className="lg:col-span-5 space-y-8 text-left">
-            <div className="text-3xl font-bold text-white tracking-wider inline-flex items-center gap-2">
-              <Stethoscope className="w-7 h-7 text-[#22C55E]" />
-              <span>SKORA<span className="text-[#22C55E]">.health</span></span>
-            </div>
+      {/* 3D Medical Emerald Floating Particles */}
+      <HealthcarePetals />
 
-            <div className="space-y-4 gsap-doc-footer-title">
-              <span className="text-xs font-mono font-semibold uppercase tracking-widest text-neutral-400 block">
-                SPECIALIZED HEALTHCARE GROWTH & EHR PORTALS
+      {/* Crisp HD Healthcare Clinical & Botanical Background Image Overlay with Soft Blur & Gentle Fade */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=2000&q=90"
+          alt="Healthcare Medical Background"
+          className="w-full h-full object-cover opacity-30 blur-[3px] scale-105 transition-transform duration-1000"
+        />
+        {/* Soft Mint Shield for 100% Sharp Text Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F4FBF7]/75 via-[#F4FBF7]/50 to-[#F4FBF7]/85" />
+
+        {/* Ambient Fresh Mint Glow Accents */}
+        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-[#22C55E]/10 rounded-full blur-[130px] pointer-events-none" />
+      </div>
+
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
+        {/* =========================================================================
+            TOP SECTION: BRAND LOGO, LET'S CONNECT & 3D LIGHT GLASSMORPHIC CONTACT CARD
+            ========================================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* Left Column: Brand Emblem, Headline & Mail CTA */}
+          <div className="lg:col-span-5 space-y-10">
+            {/* Top Serif Logo */}
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: -3 }}
+              className="text-4xl font-serif italic text-[#16A34A] tracking-wider inline-flex items-center gap-2 cursor-pointer"
+            >
+              <Stethoscope className="w-8 h-8 text-[#16A34A]" />
+              <span>s.health</span>
+            </motion.div>
+
+            <div className="space-y-6 gsap-doc-footer-title">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#16A34A] block">
+                NOW IT'S TIME TO ELEVATE YOUR MEDICAL PRACTICE &amp; PATIENT ACQUISITION
               </span>
-              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.02]">
+              <h2 className="text-5xl sm:text-7xl lg:text-8xl font-serif text-[#11261D] tracking-tight leading-[1.02]">
                 Let's connect
               </h2>
             </div>
 
-            <div className="gsap-doc-footer-title pt-2">
+            <div className="gsap-doc-footer-title">
               <a
-                href="mailto:ashish17427@gmail.com"
+                href={`mailto:${siteContent.healthcareEmail || siteContent.email || "ashish17427@gmail.com"}`}
                 onClick={(e) => {
                   if (onOpenConsultation) {
                     onOpenConsultation("Healthcare Email Inquiry");
                   }
                 }}
-                className="btn-emerald text-xs font-semibold px-6 py-3.5 rounded-lg inline-flex items-center gap-2 cursor-pointer"
+                className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-[#11261D] text-white font-bold text-xs uppercase tracking-wider shadow-xl hover:bg-[#16A34A] transition-all transform hover:scale-105 cursor-pointer group"
               >
                 <span>SEND A MAIL</span>
-                <ArrowUpRight size={15} />
+                <div className="w-7 h-7 rounded-full bg-white text-[#11261D] flex items-center justify-center transition-transform group-hover:rotate-45">
+                  <ArrowUpRight size={14} />
+                </div>
               </a>
             </div>
           </div>
 
-          {/* Right Column: Contact Form */}
+          {/* Right Column: 3D Interactive Light Glassmorphic Contact Card */}
           <div className="lg:col-span-7 gsap-doc-footer-form">
-            <Card3D maxTilt={4} className="w-full">
-              <div className="rounded-xl bg-[#0E121B] border border-white/10 p-6 sm:p-10 space-y-8 relative overflow-hidden">
+            <Card3D maxTilt={6} className="w-full">
+              <div className="rounded-[2.5rem] bg-white/95 border border-[#DCFCE7] backdrop-blur-2xl p-6 sm:p-10 shadow-[0_20px_50px_rgba(22,163,74,0.12)] space-y-8 relative overflow-hidden">
                 <AnimatePresence mode="wait">
                   {submitted ? (
                     <motion.div
                       key="submitted"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
                       className="py-16 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] flex items-center justify-center mx-auto">
-                        <CheckCircle2 size={32} />
+                      <div className="w-20 h-20 rounded-full bg-[#E8F7ED] border border-[#22C55E] text-[#16A34A] flex items-center justify-center mx-auto shadow-xl">
+                        <CheckCircle2 size={40} />
                       </div>
-                      <h3 className="text-2xl font-bold text-white">
+                      <h3 className="text-3xl font-serif text-[#11261D]">
                         Practice Audit Scheduled!
                       </h3>
-                      <p className="text-sm text-neutral-400 max-w-md mx-auto leading-relaxed font-normal">
-                        Thank you, <strong className="text-white">{name}</strong>. Our medical practice growth director will respond to <strong className="text-white">{email}</strong> shortly.
+                      <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed font-medium">
+                        Thank you, <strong className="text-[#11261D]">{name}</strong>. Our medical practice growth director will respond to <strong className="text-[#11261D]">{email}</strong> within 4 business hours.
                       </p>
                       <button
                         onClick={() => setSubmitted(false)}
-                        className="btn-secondary text-xs font-semibold px-6 py-3 rounded-lg cursor-pointer"
+                        className="px-8 py-3.5 rounded-full bg-[#11261D] text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-[#16A34A] transition-all cursor-pointer"
                       >
                         Schedule Another Session
                       </button>
                     </motion.div>
                   ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6 text-left">
-                      <div className="space-y-2">
-                        <label className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400 block">
+                    <motion.form
+                      key="form"
+                      onSubmit={handleSubmit}
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-8"
+                    >
+                      {/* Section 1: Contact Info */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block">
                           CONTACT INFO*
                         </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <input
                             type="text"
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="YOUR NAME*"
-                            className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 text-xs text-white placeholder-neutral-500 outline-none focus:border-white/30 transition-all font-mono font-medium"
+                            className="w-full rounded-full border border-[#DCFCE7] bg-[#F0FDF4] px-6 py-3.5 text-xs text-[#11261D] placeholder-slate-400 outline-none focus:border-[#22C55E] focus:bg-white transition-all uppercase font-mono font-bold shadow-inner"
                           />
                           <input
                             type="email"
@@ -252,73 +290,82 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="YOUR E-MAIL*"
-                            className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 text-xs text-white placeholder-neutral-500 outline-none focus:border-white/30 transition-all font-mono font-medium"
+                            className="w-full rounded-full border border-[#DCFCE7] bg-[#F0FDF4] px-6 py-3.5 text-xs text-[#11261D] placeholder-slate-400 outline-none focus:border-[#22C55E] focus:bg-white transition-all uppercase font-mono font-bold shadow-inner"
                           />
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400 block">
-                          SPECIALIZATION / INTEREST*
+                      {/* Section 2: Interest Pills */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block">
+                          YOU ARE INTERESTED IN*
                         </label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2.5">
                           {interests.map((item) => {
                             const active = selectedInterest === item;
                             return (
-                              <button
+                              <motion.button
                                 key={item}
                                 type="button"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => setSelectedInterest(item)}
-                                className={`px-4 py-2 rounded-md text-[11px] font-mono font-semibold tracking-wider transition-all cursor-pointer border ${
+                                className={`px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-wider transition-all cursor-pointer border ${
                                   active
-                                    ? "bg-[#22C55E] text-[#050805] border-[#22C55E]"
-                                    : "bg-white/[0.03] text-neutral-300 border-white/10 hover:border-white/25 hover:text-white"
+                                    ? "bg-[#22C55E] text-white border-[#16A34A] shadow-md"
+                                    : "bg-[#F0FDF4] text-slate-700 border-[#DCFCE7] hover:border-[#22C55E] hover:text-[#11261D]"
                                 }`}
                               >
                                 {item}
-                              </button>
+                              </motion.button>
                             );
                           })}
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400 block">
-                          BUDGET RANGE (INR ₹)*
+                      {/* Section 3: Budget Pills */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block">
+                          Your budget in INR (₹)*
                         </label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2.5">
                           {budgets.map((b) => {
                             const active = selectedBudget === b;
                             return (
-                              <button
+                              <motion.button
                                 key={b}
                                 type="button"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => setSelectedBudget(b)}
-                                className={`px-4 py-2 rounded-md text-[11px] font-mono font-semibold tracking-wider transition-all cursor-pointer border ${
+                                className={`px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-wider transition-all cursor-pointer border ${
                                   active
-                                    ? "bg-[#22C55E] text-[#050805] border-[#22C55E]"
-                                    : "bg-white/[0.03] text-neutral-300 border-white/10 hover:border-white/25 hover:text-white"
+                                    ? "bg-[#22C55E] text-white border-[#16A34A] shadow-md"
+                                    : "bg-[#F0FDF4] text-slate-700 border-[#DCFCE7] hover:border-[#22C55E] hover:text-[#11261D]"
                                 }`}
                               >
                                 {b}
-                              </button>
+                              </motion.button>
                             );
                           })}
                         </div>
                       </div>
 
-                      <button
+                      {/* Submit Action Button */}
+                      <motion.button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3.5 rounded-lg btn-emerald text-xs font-bold uppercase tracking-widest justify-center cursor-pointer"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-4 rounded-full bg-[#11261D] hover:bg-[#16A34A] text-white font-black text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#16A34A]/30"
                       >
                         {loading ? (
-                          <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                          <span>SCHEDULE PRACTICE AUDIT</span>
+                          <span>START DOCTOR JOURNEY</span>
                         )}
-                      </button>
-                    </form>
+                      </motion.button>
+                    </motion.form>
                   )}
                 </AnimatePresence>
               </div>
@@ -326,15 +373,17 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
           </div>
         </div>
 
-        {/* BOTTOM FOOTER ROW */}
-        <div className="pt-12 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 text-xs text-neutral-400 font-normal">
+        {/* =========================================================================
+            BOTTOM FOOTER ROW: KEEP IN TOUCH, FIND US, CONTACT US (SOCIAL ICONS) & POLICIES
+            ========================================================================= */}
+        <div className="pt-12 border-t border-[#DCFCE7] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 text-xs text-slate-600 font-medium">
           {/* Column 1: Keep in touch */}
           <div className="space-y-3 gsap-doc-footer-row">
-            <h4 className="text-sm font-bold text-white tracking-wide">
+            <h4 className="text-sm font-bold text-[#11261D] tracking-wide">
               Keep in touch
             </h4>
-            <p className="text-neutral-300 font-mono">ashish17427@gmail.com</p>
-            <p className="text-neutral-400 pt-4" suppressHydrationWarning>
+            <p className="text-slate-700 font-mono">{siteContent.healthcareEmail || siteContent.email || "ashish17427@gmail.com"}</p>
+            <p className="text-slate-500 pt-4" suppressHydrationWarning>
               © {new Date().getFullYear()} SKORA Healthcare IT Division. All Rights Reserved.
             </p>
           </div>
@@ -345,9 +394,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
               FIND US HERE
             </h4>
             <p className="text-slate-700 leading-relaxed font-medium">
-              Skora Healthcare IT Studio,<br />
-              Gaur City 2, Greater Noida,<br />
-              Uttar Pradesh 201308, India
+              {siteContent.address || "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India"}
             </p>
           </div>
 
@@ -421,7 +468,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
               <motion.a
                 whileHover={{ y: -4, scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                href="https://wa.me/919217375835"
+                href={`https://wa.me/${(siteContent.phone || "+919217375835").replace(/[^0-9]/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="WhatsApp"
@@ -454,14 +501,6 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
                   className="hover:text-[#16A34A] transition-colors inline-block hover:translate-x-1 duration-200 transform font-semibold"
                 >
                   Privacy Policy
-                </Link>
-              </li>
-              <li className="pt-2">
-                <Link
-                  href="/admin"
-                  className="hover:text-[#16A34A] font-mono text-[11px] text-slate-500 transition-colors inline-block hover:translate-x-1 duration-200 transform font-bold"
-                >
-                  Admin Portal 🔒
                 </Link>
               </li>
             </ul>

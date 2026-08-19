@@ -47,55 +47,55 @@ export default function FAQSection() {
   );
 
   return (
-    <section id="faq" className="py-28 relative bg-[#080A0F] border-t border-white/10">
+    <section id="faq" className="py-24 relative bg-[#05070E]">
       <div className="max-w-[960px] mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center space-y-4 mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider border border-white/10 bg-white/[0.03] text-neutral-300">
-            <HelpCircle className="w-3.5 h-3.5 text-[#22C55E]" />
+        <div className="text-center space-y-4 mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-pill text-xs font-semibold uppercase tracking-wider">
+            <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
             <span>Got Questions? We Have Answers</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-            Frequently Asked <span className="text-[#22C55E]">Questions</span>
+            Frequently Asked <span className="text-gradient">Questions</span>
           </h2>
 
-          <p className="text-base text-neutral-400 font-normal">
+          <p className="text-base text-[#94A3B8]">
             Everything you need to know about our digital marketing, software engineering, and pricing.
           </p>
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-12 max-w-md mx-auto">
-          <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2" />
+        <div className="relative mb-10 max-w-md mx-auto">
+          <Search className="w-4 h-4 text-[#94A3B8] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search questions (e.g. AI SEO, Cloud, CRM, Pricing)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-lg bg-[#0E121B] border border-white/10 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
+            className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white placeholder-[#64748B] focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
 
         {/* Accordion List */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredFaqs.map((faq, idx) => {
             const isOpen = openIndex === idx;
             return (
               <div
                 key={idx}
-                className="rounded-xl border border-white/10 bg-[#0E121B] overflow-hidden transition-all duration-200"
+                className="glass-card rounded-2xl border border-white/10 bg-[#0B0F19]/90 overflow-hidden transition-all duration-200"
               >
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  className="w-full px-6 py-4.5 flex items-center justify-between text-left gap-4 hover:bg-white/[0.02] cursor-pointer"
+                  className="w-full px-6 py-5 flex items-center justify-between text-left gap-4 hover:bg-white/[0.02]"
                 >
                   <span className="text-base font-bold text-white">
                     {faq.question}
                   </span>
                   <div
-                    className={`w-7 h-7 rounded bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0 transition-transform duration-200 ${
-                      isOpen ? "rotate-180 text-[#22C55E]" : "text-neutral-400"
+                    className={`w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                      isOpen ? "rotate-180 bg-blue-600 text-white" : "text-blue-400"
                     }`}
                   >
                     <ChevronDown className="w-4 h-4" />
@@ -103,7 +103,7 @@ export default function FAQSection() {
                 </button>
 
                 {isOpen && (
-                  <div className="px-6 pb-5 text-sm text-neutral-400 leading-relaxed border-t border-white/10 pt-4 font-normal">
+                  <div className="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-white/5 pt-4 animate-in fade-in duration-200">
                     {faq.answer}
                   </div>
                 )}

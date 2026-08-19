@@ -1,0 +1,204 @@
+// ────────────────────────────────────────────────────────────
+// SUDO CRM — Firestore Security Rules
+// ────────────────────────────────────────────────────────────
+// Roles (stored in auth.token.role):
+//   admin   — Full read/write access to everything
+//   manager — Read/write all business data, limited auth collections
+//   agent   — Read/write only their own data (ownerId == uid)
+// ────────────────────────────────────────────────────────────
+
+rules_version = "2";
+
+// ── Helpers ───────────────────────────────────────────────
+
+// Check if the user is authenticated
+function isAuth() {
+  return request.auth != null;
+}
+
+// Get the user's role from custom claims
+function getRole() {
+  return request.auth.token.role;
+}
+
+// Check if the user has admin role
+function isAdmin() {
+  return isAuth() && getRole() == "admin";
+}
+
+// Check if the user has manager role or above
+function isManager() {
+  return isAuth() && (getRole() == "manager" || getRole() == "admin");
+}
+
+// Check if the user is the owner of the document
+function isOwner(userId) {
+  return isAuth() && request.auth.uid == userId;
+}
+
+// Check if the document's ownerId matches the requesting user
+function isDocOwner() {
+  return isAuth() && resource.data.ownerId == request.auth.uid;
+}
+
+// Check if the incoming document's ownerId matches the requesting user
+function isIncomingOwner() {
+  return isAuth() && request.resource.data.ownerId == request.auth.uid;
+}
+
+// Check if the document's userId matches the requesting user
+function isDocUser() {
+  return isAuth() && resource.data.userId == request.auth.uid;
+}
+
+// Check if the incoming document's userId matches the requesting user
+function isIncomingUser() {
+  return isAuth() && request.resource.data.userId == request.auth.uid;
+}
+
+// Check if the document's assigneeId matches the requesting user
+function isAssignee() {
+  return isAuth() && resource.data.assigneeId == request.auth.uid;
+}
+
+// Check if the incoming document's assigneeId matches the requesting user
+function isIncomingAssignee() {
+  return isAuth() && request.resource.data.assigneeId == request.auth.uid;
+}
+
+// ── Main Rules ────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════
+    // USERS
+    // ═══════════════════════════════════════════════════════
+    // Users can read their own profile.
+    // Admins can read/write all user profiles.
+    // Creation is handled server-side via Admin SDK.
+    match /users/{userId} {
+      allow read: if isAuth() && (isAdmin() || isOwner(userId));
+      allow create: if isAdmin();  // client creation restricted to admins
+      allow update: if isAdmin() || (isOwner(userId)
+        // Users can update their own profile but NOT their role
+        && (!request.resource.data.keys().hasAny(["role"])));
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // LEADS
+    // ═══════════════════════════════════════════════════════
+    // Agents:  read/write only their own leads (ownerId == uid)
+    // Managers: read/write all leads
+    // Admins:   full access
+    match /leads/{leadId} {
+      allow read: if isAuth() && (isManager() || isDocOwner());
+      allow create: if isAuth() && (isManager() || isIncomingOwner());
+      allow update: if isAuth() && (isManager() || isDocOwner());
+      allow delete: if isManager();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CUSTOMERS
+    // ═══════════════════════════════════════════════════════
+    // Agents:  read/write only their own customers (ownerId == uid)
+    // Managers: read/write all customers
+    // Admins:   full access
+    match /customers/{customerId} {
+      allow read: if isAuth() && (isManager() || isDocOwner());
+      allow create: if isAuth() && (isManager() || isIncomingOwner());
+      allow update: if isAuth() && (isManager() || isDocOwner());
+      allow delete: if isManager();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DEALS
+    // ═══════════════════════════════════════════════════════
+    // Agents:  read/write only their own deals (ownerId == uid)
+    // Managers: read/write all deals
+    // Admins:   full access
+    match /deals/{dealId} {
+      allow read: if isAuth() && (isManager() || isDocOwner());
+      allow create: if isAuth() && (isManager() || isIncomingOwner());
+      allow update: if isAuth() && (isManager() || isDocOwner());
+      allow delete: if isManager();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CONTACTS
+    // ═══════════════════════════════════════════════════════
+    // All authenticated users can read/write contacts.
+    // Contacts don't have an owner — they're shared across the team.
+    match /contacts/{contactId} {
+      allow read, create, update: if isAuth();
+      allow delete: if isManager();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ACTIVITIES
+    // ═══════════════════════════════════════════════════════
+    // Users can create activities (userId must match themselves).
+    // Users can read activities they created.
+    // Managers/admins can read/write all.
+    match /activities/{activityId} {
+      allow read: if isAuth() && (isManager() || isDocUser());
+      allow create: if isAuth() && (isManager() || isIncomingUser());
+      allow update: if isManager();
+      allow delete: if isManager();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TASKS
+    // ═══════════════════════════════════════════════════════
+    // Users can read/write tasks assigned to them (assigneeId == uid).
+    // Managers/admins can read/write all tasks.
+    match /tasks/{taskId} {
+      allow read: if isAuth() && (isManager() || isAssignee());
+      allow create: if isAuth() && (isManager() || isIncomingAssignee());
+      allow update: if isAuth() && (isManager() || isAssignee());
+      allow delete: if isManager();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ACCOUNTS — OAuth provider links
+    // ═══════════════════════════════════════════════════════
+    // Users can read/write their own accounts (userId == uid).
+    // Admins can read all.
+    match /accounts/{accountId} {
+      allow read: if isAuth() && (isAdmin() || isDocUser());
+      allow create: if isAuth() && isIncomingUser();
+      allow update: if isAuth() && isDocUser();
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SESSIONS
+    // ═══════════════════════════════════════════════════════
+    // Users can read/write their own sessions (userId == uid).
+    // Admins can read all.
+    match /sessions/{sessionId} {
+      allow read: if isAuth() && (isAdmin() || isDocUser());
+      allow create: if isAuth() && isIncomingUser();
+      allow update: if isAuth() && isDocUser();
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // VERIFICATION TOKENS
+    // ═══════════════════════════════════════════════════════
+    // Deny all client-side access. These are managed server-side
+    // via the Firebase Admin SDK (which bypasses security rules).
+    match /verification_tokens/{tokenId} {
+      allow read, write: if false;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DEFAULT DENY
+    // ═══════════════════════════════════════════════════════
+    // Any collection not explicitly matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
