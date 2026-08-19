@@ -28,38 +28,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (isLoginPage) return;
 
-    fetch("/api/admin/me")
+    fetch("/api/admin/me", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (!data.authenticated) {
-          router.push("/admin/login");
+          window.location.href = "/admin/login";
         } else {
           setAuthenticated(true);
         }
       })
       .catch(() => {
-        router.push("/admin/login");
+        window.location.href = "/admin/login";
       });
-  }, [pathname, isLoginPage, router]);
+  }, [isLoginPage]);
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login");
+    window.location.href = "/admin/login";
   };
 
   if (isLoginPage) {
     return <>{children}</>;
-  }
-
-  if (authenticated === null) {
-    return (
-      <div className="min-h-screen bg-[#F4F6F1] flex flex-col items-center justify-center text-[#0B1310] space-y-4 font-sans">
-        <div className="w-12 h-12 border-4 border-[#2563EB]/20 border-t-[#2563EB] rounded-full animate-spin" />
-        <p className="text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">
-          Verifying Admin Security Token...
-        </p>
-      </div>
-    );
   }
 
   const navItems = [

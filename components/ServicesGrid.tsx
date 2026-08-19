@@ -188,40 +188,44 @@ export default function ServicesGrid({
     if (!gridRef.current) return;
     gsap.fromTo(
       ".gsap-service-card",
-      { opacity: 0, y: 25 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power2.out" }
+      { opacity: 0, y: 30, rotateY: -10 },
+      { opacity: 1, y: 0, rotateY: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" }
     );
   }, [activeFilter]);
 
   return (
-    <section id="services" className="py-28 relative bg-[#080A0F]">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative z-10">
+    <section id="services" className="py-24 relative bg-[#05070E] [perspective:1000px]">
+      {/* Background Halos */}
+      <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute bottom-10 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider border border-white/10 bg-white/[0.03] text-neutral-300">
-            <Sparkles className="w-3.5 h-3.5 text-[#22C55E]" />
-            <span>ENTERPRISE CAPABILITIES</span>
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-14">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-pill text-xs font-semibold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <span>Complete Enterprise Capabilities</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            Our 7 Core <span className="text-[#22C55E]">Tech & Marketing Services</span>
+            Our 7 Core <span className="text-gradient">Tech & Marketing Services</span>
           </h2>
 
-          <p className="text-base sm:text-lg text-neutral-400 leading-relaxed font-normal">
-            From search dominance and mobile apps to scalable cloud architecture and custom PMS & CRM solutions.
+          <p className="text-base sm:text-lg text-[#94A3B8] leading-relaxed">
+            From search dominance and mobile apps to scalable cloud architecture and custom PMS & CRM solutions — engineered for hyper-growth.
           </p>
         </div>
 
         {/* Category Filter Tabs */}
-        <div className="flex items-center justify-center flex-wrap gap-2.5 mb-14">
+        <div className="flex items-center justify-center flex-wrap gap-2.5 mb-12">
           {filterTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveFilter(tab.id)}
-              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 border cursor-pointer ${
+              className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 border ${
                 activeFilter === tab.id
-                  ? "bg-[#22C55E] text-[#050805] border-[#22C55E]"
-                  : "bg-[#0E121B] text-neutral-300 border-white/10 hover:text-white hover:border-white/20"
+                  ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/30"
+                  : "bg-[#0B0F19] text-[#94A3B8] border-white/10 hover:text-white hover:border-white/20"
               }`}
             >
               {tab.label}
@@ -229,57 +233,61 @@ export default function ServicesGrid({
           ))}
         </div>
 
-        {/* Services Cards Grid */}
+        {/* Services Cards Grid with 3D Tilt */}
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.map((service) => (
             <Card3D
               key={service.id}
-              maxTilt={8}
-              className="gsap-service-card rounded-xl border border-white/10 bg-[#0E121B] group relative overflow-hidden h-full transition hover:border-white/25"
+              maxTilt={14}
+              className="gsap-service-card glass-card rounded-2xl border border-white/10 bg-[#0B0F19]/80 group relative overflow-hidden h-full"
             >
-              <div className="p-7 flex flex-col justify-between h-full">
+              <div className="p-7 flex flex-col justify-between h-full [transform-style:preserve-3d]">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}
+                ></div>
+
                 <div className="relative z-10 space-y-5">
                   {/* Header Icon + Metric Badge */}
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-lg bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#22C55E]">
+                  <div className="flex items-center justify-between [transform:translateZ(30px)]">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600/20 to-cyan-500/10 border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/10 group-hover:scale-110 transition-transform duration-300">
                       {service.icon}
                     </div>
-                    <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20">
+                    <span className="px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                       {service.metrics}
                     </span>
                   </div>
 
                   {/* Title & Tagline */}
-                  <div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-[#22C55E] transition-colors">
+                  <div className="[transform:translateZ(40px)]">
+                    <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
                       {service.title}
                     </h3>
-                    <p className="text-xs font-medium text-neutral-400 mt-1">
+                    <p className="text-xs font-medium text-cyan-400 mt-1">
                       {service.tagline}
                     </p>
                   </div>
 
                   {/* Description */}
-                  <p className="text-sm text-neutral-400 leading-relaxed line-clamp-3 font-normal">
+                  <p className="text-sm text-[#94A3B8] leading-relaxed line-clamp-3 [transform:translateZ(20px)]">
                     {service.description}
                   </p>
 
                   {/* Checklist Features */}
-                  <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="space-y-2 pt-2 border-t border-white/5 [transform:translateZ(30px)]">
                     {service.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#22C55E] shrink-0" />
+                      <div key={idx} className="flex items-center gap-2 text-xs text-[#CBD5E1]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                         <span>{feature}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Tech Stack Tags */}
-                  <div className="flex flex-wrap gap-1.5 pt-2">
+                  <div className="flex flex-wrap gap-1.5 pt-2 [transform:translateZ(20px)]">
                     {service.techStack.map((tech, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/[0.03] border border-white/10 text-neutral-400"
+                        className="px-2.5 py-1 rounded-md text-[10px] font-mono bg-white/[0.04] border border-white/10 text-[#94A3B8]"
                       >
                         {tech}
                       </span>
@@ -288,21 +296,21 @@ export default function ServicesGrid({
                 </div>
 
                 {/* Card Bottom Actions */}
-                <div className="relative z-10 pt-6 mt-6 border-t border-white/10 flex items-center justify-between">
+                <div className="relative z-10 pt-6 mt-6 border-t border-white/10 flex items-center justify-between [transform:translateZ(35px)]">
                   <button
                     onClick={() => onSelectService(service)}
-                    className="text-xs font-semibold text-neutral-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-semibold text-[#94A3B8] hover:text-white transition-colors flex items-center gap-1"
                   >
                     <span>View Specs</span>
-                    <Code2 className="w-3.5 h-3.5 text-[#22C55E]" />
+                    <Code2 className="w-3.5 h-3.5 text-blue-400" />
                   </button>
 
                   <button
                     onClick={() => onOpenConsultation(service.title)}
-                    className="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-[#22C55E]/10 hover:bg-[#22C55E] text-[#22C55E] hover:text-[#050805] border border-[#22C55E]/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 transition-all flex items-center gap-1.5 group/btn"
                   >
                     <span>Book Service</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>

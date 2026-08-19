@@ -1,0 +1,307 @@
+# ═══════════════════════════════════════════════════════════════
+# Production CI/CD Workflow
+#
+# Triggered on:
+#   - Push to main branch
+#   - Pull request targeting main (skips deploy)
+#
+# Pipeline stages:
+#   1. Validate – lint, typecheck, build, and (optionally) test
+#   2. Deploy – validate secrets, deploy to Vercel, health check
+#
+# Secrets required (set in GitHub → Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN             – Vercel API token (https://vercel.com/account/tokens)
+#   VERCEL_ORG_ID            – Vercel team/personal account ID
+#   VERCEL_PROJECT_ID        – Vercel project ID
+#   NEXT_PUBLIC_FIREBASE_*   – Firebase client SDK credentials
+#   FIREBASE_PROJECT_ID      – Firebase Admin project ID
+#   FIREBASE_CLIENT_EMAIL    – Firebase Admin client email
+#   FIREBASE_PRIVATE_KEY     – Firebase Admin private key
+# ═══════════════════════════════════════════════════════════════
+
+name: Production CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  # List of every Firebase-related env var the app expects at build time
+  BUILD_ENV_VARS: >-
+    NEXT_PUBLIC_FIREBASE_API_KEY
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    NEXT_PUBLIC_FIREBASE_APP_ID
+  DEPLOY_ENV_VARS: >-
+    VERCEL_TOKEN
+    VERCEL_ORG_ID
+    VERCEL_PROJECT_ID
+
+jobs:
+  #############################################################################
+  # Validate – gate everything on a clean build
+  #############################################################################
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      build_successful: ${{ steps.build.outcome == 'success' && 'true' || 'false' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+        env:
+          NODE_ENV: development
+
+      - name: Run ESLint
+        id: lint
+        run: npm run lint -- --max-warnings=0
+
+      - name: Build Next.js application
+        id: build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY || '' }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '' }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '' }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '' }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '' }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID || '' }}
+
+      - name: Run tests (if available)
+        run: |
+          if grep -q '"test"' package.json; then
+            npm test -- --reporter=compact
+          else
+            echo "No test script found – skipping test step"
+          fi
+
+      - name: Upload build artifacts (for deploy job)
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build-output-${{ github.sha }}
+          path: |
+            .next/
+            public/
+            next.config.ts
+            package.json
+            node_modules/.cache/
+          retention-days: 1
+          include-hidden-files: true
+
+  #############################################################################
+  # Deploy – only on push to main (not PRs)
+  #############################################################################
+  deploy:
+    name: Deploy to Vercel
+    needs: [validate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+        env:
+          NODE_ENV: development
+
+      # ── Environment Variable Validation ────────────────────
+      - name: Validate required secrets
+        id: validate-secrets
+        run: |
+          MISSING=""
+
+          echo "::group::Validating build-time env vars"
+          for VAR in $BUILD_ENV_VARS; do
+            if [ -z "${!VAR}" ]; then
+              echo "::error::Missing required secret: $VAR"
+              MISSING="$MISSING $VAR"
+            else
+              echo "  ✓ $VAR is set"
+            fi
+          done
+          echo "::endgroup::"
+
+          echo "::group::Validating deployment env vars"
+          for VAR in $DEPLOY_ENV_VARS; do
+            if [ -z "${!VAR}" ]; then
+              echo "::error::Missing required secret: $VAR"
+              MISSING="$MISSING $VAR"
+            else
+              echo "  ✓ $VAR is set"
+            fi
+          done
+          echo "::endgroup::"
+
+          if [ -n "$MISSING" ]; then
+            echo "::error::Deployment aborted – missing secrets:$MISSING"
+            exit 1
+          fi
+
+          echo "All required secrets are present – proceeding with deployment"
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # ── Vercel Deployment ─────────────────────────────────
+      #
+      # NOTE: Before this workflow works, run `npx vercel link` locally once
+      # to link your repository to your Vercel project. This creates a
+      # `.vercel/project.json` with the projectId and orgId, which are then
+      # stored as GitHub Secrets.
+      - name: Link Vercel project (if not already linked)
+        run: |
+          if [ ! -f .vercel/project.json ]; then
+            npx vercel link --confirm --token=${{ secrets.VERCEL_TOKEN }} --project=${{ secrets.VERCEL_PROJECT_ID }}
+          else
+            echo "Vercel project already linked"
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Pull Vercel project configuration
+        run: |
+          npx vercel pull \
+            --yes \
+            --environment=production \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build for Vercel production
+        run: |
+          npx vercel build \
+            --prod \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+
+      - name: Deploy to Vercel production
+        id: deploy
+        run: |
+          DEPLOY_OUTPUT=$(npx vercel deploy \
+            --prebuilt \
+            --prod \
+            --debug \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            2>&1)
+          echo "$DEPLOY_OUTPUT"
+
+          # Parse the production URL from Vercel JSON response or CLI output
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -Eo 'https://[a-zA-Z0-9.-]+\.vercel\.app' | head -1)
+          if [ -z "$DEPLOY_URL" ]; then
+            # Fallback: look for any https URL in output
+            DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -Eo 'https://[^ ]+' | head -1)
+          fi
+
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "✅ Deployed to: $DEPLOY_URL"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # ── Health Check ──────────────────────────────────────
+      - name: Health check – verify deployment is live
+        id: health-check
+        run: |
+          DEPLOY_URL="${{ steps.deploy.outputs.deploy_url }}"
+
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "::error::Could not determine deployment URL from Vercel output"
+            exit 1
+          fi
+
+          echo "Performing health check on $DEPLOY_URL ..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            "$DEPLOY_URL")
+
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Health check passed (HTTP $STATUS)"
+          else
+            echo "::error::Health check failed (HTTP $STATUS)"
+            exit 1
+          fi
+
+      # ── Rollback Support ──────────────────────────────────
+      - name: Auto-rollback on failure
+        if: failure() && steps.deploy.outcome == 'success'
+        run: |
+          echo "::warning::⚠️  Deployment health check failed — initiating rollback..."
+          npx vercel rollback --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 || \
+            echo "::error::Automatic rollback failed. Please rollback manually from the Vercel dashboard."
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Create and push release tag
+        if: success()
+        run: |
+          TAG="deploy-$(date +'%Y%m%d-%H%M%S')-${{ github.sha }}"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "🏷️  Release tag created: $TAG"
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "::notice::✅ Production deployment completed successfully!"
+          echo "::notice::Deploy URL: ${{ steps.deploy.outputs.deploy_url }}"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "::error::❌ Production deployment failed!"
+          echo "::error::Check the logs above for details."
+          echo "::notice::To rollback to the previous working version: npx vercel rollback --prod --token=<token>"

@@ -76,38 +76,38 @@ export default function CrmPage() {
   }, []);
 
   return (
-    <main ref={containerRef} className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans relative overflow-x-hidden">
+    <main ref={containerRef} className="min-h-screen bg-[#F8F9F6] text-[#0B1310] font-sans selection:bg-[#2563EB] selection:text-white relative overflow-x-hidden">
       <ScrollProgressBar />
       <Navbar onOpenConsultation={() => setConsultationModalOpen(true)} />
 
       {/* Hero Header */}
-      <section className="pt-36 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           className="max-w-3xl space-y-6"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider border border-[#E1E6DF] bg-white text-slate-800 shadow-sm">
-            <MessageCircle className="w-4 h-4 text-[#22C55E]" />
-            <span>CUSTOM CRM & AUTOMATIONS</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E2E8F0] shadow-sm text-xs font-semibold">
+            <MessageCircle className="w-4 h-4 text-[#2563EB]" />
+            <span className="text-[#0B1310] font-bold">✦ CUSTOM CRM &amp; WHATSAPP AUTOMATIONS ✦</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#0B1310] tracking-tight leading-[1.02] uppercase">
-            AUTOMATED CRM &amp; <br />
-            <span className="text-[#22C55E]">WHATSAPP LEAD PIPELINES</span>
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#0B1310] tracking-tight leading-[1.02] uppercase">
+            CONSOLIDATING LEADS &amp; <br />
+            <span className="text-[#2563EB]">AUTOMATING WHATSAPP PIPELINES</span>
           </h1>
 
-          <p className="text-lg text-slate-600 font-normal leading-relaxed">
-            Tailored CRM architecture, automated lead assignment, instant WhatsApp notification triggers, and customer analytics for high-converting sales pipelines.
+          <p className="text-lg text-slate-600 font-medium leading-relaxed">
+            Consolidate inquiries from Meta Ads, Google PPC, and website forms into a unified sales pipeline with instant automated WhatsApp &amp; email nurture sequences.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-4">
             <button
               onClick={() => setConsultationModalOpen(true)}
-              className="btn-emerald text-sm font-semibold px-8 py-3.5 rounded-lg cursor-pointer flex items-center gap-2"
+              className="px-8 py-4 rounded-full bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
             >
-              <span>Build Custom CRM</span>
+              <span>Build Custom CRM Engine</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -118,27 +118,24 @@ export default function CrmPage() {
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-16 rounded-xl overflow-hidden border border-[#E1E6DF] bg-white group cursor-pointer shadow-lg"
+          className="mt-16 rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E2E8F0] bg-white group cursor-pointer"
         >
           <img
             src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80"
-            alt="CRM Architecture"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80";
-            }}
-            className="w-full h-[400px] sm:h-[500px] object-cover group-hover:scale-105 transition-transform duration-500"
+            alt="Custom CRM Software"
+            className="w-full h-[400px] sm:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
           />
         </motion.div>
       </section>
 
       {/* Capabilities Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
-        <div className="text-left mb-12 space-y-1">
-          <span className="text-xs font-mono font-semibold uppercase tracking-widest text-[#22C55E]">
-            Sales Automation /
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-left mb-12">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
+            Pipeline Engine /
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B1310] uppercase">
-            CRM CAPABILITIES
+          <h2 className="text-3xl sm:text-4xl font-black text-[#0B1310] uppercase mt-1">
+            CRM &amp; AUTOMATION CAPABILITIES
           </h2>
         </div>
 
@@ -152,27 +149,27 @@ export default function CrmPage() {
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               className="gsap-scroll-card"
             >
-              <Card3D maxTilt={6} className="p-8 rounded-xl bg-white border border-[#E1E6DF] space-y-4 h-full shadow-md">
+              <Card3D maxTilt={10} className="p-8 rounded-[2.2rem] bg-white border border-[#E2E8F0] shadow-lg space-y-4 h-full">
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded bg-[#22C55E]/10 text-[#22C55E] text-xs font-mono font-bold border border-[#22C55E]/20">
+                  <span className="px-3 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] text-xs font-bold font-mono">
                     {cap.metrics}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-[#0B1310]">{cap.title}</h3>
-                <p className="text-sm text-slate-600 font-normal leading-relaxed">{cap.desc}</p>
+                <h3 className="text-xl font-extrabold text-[#0B1310]">{cap.title}</h3>
+                <p className="text-sm text-slate-600 font-medium leading-relaxed">{cap.desc}</p>
               </Card3D>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Deliverables Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#E1E6DF]">
-        <div className="text-left mb-16 space-y-1">
-          <span className="text-xs font-mono font-semibold uppercase tracking-widest text-[#22C55E]">
+      {/* Light Glass Deliverables Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-white rounded-[3rem] border border-[#E2E8F0] shadow-xl my-12">
+        <div className="text-left mb-16">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#2563EB]">
             Deliverables /
           </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold uppercase text-[#0B1310]">
+          <h2 className="text-3xl sm:text-5xl font-black uppercase text-[#0B1310] mt-1">
             CRM DELIVERABLES
           </h2>
         </div>
@@ -181,33 +178,33 @@ export default function CrmPage() {
           {deliverables.map((item, idx) => (
             <motion.div
               key={idx}
-              whileHover={{ y: -4 }}
+              whileHover={{ y: -6, scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="gsap-scroll-card p-6 rounded-xl bg-white border border-[#E1E6DF] flex items-start gap-4 shadow-sm"
+              className="gsap-scroll-card p-6 rounded-2xl bg-[#F8F9F6] border border-[#E2E8F0] flex items-start gap-4 hover:border-[#2563EB]/60 transition-colors shadow-md"
             >
-              <div className="w-7 h-7 rounded-full bg-[#22C55E]/10 text-[#22C55E] flex items-center justify-center shrink-0 mt-0.5 border border-[#22C55E]/20">
-                <Check size={14} />
+              <div className="w-8 h-8 rounded-full bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 mt-0.5 border border-[#2563EB]/30">
+                <Check size={16} />
               </div>
-              <p className="text-sm font-medium text-slate-700 leading-snug">{item}</p>
+              <p className="text-sm font-bold text-slate-800 leading-snug">{item}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* CTA Banner */}
-        <div className="mt-20 relative rounded-xl overflow-hidden bg-white p-10 sm:p-16 text-center text-[#0B1310] border border-[#E1E6DF] shadow-lg">
+        {/* Liquid Emerald CTA Banner */}
+        <div className="mt-24 relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#0284C7] p-10 sm:p-16 text-center text-white border border-[#2563EB]/30 shadow-2xl">
           <div className="max-w-2xl mx-auto space-y-6">
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight uppercase">
-              READY TO AUTOMATE YOUR LEAD SALES PIPELINE?
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight uppercase">
+              READY TO AUTOMATE YOUR LEAD CONVERSION?
             </h2>
-            <p className="text-slate-600 text-sm font-normal">
-              Let's discuss how customized CRM and WhatsApp triggers can boost your sales team productivity.
+            <p className="text-white/90 text-sm font-medium">
+              Talk to our automation engineers to connect your lead sources to WhatsApp workflows.
             </p>
             <div className="pt-4 flex justify-center">
               <button
                 onClick={() => setConsultationModalOpen(true)}
-                className="btn-emerald text-sm font-semibold px-8 py-3.5 rounded-lg cursor-pointer"
+                className="px-10 py-4 rounded-full bg-white hover:bg-slate-100 text-[#0B1310] font-black text-sm shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
               >
-                Book CRM Strategy Session
+                Schedule CRM Consultation
               </button>
             </div>
           </div>

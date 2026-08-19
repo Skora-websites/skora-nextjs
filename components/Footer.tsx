@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Card3D from "./Card3D";
+import { useSiteContent } from "@/context/SiteContentContext";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -55,6 +56,7 @@ interface FooterProps {
 }
 
 export default function Footer({ onOpenConsultation }: FooterProps) {
+  const siteContent = useSiteContent();
   const [selectedInterest, setSelectedInterest] = useState<string>("SOFTWARE / SAAS");
   const [selectedBudget, setSelectedBudget] = useState<string>("₹25K - ₹50K");
   const [name, setName] = useState("");
@@ -167,67 +169,93 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
   return (
     <footer
       ref={footerRef}
-      className="relative bg-[#080A0F] text-white pt-24 pb-12 overflow-hidden border-t border-white/10"
+      className="relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden border-t border-white/10 selection:bg-[#2563EB] selection:text-white"
     >
+      {/* 3D Cyber Tech Network Floating Particles */}
+      <TechCyberParticles />
+
+      {/* Crisp HD Cyber Tech Network Backdrop with Soft Blur & Elegant Dark Fade */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <img
+          src="/images/tech_footer_bg.jpg"
+          alt="High-Tech Cyber Network Backdrop"
+          className="w-full h-full object-cover opacity-25 blur-[3px] scale-105 transition-transform duration-1000"
+        />
+        {/* Deep Ambient Dark Fade Shield for Ultra Crisp Contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05060A]/85 via-[#05060A]/65 to-[#05060A]/95" />
+
+        {/* Muted Ambient Electric Blue / Cyan Glow Accents */}
+        <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-blue-950/20 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-cyan-950/15 rounded-full blur-[140px] pointer-events-none" />
+      </div>
+
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
-        {/* TOP SECTION: BRAND LOGO, LET'S CONNECT & CONTACT FORM */}
+        {/* =========================================================================
+            TOP SECTION: BRAND LOGO, LET'S CONNECT & 3D GLASSMORPHIC CONTACT CARD
+            ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Left Column: Brand Emblem, Headline & Mail CTA */}
-          <div className="lg:col-span-5 space-y-8 text-left">
-            <div className="text-3xl font-bold text-white tracking-wider inline-block">
-              SKORA<span className="text-[#22C55E]">.</span>
-            </div>
+          <div className="lg:col-span-5 space-y-10">
+            {/* Top Serif Logo */}
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: -3 }}
+              className="text-4xl font-serif italic text-slate-200 tracking-wider inline-block cursor-pointer"
+            >
+              s.
+            </motion.div>
 
-            <div className="space-y-4 gsap-footer-title">
-              <span className="text-xs font-mono font-semibold uppercase tracking-widest text-neutral-400 block">
-                ENGINEERED FOR MODERN SCALE
+            <div className="space-y-6 gsap-footer-title">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400 block">
+                NOW IT'S TIME TO TELL THE WHOLE WORLD ABOUT YOUR BUSINESS
               </span>
-              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.02]">
+              <h2 className="text-5xl sm:text-7xl lg:text-8xl font-serif text-white tracking-tight leading-[1.02]">
                 Let's connect
               </h2>
             </div>
 
-            <div className="gsap-footer-title pt-2">
+            <div className="gsap-footer-title">
               <a
-                href="mailto:ashish17427@gmail.com"
+                href={`mailto:${siteContent.email || "ashish17427@gmail.com"}`}
                 onClick={(e) => {
                   if (onOpenConsultation) {
                     onOpenConsultation("Direct Email Inquiry");
                   }
                 }}
-                className="btn-emerald text-xs font-semibold px-6 py-3.5 rounded-lg inline-flex items-center gap-2 cursor-pointer"
+                className="inline-flex items-center gap-3 px-7 py-4 rounded-full bg-white text-[#0B1310] font-bold text-xs uppercase tracking-wider shadow-2xl hover:bg-slate-100 transition-all transform hover:scale-105 cursor-pointer group border border-white/20"
               >
                 <span>SEND A MAIL</span>
-                <ArrowUpRight size={15} />
+                <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:rotate-45">
+                  <ArrowUpRight size={14} />
+                </div>
               </a>
             </div>
           </div>
 
-          {/* Right Column: Contact Form */}
+          {/* Right Column: 3D Interactive Glassmorphic Contact Card */}
           <div className="lg:col-span-7 gsap-footer-form">
-            <Card3D maxTilt={4} className="w-full">
-              <div className="rounded-xl bg-[#0E121B] border border-white/10 p-6 sm:p-10 space-y-8 relative overflow-hidden">
+            <Card3D maxTilt={6} className="w-full">
+              <div className="rounded-[2.5rem] bg-[#0E111F]/85 border border-white/15 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.8)] space-y-8 relative overflow-hidden">
                 <AnimatePresence mode="wait">
                   {submitted ? (
                     <motion.div
                       key="submitted"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
                       className="py-16 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] flex items-center justify-center mx-auto">
-                        <CheckCircle2 size={32} />
+                      <div className="w-20 h-20 rounded-full bg-purple-500/20 border border-purple-400 text-purple-300 flex items-center justify-center mx-auto shadow-2xl shadow-purple-500/30">
+                        <CheckCircle2 size={40} />
                       </div>
-                      <h3 className="text-2xl font-bold text-white">
-                        Inquiry Received
+                      <h3 className="text-3xl font-serif text-white">
+                        Journey Initialized!
                       </h3>
-                      <p className="text-sm text-neutral-400 max-w-md mx-auto leading-relaxed font-normal">
-                        Thank you, <strong className="text-white">{name}</strong>. Our strategy director will respond to <strong className="text-white">{email}</strong> shortly.
+                      <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed font-medium">
+                        Thank you, <strong className="text-white">{name}</strong>. Our strategy director will respond to <strong className="text-white">{email}</strong> shortly to begin your digital transformation.
                       </p>
                       <button
                         onClick={() => setSubmitted(false)}
-                        className="btn-secondary text-xs font-semibold px-6 py-3 rounded-lg cursor-pointer"
+                        className="px-8 py-3.5 rounded-full bg-white text-[#0B1310] font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-slate-100 transition-all cursor-pointer"
                       >
                         Send Another Message
                       </button>
@@ -238,21 +266,21 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
                       onSubmit={handleSubmit}
                       initial={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="space-y-6 text-left"
+                      className="space-y-8"
                     >
                       {/* Section 1: Contact Info */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400 block">
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
                           CONTACT INFO*
                         </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <input
                             type="text"
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="YOUR NAME*"
-                            className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 text-xs text-white placeholder-neutral-500 outline-none focus:border-white/30 transition-all font-mono font-medium"
+                            className="w-full rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-xs text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:bg-white/10 transition-all uppercase font-mono font-bold shadow-inner"
                           />
                           <input
                             type="email"
@@ -260,75 +288,81 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="YOUR E-MAIL*"
-                            className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 text-xs text-white placeholder-neutral-500 outline-none focus:border-white/30 transition-all font-mono font-medium"
+                            className="w-full rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-xs text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:bg-white/10 transition-all uppercase font-mono font-bold shadow-inner"
                           />
                         </div>
                       </div>
 
                       {/* Section 2: Interest Pills */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400 block">
-                          INTERESTED IN*
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
+                          YOU ARE INTERESTED IN*
                         </label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2.5">
                           {interests.map((item) => {
                             const active = selectedInterest === item;
                             return (
-                              <button
+                              <motion.button
                                 key={item}
                                 type="button"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => setSelectedInterest(item)}
-                                className={`px-4 py-2 rounded-md text-[11px] font-mono font-semibold tracking-wider transition-all cursor-pointer border ${
+                                className={`px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-wider transition-all cursor-pointer border ${
                                   active
-                                    ? "bg-[#22C55E] text-[#050805] border-[#22C55E]"
-                                    : "bg-white/[0.03] text-neutral-300 border-white/10 hover:border-white/25 hover:text-white"
+                                    ? "bg-white text-[#0B1310] border-white shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                                    : "bg-white/5 text-slate-300 border-white/15 hover:border-white/40 hover:text-white"
                                 }`}
                               >
                                 {item}
-                              </button>
+                              </motion.button>
                             );
                           })}
                         </div>
                       </div>
 
                       {/* Section 3: Budget Pills */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400 block">
-                          BUDGET RANGE (INR ₹)*
+                      <div className="space-y-3">
+                        <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 block">
+                          Your budget in INR (₹)*
                         </label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2.5">
                           {budgets.map((b) => {
                             const active = selectedBudget === b;
                             return (
-                              <button
+                              <motion.button
                                 key={b}
                                 type="button"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => setSelectedBudget(b)}
-                                className={`px-4 py-2 rounded-md text-[11px] font-mono font-semibold tracking-wider transition-all cursor-pointer border ${
+                                className={`px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-wider transition-all cursor-pointer border ${
                                   active
-                                    ? "bg-[#22C55E] text-[#050805] border-[#22C55E]"
-                                    : "bg-white/[0.03] text-neutral-300 border-white/10 hover:border-white/25 hover:text-white"
+                                    ? "bg-white text-[#0B1310] border-white shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                                    : "bg-white/5 text-slate-300 border-white/15 hover:border-white/40 hover:text-white"
                                 }`}
                               >
                                 {b}
-                              </button>
+                              </motion.button>
                             );
                           })}
                         </div>
                       </div>
 
                       {/* Submit Action Button */}
-                      <button
+                      <motion.button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3.5 rounded-lg btn-emerald text-xs font-bold uppercase tracking-widest justify-center cursor-pointer"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-4 rounded-full bg-[#E2E8F0] hover:bg-white text-[#0B1310] font-black text-xs uppercase tracking-widest shadow-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/40"
                       >
                         {loading ? (
-                          <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                         ) : (
-                          <span>START STRATEGY SESSION</span>
+                          <span>START A JOURNEY</span>
                         )}
-                      </button>
+                      </motion.button>
                     </motion.form>
                   )}
                 </AnimatePresence>
@@ -346,7 +380,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
             <h4 className="text-sm font-bold text-white tracking-wide">
               Keep in touch
             </h4>
-            <p className="text-slate-300 font-mono">ashish17427@gmail.com</p>
+            <p className="text-slate-300 font-mono">{siteContent.email || "ashish17427@gmail.com"}</p>
             <p className="text-slate-500 pt-4" suppressHydrationWarning>
               © {new Date().getFullYear()} SKORA Digital. All Rights Reserved.
             </p>
@@ -358,9 +392,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
               FIND US HERE
             </h4>
             <p className="text-slate-300 leading-relaxed font-medium">
-              Skora Digital Studio,<br />
-              Gaur City 2, Greater Noida,<br />
-              Uttar Pradesh 201308, India
+              {siteContent.address || "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India"}
             </p>
           </div>
 
@@ -434,7 +466,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
               <motion.a
                 whileHover={{ y: -4, scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                href="https://wa.me/919217375835"
+                href={`https://wa.me/${(siteContent.phone || "+919217375835").replace(/[^0-9]/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="WhatsApp"
@@ -467,14 +499,6 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
                   className="hover:text-white transition-colors inline-block hover:translate-x-1 duration-200 transform"
                 >
                   Privacy Policy
-                </Link>
-              </li>
-              <li className="pt-2">
-                <Link
-                  href="/admin"
-                  className="hover:text-cyan-400 font-mono text-[11px] text-slate-400 transition-colors inline-block hover:translate-x-1 duration-200 transform font-bold"
-                >
-                  Admin Portal 🔒
                 </Link>
               </li>
             </ul>

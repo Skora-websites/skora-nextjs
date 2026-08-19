@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push("/admin");
+      window.location.href = "/admin";
     } catch (err) {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -136,7 +136,7 @@ export default function AdminLoginPage() {
           {/* Footer Note */}
           <div className="text-center pt-2 border-t border-slate-100">
             <p className="text-[11px] font-mono text-slate-500">
-              Skora Info: <code className="text-[#2563EB] font-bold">skora2026!</code>
+              Skora Security Portal — Authorized Personnel Only
             </p>
           </div>
         </div>
