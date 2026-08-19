@@ -1,266 +1,185 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/shared/data-table";
-import type { Column, Action } from "@/components/shared/data-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { FormSection } from "@/components/ui/form-section";
-import { FormInput } from "@/components/ui/form-input";
-import { FormSelect } from "@/components/ui/form-select";
-import { FormTextarea } from "@/components/ui/form-textarea";
-import { FormActions } from "@/components/ui/form-actions";
-import {
-  UserCheck,
-  Plus,
-  ClipboardList,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Users,
-  Pencil,
-  Trash2,
-  Layers,
-  ToggleLeft,
-} from "lucide-react";
-import { useOnboardingPrograms, useOnboardingDashboard } from "@/hooks/hrm/use-onboarding";
-import { useMutation } from "@/hooks/use-mutation";
+import { UserCheck, FileText, CheckCircle2, Clock, ShieldCheck, Upload, IdCard, AlertCircle, XCircle, AlertTriangle, FileUp } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
 
-const statusColors: Record<string, "success" | "warning" | "danger" | "info" | "primary"> = {
-  active: "success",
-  inactive: "info",
-};
+interface CandidateApplication {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  documentName: string;
+  status: "DOCUMENT_VERIFICATION_PENDING" | "APPROVED" | "REJECTED_48H_DEADLINE" | "CANCELLED";
+  employeeCode?: string;
+  submittedAt: string;
+  deadlineHoursRemaining?: number;
+}
 
-const emptyForm = { name: "", description: "", departmentId: "", isDefault: "false", status: "active", tasks: "[]" };
+const initialApplications: CandidateApplication[] = [
+  {
+    id: "app-101",
+    name: "Shivangi Gupta",
+    email: "shivangi@company.com",
+    role: "Frontend Engineer",
+    department: "Engineering",
+    documentName: "Government_Aadhaar_Passport.pdf",
+    status: "DOCUMENT_VERIFICATION_PENDING",
+    submittedAt: "2026-08-19",
+  },
+  {
+    id: "app-102",
+    name: "Rohan Verma",
+    email: "rohan.v@company.com",
+    role: "Sales Associate",
+    department: "Sales",
+    documentName: "Invalid_Blurry_Doc.pdf",
+    status: "REJECTED_48H_DEADLINE",
+    submittedAt: "2026-08-18",
+    deadlineHoursRemaining: 47,
+  },
+  {
+    id: "app-103",
+    name: "Priya Sharma",
+    email: "priya.s@company.com",
+    role: "UI/UX Designer",
+    department: "Design",
+    documentName: "Government_ID_Proof.pdf",
+    status: "APPROVED",
+    employeeCode: "EMP-2026-1004",
+    submittedAt: "2026-08-17",
+  },
+];
 
 export default function OnboardingPage() {
-  const { data: programs, loading, error, refetch } = useOnboardingPrograms();
-  const { data: dashboard } = useOnboardingDashboard();
-  const mutation = useMutation();
+  const { user } = useAuth();
+  const [applications, setApplications] = useState<CandidateApplication[]>(initialApplications);
+  const [rejectReasonModal, setRejectReasonModal] = useState<string | null>(null);
 
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState<any>(null);
-  const [form, setForm] = useState(emptyForm);
+  const isHR = user?.role === "super_admin" || user?.role === "hr_admin" || !user?.role;
 
-  const resetForm = useCallback(() => setForm(emptyForm), []);
-
-  const handleAdd = async () => {
-    const result = await mutation.createRecord("/api/hrm/v2/onboarding", {
-      name: form.name, description: form.description, departmentId: form.departmentId || undefined,
-      isDefault: form.isDefault === "true", status: form.status, tasks: form.tasks ? JSON.parse(form.tasks) : [],
-    });
-    if (result) { setShowAddDialog(false); resetForm(); refetch(); }
+  const handleApprove = (appId: string) => {
+    const randomCode = `EMP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id === appId
+          ? { ...app, status: "APPROVED", employeeCode: randomCode, deadlineHoursRemaining: undefined }
+          : app
+      )
+    );
   };
 
-  const handleEdit = async () => {
-    if (!selectedProgram) return;
-    const result = await mutation.updateRecord(`/api/hrm/v2/onboarding?id=${selectedProgram.id}`, {
-      name: form.name, description: form.description, departmentId: form.departmentId || undefined,
-      isDefault: form.isDefault === "true", status: form.status, tasks: form.tasks ? JSON.parse(form.tasks) : [],
-    });
-    if (result) { setShowEditDialog(false); setSelectedProgram(null); resetForm(); refetch(); }
+  const handleRejectWith48hDeadline = (appId: string) => {
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id === appId
+          ? { ...app, status: "REJECTED_48H_DEADLINE", deadlineHoursRemaining: 48 }
+          : app
+      )
+    );
+    setRejectReasonModal(null);
   };
-
-  const handleDelete = async () => {
-    if (!selectedProgram) return;
-    const result = await mutation.deleteRecord(`/api/hrm/v2/onboarding?id=${selectedProgram.id}`);
-    if (result) { setShowDeleteDialog(false); setSelectedProgram(null); refetch(); }
-  };
-
-  const openEdit = (program: any) => {
-    setSelectedProgram(program);
-    setForm({
-      name: program.name || "", description: program.description || "", departmentId: program.departmentId || "",
-      isDefault: program.isDefault ? "true" : "false", status: program.status || "active", tasks: JSON.stringify(program.tasks || []),
-    });
-    setShowEditDialog(true);
-  };
-
-  const safeDashboard = dashboard || { totalPrograms: 0, activeOnboardings: 0, pendingTasks: 0, overdueTasks: 0 };
-
-  const columns: Column<any>[] = [
-    {
-      key: "name",
-      header: "Program",
-      sortable: true,
-      cell: (p: any) => (
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-primary flex items-center justify-center text-white font-bold">
-            <UserCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-dark dark:text-white">{p.name}</p>
-            <p className="text-xs text-muted">{p.tasks?.length || 0} tasks</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "departmentId",
-      header: "Department",
-      cell: (p: any) => <span className="text-sm text-muted">{p.departmentId || "All"}</span>,
-    },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
-      cell: (p: any) => (
-        <Badge variant={statusColors[p.status as keyof typeof statusColors] || "info"} size="sm">{p.status}</Badge>
-      ),
-    },
-    {
-      key: "isDefault",
-      header: "Default",
-      sortable: true,
-      cell: (p: any) => (
-        <Badge variant={p.isDefault ? "success" : "subtle"} size="sm">{p.isDefault ? "Yes" : "No"}</Badge>
-      ),
-    },
-  ];
-
-  const actions: Action<any>[] = [
-    { label: "Edit", icon: Pencil, onClick: (p: any) => openEdit(p), variant: "ghost" },
-    { label: "Delete", icon: Trash2, onClick: (p: any) => { setSelectedProgram(p); setShowDeleteDialog(true); }, variant: "ghost" },
-  ];
 
   return (
-    <AppShell title="Onboarding">
-      <PageHeader
-        title="Onboarding"
-        description="Manage new employee onboarding — programs, tasks, and progress tracking."
-      >
-        <Button onClick={() => { resetForm(); setShowAddDialog(true); }}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Program
-        </Button>
-      </PageHeader>
-
-      {/* Dashboard Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Active Programs", value: safeDashboard.activeOnboardings, icon: UserCheck, color: "text-primary" },
-          { label: "In Progress", value: safeDashboard.pendingTasks, icon: Clock, color: "text-warning" },
-          { label: "Total Programs", value: safeDashboard.totalPrograms, icon: ClipboardList, color: "text-info" },
-          { label: "Overdue Tasks", value: safeDashboard.overdueTasks, icon: AlertCircle, color: "text-danger" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-card rounded-xl border border-border p-4 shadow-sm">
-            <stat.icon className={`h-5 w-5 ${stat.color} mb-2`} />
-            <p className="text-2xl font-bold text-dark dark:text-white">{stat.value}</p>
-            <p className="text-xs text-muted mt-1">{stat.label}</p>
-          </div>
-        ))}
+    <AppShell title="Employee Onboarding & HR Document Approval">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Onboarding &amp; Document Verification Portal</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Review candidate documents, issue official Employee Codes, or trigger 48-Hour Resubmission Deadlines
+          </p>
+        </div>
       </div>
 
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={programs ?? []}
-        searchable
-        searchKeys={["name", "departmentId"]}
-        pageSize={10}
-        loading={loading}
-        error={error || undefined}
-        onRetry={refetch}
-        emptyMessage="No onboarding programs yet"
-        actions={actions}
-        striped
-        stickyHeader
-      />
+      {/* Onboarding Applications Table */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
+        <h3 className="font-bold text-base mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
+          <UserCheck className="h-5 w-5 text-primary" /> Registered Applications &amp; Document Approvals
+        </h3>
 
-      {/* Add Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Plus className="h-4 w-4 text-primary" />
-              </div>
-              New Onboarding Program
-            </DialogTitle>
-            <DialogDescription>Create a new employee onboarding program.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); handleAdd(); }} className="space-y-6">
-            <FormSection title="Program Details" icon={<ClipboardList className="h-4 w-4" />} columns={2}>
-              <FormInput label="Program Name" icon={<UserCheck className="h-4 w-4" />} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Standard Onboarding" />
-              <FormInput label="Department ID" icon={<Users className="h-4 w-4" />} value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} placeholder="engineering" />
-              <FormSelect label="Status" icon={<ToggleLeft className="h-4 w-4" />} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
-              <FormSelect label="Default Program" icon={<CheckCircle2 className="h-4 w-4" />} value={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.value })} options={[{ value: "false", label: "No" }, { value: "true", label: "Yes" }]} />
-            </FormSection>
-            <FormSection title="Description" icon={<ClipboardList className="h-4 w-4" />}>
-              <FormTextarea label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe the onboarding program..." />
-            </FormSection>
-            <FormSection title="Tasks Configuration" icon={<Layers className="h-4 w-4" />}>
-              <FormTextarea label="Tasks (JSON array)" value={form.tasks} onChange={(e) => setForm({ ...form, tasks: e.target.value })} placeholder='[{"title":"Submit ID","assignedTo":"employee","dueDaysAfterJoining":1,"isMandatory":true}]' className="font-mono text-xs" />
-            </FormSection>
-            {mutation.error && <div className="p-3 text-sm text-danger bg-danger/10 rounded-lg border border-danger/20">{mutation.error}</div>}
-            <FormActions onCancel={() => setShowAddDialog(false)} submitLabel="Create Program" loading={mutation.loading} />
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Pencil className="h-4 w-4 text-primary" />
-              </div>
-              Edit Program
-            </DialogTitle>
-            <DialogDescription>Update the onboarding program details.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }} className="space-y-6">
-            <FormSection title="Program Details" icon={<ClipboardList className="h-4 w-4" />} columns={2}>
-              <FormInput label="Program Name" icon={<UserCheck className="h-4 w-4" />} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Standard Onboarding" />
-              <FormInput label="Department ID" icon={<Users className="h-4 w-4" />} value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} placeholder="engineering" />
-              <FormSelect label="Status" icon={<ToggleLeft className="h-4 w-4" />} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
-              <FormSelect label="Default Program" icon={<CheckCircle2 className="h-4 w-4" />} value={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.value })} options={[{ value: "false", label: "No" }, { value: "true", label: "Yes" }]} />
-            </FormSection>
-            <FormSection title="Description" icon={<ClipboardList className="h-4 w-4" />}>
-              <FormTextarea label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe the onboarding program..." />
-            </FormSection>
-            <FormSection title="Tasks Configuration" icon={<Layers className="h-4 w-4" />}>
-              <FormTextarea label="Tasks (JSON array)" value={form.tasks} onChange={(e) => setForm({ ...form, tasks: e.target.value })} placeholder='[{"title":"Submit ID","assignedTo":"employee","dueDaysAfterJoining":1,"isMandatory":true}]' className="font-mono text-xs" />
-            </FormSection>
-            {mutation.error && <div className="p-3 text-sm text-danger bg-danger/10 rounded-lg border border-danger/20">{mutation.error}</div>}
-            <FormActions onCancel={() => setShowEditDialog(false)} submitLabel="Save Changes" loading={mutation.loading} />
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-danger/10">
-                <Trash2 className="h-4 w-4 text-danger" />
-              </div>
-              Delete Program
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete <strong>{selectedProgram?.name || "this program"}</strong>? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {mutation.error && <div className="p-3 text-sm text-danger bg-danger/10 rounded-lg border border-danger/20 mb-4">{mutation.error}</div>}
-          <div className="flex items-center justify-end gap-3">
-            <Button variant="ghost" onClick={() => setShowDeleteDialog(false)} disabled={mutation.loading}>Cancel</Button>
-            <Button variant="danger" onClick={handleDelete} loading={mutation.loading}><Trash2 className="h-4 w-4 mr-1.5" />Delete</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="border-b border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400">
+              <tr>
+                <th className="pb-3 font-semibold">Candidate</th>
+                <th className="pb-3 font-semibold">Role &amp; Dept</th>
+                <th className="pb-3 font-semibold">Verification File</th>
+                <th className="pb-3 font-semibold">Submitted Date</th>
+                <th className="pb-3 font-semibold">Verification Status</th>
+                <th className="pb-3 font-semibold">Employee Code</th>
+                {isHR && <th className="pb-3 font-semibold text-right">HR Action</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-slate-800 dark:text-slate-200">
+              {applications.map((app) => (
+                <tr key={app.id}>
+                  <td className="py-3 font-bold text-slate-900 dark:text-white">
+                    {app.name}
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-normal">{app.email}</span>
+                  </td>
+                  <td className="py-3">
+                    <span className="font-semibold block">{app.role}</span>
+                    <span className="text-[10px] text-slate-500">{app.department}</span>
+                  </td>
+                  <td className="py-3">
+                    <span className="inline-flex items-center gap-1 text-primary font-mono text-[11px] underline cursor-pointer font-bold">
+                      <FileText className="h-3.5 w-3.5" /> {app.documentName}
+                    </span>
+                  </td>
+                  <td className="py-3 font-mono text-slate-500">{app.submittedAt}</td>
+                  <td className="py-3">
+                    {app.status === "APPROVED" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="h-3 w-3" /> VERIFIED &amp; APPROVED
+                      </span>
+                    ) : app.status === "REJECTED_48H_DEADLINE" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-[10px] font-bold text-red-600 dark:text-red-400">
+                        <AlertTriangle className="h-3 w-3 animate-pulse" /> REJECTED (48H DEADLINE: {app.deadlineHoursRemaining || 48}h)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-0.5 text-[10px] font-bold text-yellow-600 dark:text-yellow-400">
+                        <Clock className="h-3 w-3 animate-pulse" /> DOCUMENT VERIFICATION PENDING
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3 font-mono font-bold text-primary">
+                    {app.employeeCode ? app.employeeCode : <span className="text-slate-400 font-normal text-[11px]">Pending HR Approval</span>}
+                  </td>
+                  {isHR && (
+                    <td className="py-3 text-right">
+                      {app.status === "DOCUMENT_VERIFICATION_PENDING" ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            onClick={() => handleApprove(app.id)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Approve
+                          </Button>
+                          <Button
+                            onClick={() => handleRejectWith48hDeadline(app.id)}
+                            variant="danger"
+                            className="font-bold text-xs h-8 px-3"
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1" /> Reject (48h Clock)
+                          </Button>
+                        </div>
+                      ) : app.status === "REJECTED_48H_DEADLINE" ? (
+                        <span className="text-[10px] text-red-500 font-bold">48h Resubmission Active</span>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 font-medium">Finalized</span>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </AppShell>
   );
 }

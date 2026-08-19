@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const protectedHrmsRoutes = [
   "/hrms/dashboard",
+  "/hrms/superadmin",
+  "/hrms/manager",
+  "/hrms/employee",
   "/hrms/leads",
   "/hrms/customers",
   "/hrms/contacts",

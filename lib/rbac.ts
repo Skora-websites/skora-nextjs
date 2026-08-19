@@ -6,46 +6,53 @@ import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 
 // ── Role Types ─────────────────────────────────────────
 
-export type Role = "super_admin" | "admin" | "employee";
+export type Role = "super_admin" | "admin" | "hr_admin" | "manager" | "employee";
 
 export const ROLES = {
   SUPER_ADMIN: "super_admin" as const,
   ADMIN: "admin" as const,
+  HR_ADMIN: "hr_admin" as const,
+  MANAGER: "manager" as const,
   EMPLOYEE: "employee" as const,
 } as const;
 
 /**
- * Maps legacy roles (from the old system) to the new 3-role RBAC system.
+ * Maps legacy roles (from the old system) to the new RBAC system.
  * This ensures backward compatibility for existing users.
  */
 export const LEGACY_ROLE_MAP: Record<string, Role> = {
   super_admin: "super_admin",
-  admin: "admin",
-  hr: "admin",
-  manager: "admin",
+  admin: "hr_admin",
+  hr_admin: "hr_admin",
+  hr: "hr_admin",
+  manager: "manager",
   employee: "employee",
   agent: "employee",
-  support_manager: "admin",
+  support_manager: "manager",
 };
 
 /**
- * Normalize a role string to one of the three canonical roles.
+ * Normalize a role string to one of the canonical roles.
  * Handles legacy roles and unknown roles gracefully.
  */
 export function normalizeRole(role: string | undefined | null): Role {
   if (!role) return "employee";
-  return LEGACY_ROLE_MAP[role] || "employee";
+  return LEGACY_ROLE_MAP[role] || (role as Role) || "employee";
 }
 
 export const ROLE_HIERARCHY: Record<Role, number> = {
   super_admin: 100,
+  hr_admin: 80,
   admin: 80,
+  manager: 50,
   employee: 20,
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
   super_admin: "Super Admin",
-  admin: "Admin",
+  hr_admin: "HR Admin",
+  admin: "HR Admin",
+  manager: "Manager",
   employee: "Employee",
 };
 
@@ -275,135 +282,114 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   // Super Admin — full access to everything
   super_admin: Object.values(PERMISSIONS),
 
-  // Admin — employee management, attendance, leave, HR operations, reports
-  admin: [
+  // HR Admin — full employee management, attendance, leave, payroll, HR operations, reports
+  hr_admin: [
     PERMISSIONS.DASHBOARD_VIEW,
-
     PERMISSIONS.EMPLOYEES_VIEW,
     PERMISSIONS.EMPLOYEES_CREATE,
     PERMISSIONS.EMPLOYEES_EDIT,
     PERMISSIONS.EMPLOYEES_DELETE,
-
     PERMISSIONS.ATTENDANCE_VIEW,
     PERMISSIONS.ATTENDANCE_EDIT,
     PERMISSIONS.ATTENDANCE_REGULARIZE,
-
     PERMISSIONS.LEAVE_VIEW,
     PERMISSIONS.LEAVE_APPLY,
     PERMISSIONS.LEAVE_APPROVE,
-
     PERMISSIONS.PAYROLL_VIEW,
     PERMISSIONS.PAYROLL_PROCESS,
     PERMISSIONS.PAYROLL_EDIT,
-
     PERMISSIONS.ORG_VIEW,
     PERMISSIONS.ORG_EDIT,
     PERMISSIONS.ORG_DEPARTMENTS,
-
     PERMISSIONS.REPORTS_VIEW,
     PERMISSIONS.REPORTS_EXPORT,
-
     PERMISSIONS.ASSETS_VIEW,
     PERMISSIONS.ASSETS_CREATE,
     PERMISSIONS.ASSETS_ASSIGN,
-
     PERMISSIONS.DOCUMENTS_VIEW,
     PERMISSIONS.DOCUMENTS_UPLOAD,
-
     PERMISSIONS.ENGAGE_POST,
     PERMISSIONS.ENGAGE_COMMENT,
-
     PERMISSIONS.ONBOARDING_VIEW,
     PERMISSIONS.ONBOARDING_MANAGE,
-
     PERMISSIONS.EXIT_VIEW,
     PERMISSIONS.EXIT_MANAGE,
-
     PERMISSIONS.HOLIDAYS_VIEW,
     PERMISSIONS.HOLIDAYS_MANAGE,
-
     PERMISSIONS.PROBATION_VIEW,
     PERMISSIONS.PROBATION_MANAGE,
-
-    // CRM
-    PERMISSIONS.LEADS_VIEW,
-    PERMISSIONS.LEADS_CREATE,
-    PERMISSIONS.LEADS_EDIT,
-    PERMISSIONS.LEADS_DELETE,
-    PERMISSIONS.CUSTOMERS_VIEW,
-    PERMISSIONS.CUSTOMERS_CREATE,
-    PERMISSIONS.CUSTOMERS_EDIT,
-    PERMISSIONS.CUSTOMERS_DELETE,
-    PERMISSIONS.CONTACTS_VIEW,
-    PERMISSIONS.CONTACTS_CREATE,
-    PERMISSIONS.CONTACTS_EDIT,
-    PERMISSIONS.CONTACTS_DELETE,
-    PERMISSIONS.DEALS_VIEW,
-    PERMISSIONS.DEALS_CREATE,
-    PERMISSIONS.DEALS_EDIT,
-    PERMISSIONS.DEALS_DELETE,
-    PERMISSIONS.TASKS_VIEW,
-    PERMISSIONS.TASKS_CREATE,
-    PERMISSIONS.TASKS_EDIT,
-    PERMISSIONS.TASKS_DELETE,
-    PERMISSIONS.ACTIVITIES_VIEW,
-    PERMISSIONS.ACTIVITIES_CREATE,
-    PERMISSIONS.ACTIVITIES_EDIT,
-    PERMISSIONS.ACTIVITIES_DELETE,
-
-    // Recruitment
     PERMISSIONS.RECRUITMENT_VIEW,
     PERMISSIONS.RECRUITMENT_CREATE,
     PERMISSIONS.RECRUITMENT_EDIT,
     PERMISSIONS.RECRUITMENT_DELETE,
-
-    // Performance
     PERMISSIONS.PERFORMANCE_VIEW,
     PERMISSIONS.PERFORMANCE_CREATE,
     PERMISSIONS.PERFORMANCE_EDIT,
     PERMISSIONS.PERFORMANCE_DELETE,
-
-    // Task & Ticket Management
     PERMISSIONS.TASKS_HRM_VIEW,
     PERMISSIONS.TASKS_HRM_CREATE,
     PERMISSIONS.TASKS_HRM_EDIT,
     PERMISSIONS.TASKS_HRM_DELETE,
-    PERMISSIONS.TASKS_HRM_ASSIGN,
-    PERMISSIONS.TASKS_HRM_REASSIGN,
     PERMISSIONS.TICKETS_VIEW,
     PERMISSIONS.TICKETS_CREATE,
     PERMISSIONS.TICKETS_EDIT,
-    PERMISSIONS.TICKETS_DELETE,
-    PERMISSIONS.TICKETS_ASSIGN,
     PERMISSIONS.TICKETS_REPLY,
-
-    // Projects
     PERMISSIONS.PROJECTS_VIEW,
     PERMISSIONS.PROJECTS_CREATE,
     PERMISSIONS.PROJECTS_EDIT,
     PERMISSIONS.PROJECTS_DELETE,
-
-    // Departments
     PERMISSIONS.DEPARTMENTS_VIEW,
-    PERMISSIONS.DEPARTMENTS_CREATE,
-    PERMISSIONS.DEPARTMENTS_EDIT,
-    PERMISSIONS.DEPARTMENTS_DELETE,
-  ],    // Employee — self-service: own profile, attendance, leave, assigned assets, documents
+  ],
+
+  // Admin alias for hr_admin
+  admin: [
+    PERMISSIONS.DASHBOARD_VIEW,
+    PERMISSIONS.EMPLOYEES_VIEW,
+    PERMISSIONS.EMPLOYEES_CREATE,
+    PERMISSIONS.EMPLOYEES_EDIT,
+    PERMISSIONS.EMPLOYEES_DELETE,
+    PERMISSIONS.ATTENDANCE_VIEW,
+    PERMISSIONS.LEAVE_VIEW,
+    PERMISSIONS.LEAVE_APPROVE,
+    PERMISSIONS.PAYROLL_VIEW,
+    PERMISSIONS.PAYROLL_PROCESS,
+    PERMISSIONS.PROJECTS_VIEW,
+    PERMISSIONS.PROJECTS_CREATE,
+  ],
+
+  // Manager — departmental team management, project tasks, leave approvals, timesheets
+  manager: [
+    PERMISSIONS.DASHBOARD_VIEW,
+    PERMISSIONS.EMPLOYEES_VIEW,
+    PERMISSIONS.ATTENDANCE_VIEW,
+    PERMISSIONS.LEAVE_VIEW,
+    PERMISSIONS.LEAVE_APPLY,
+    PERMISSIONS.LEAVE_APPROVE,
+    PERMISSIONS.PERFORMANCE_VIEW,
+    PERMISSIONS.PERFORMANCE_CREATE,
+    PERMISSIONS.TASKS_HRM_VIEW,
+    PERMISSIONS.TASKS_HRM_CREATE,
+    PERMISSIONS.TASKS_HRM_EDIT,
+    PERMISSIONS.TASKS_HRM_ASSIGN,
+    PERMISSIONS.PROJECTS_VIEW,
+    PERMISSIONS.PROJECTS_CREATE,
+    PERMISSIONS.PROJECTS_EDIT,
+    PERMISSIONS.TICKETS_VIEW,
+    PERMISSIONS.TICKETS_REPLY,
+    PERMISSIONS.HOLIDAYS_VIEW,
+    PERMISSIONS.DOCUMENTS_VIEW,
+  ],
+
+  // Employee — self-service: own profile, attendance, leave, assigned tasks, timesheets
   employee: [
     PERMISSIONS.DASHBOARD_VIEW,
-
     PERMISSIONS.ATTENDANCE_VIEW,
     PERMISSIONS.LEAVE_APPLY,
-
     PERMISSIONS.ASSETS_VIEW,
     PERMISSIONS.DOCUMENTS_VIEW,
-
     PERMISSIONS.ENGAGE_POST,
     PERMISSIONS.ENGAGE_COMMENT,
-
     PERMISSIONS.HOLIDAYS_VIEW,
-
-    // Task & Ticket
     PERMISSIONS.TASKS_HRM_VIEW,
     PERMISSIONS.TICKETS_VIEW,
     PERMISSIONS.TICKETS_CREATE,
@@ -415,44 +401,42 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
 
 export const ROUTE_ACCESS: Record<string, Role[]> = {
   // Everyone
-  "/dashboard": ["super_admin", "admin", "employee"],
+  "/dashboard": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/employee": ["super_admin", "hr_admin", "admin", "manager", "employee"],
 
-  // Admin & Super Admin only
-  "/employees": ["super_admin", "admin"],
-  "/payroll": ["super_admin", "admin"],
-  "/organization": ["super_admin", "admin"],
-  "/reports": ["super_admin", "admin"],
-  "/onboarding": ["super_admin", "admin"],
-  "/exit": ["super_admin", "admin"],
-  "/probation": ["super_admin", "admin"],
+  // Manager Dashboard
+  "/manager": ["super_admin", "hr_admin", "admin", "manager"],
 
-  // Admin, Super Admin, and self-service employees
-  "/attendance": ["super_admin", "admin", "employee"],
-  "/leaves": ["super_admin", "admin", "employee"],
-  "/assets": ["super_admin", "admin", "employee"],
-  "/documents": ["super_admin", "admin", "employee"],
-  "/engage": ["super_admin", "admin", "employee"],
-  "/holidays": ["super_admin", "admin", "employee"],
+  // Superadmin Portal
+  "/superadmin": ["super_admin"],
 
-  // Task & Ticket Management
-  "/tasks": ["super_admin", "admin", "employee"],
-  "/tickets": ["super_admin", "admin", "employee"],
+  // HR Admin & Super Admin only
+  "/employees": ["super_admin", "hr_admin", "admin"],
+  "/payroll": ["super_admin", "hr_admin", "admin"],
+  "/organization": ["super_admin", "hr_admin", "admin"],
+  "/reports": ["super_admin", "hr_admin", "admin"],
+  "/onboarding": ["super_admin", "hr_admin", "admin"],
+  "/exit": ["super_admin", "hr_admin", "admin"],
+  "/probation": ["super_admin", "hr_admin", "admin"],
 
-  // Super Admin only
-  "/settings": ["super_admin"],
+  // HR Admin, Manager, Super Admin, and self-service employees
+  "/attendance": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/leaves": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/assets": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/documents": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/engage": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/holidays": ["super_admin", "hr_admin", "admin", "manager", "employee"],
 
-  // CRM routes — Super Admin only (legacy CRM features)
-  "/leads": ["super_admin"],
-  "/pipeline": ["super_admin"],
-  "/customers": ["super_admin"],
-  "/contacts": ["super_admin"],
-  "/analytics": ["super_admin"],
+  // Task & Ticket Management & PMS Projects
+  "/tasks": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/tickets": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/projects": ["super_admin", "hr_admin", "admin", "manager", "employee"],
 
-  // New modules — Super Admin & Admin
-  "/recruitment": ["super_admin", "admin"],
-  "/performance": ["super_admin", "admin"],
-  "/projects": ["super_admin", "admin"],
-  "/departments": ["super_admin", "admin"],
+  // Super Admin & HR Admin
+  "/settings": ["super_admin", "hr_admin"],
+  "/recruitment": ["super_admin", "hr_admin", "admin"],
+  "/performance": ["super_admin", "hr_admin", "admin", "manager"],
+  "/departments": ["super_admin", "hr_admin", "admin"],
 
   // System-level — Super Admin only
   "/role-management": ["super_admin"],

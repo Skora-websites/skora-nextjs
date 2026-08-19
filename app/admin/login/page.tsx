@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, Lock, User, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { loginAdminAction } from "@/lib/actions/admin-auth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -18,22 +19,16 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Authentication failed.");
+      const res = await loginAdminAction(username, password);
+      if (!res.success) {
+        setError(res.error || "Authentication failed.");
         setLoading(false);
         return;
       }
 
       window.location.href = "/admin";
-    } catch (err) {
-      setError("Network error. Please try again.");
+    } catch (err: any) {
+      setError(err?.message || "Authentication failed. Please try again.");
       setLoading(false);
     }
   };

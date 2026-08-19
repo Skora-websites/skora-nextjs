@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { UserPlus, Building2, Mail, Lock, User, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Building2, Mail, Lock, User, AlertCircle, CheckCircle2, Eye, EyeOff, Upload, FileText, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/ui/form-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +53,12 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    department: "Software Engineering",
   });
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -63,8 +68,14 @@ export default function RegisterPage() {
   const passwordsMatch = formData.password === formData.confirmPassword;
   const passwordError = formData.confirmPassword && !passwordsMatch ? "Passwords do not match" : undefined;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,7 +96,14 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!selectedFile) {
+      setError("Please upload an ID verification document file (.pdf, .png, .jpg) for HR verification");
+      setLoading(false);
+      return;
+    }
+
     try {
+      // 1. Submit Registration Request
       const res = await fetch("/api/hrm/v2/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,14 +122,19 @@ export default function RegisterPage() {
         throw new Error(data.error || "Registration failed");
       }
 
-      const data = await res.json();
-      if (data.data?.sessionCreated) {
-        setSuccess("Account created successfully! Redirecting...");
-        setTimeout(() => router.push("/hrms/dashboard"), 1500);
-      } else {
-        setSuccess("Account created successfully! Redirecting to login...");
-        setTimeout(() => router.push("/hrms/login"), 2000);
-      }
+      // Save Onboarding Status to Local Storage
+      const appState = {
+        name: formData.name,
+        email: formData.email,
+        department: formData.department,
+        documentName: selectedFile.name,
+        status: "DOCUMENT_VERIFICATION_PENDING",
+        submittedAt: new Date().toISOString(),
+      };
+      localStorage.setItem("my-onboarding-status", JSON.stringify(appState));
+
+      setSuccess("Documents submitted! Verification request sent to HR for approval.");
+      setTimeout(() => router.push("/hrms/employee/profile"), 1800);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -121,26 +144,26 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-md animate-section-in">
+      <Card className="w-full max-w-md animate-section-in text-slate-900 dark:text-white">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-primary shadow-lg shadow-primary/25">
             <Building2 className="h-7 w-7 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold">Create account</CardTitle>
-          <CardDescription>Register for your HRMS account</CardDescription>
+          <CardTitle className="text-2xl font-bold">Employee Registration</CardTitle>
+          <CardDescription>Register & Submit Documents for HR Verification</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-4 text-xs">
             {error && (
-              <div className="flex items-center gap-2 p-3 text-sm text-danger bg-danger/10 rounded-xl border border-danger/20 animate-form-error">
+              <div className="flex items-center gap-2 p-3 text-xs text-danger bg-danger/10 rounded-xl border border-danger/20">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="flex items-center gap-2 p-3 text-sm text-success bg-success/10 rounded-xl border border-success/20 animate-form-error">
+              <div className="flex items-center gap-2 p-3 text-xs text-success bg-success/10 rounded-xl border border-success/20 font-bold">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                 {success}
               </div>
@@ -150,18 +173,18 @@ export default function RegisterPage() {
               label="Full Name"
               icon={<User className="h-4 w-4" />}
               name="name"
-              placeholder="John Doe"
+              placeholder="e.g. Shivangi Gupta"
               value={formData.name}
               onChange={handleChange}
               required
             />
 
             <FormInput
-              label="Email"
+              label="Email Address"
               type="email"
               icon={<Mail className="h-4 w-4" />}
               name="email"
-              placeholder="john@company.com"
+              placeholder="shivangi@company.com"
               value={formData.email}
               onChange={handleChange}
               required
@@ -178,7 +201,6 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 required
                 minLength={6}
-                helperText="Must be at least 6 characters"
                 endIcon={
                   <button
                     type="button"
@@ -214,22 +236,49 @@ export default function RegisterPage() {
                 </button>
               }
             />
+
+            {/* Step 2: Mandatory Real Document Upload */}
+            <div className="space-y-1.5 pt-1">
+              <label className="block font-semibold text-slate-700 dark:text-slate-300">
+                Onboarding Document Verification <span className="text-red-500">*</span>
+              </label>
+
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-primary/40 rounded-xl bg-slate-50 dark:bg-black/40 hover:bg-slate-100 dark:hover:bg-black/60 cursor-pointer transition-colors text-center"
+              >
+                <Upload className="h-6 w-6 text-primary mb-1" />
+                <span className="font-bold text-slate-900 dark:text-white text-xs">
+                  {selectedFile ? selectedFile.name : "Click to Browse Govt ID / Passport File"}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {selectedFile
+                    ? `Size: ${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`
+                    : "Mandatory for HR Approval & Employee Code Issuance"}
+                </span>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </div>
+            </div>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full h-11" disabled={loading}>
+          <CardFooter className="flex flex-col gap-3 pt-2">
+            <Button type="submit" className="w-full h-11 font-bold" disabled={loading}>
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Creating account...
+                  <Clock className="animate-spin h-4 w-4" />
+                  Submitting to HR...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
-                  Create Account
+                  Register &amp; Submit Documents to HR
                 </span>
               )}
             </Button>

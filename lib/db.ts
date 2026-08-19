@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import clientPromise from "./mongodb";
+import clientPromise, { getMongoClient } from "./mongodb";
 
 export interface Lead {
   id: string;
@@ -40,6 +40,7 @@ export interface SiteContent {
   healthcareEmail: string;
   address: string;
   responseGuarantee: string;
+  adminUsername?: string;
   adminPasswordHash: string;
   packages: PackageItem[];
   services: ServiceItem[];
@@ -118,7 +119,8 @@ const defaultSiteContent: SiteContent = {
   healthcareEmail: "ashish17427@gmail.com",
   address: "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India",
   responseGuarantee: "Rapid 4-Hour Response Guarantee",
-  adminPasswordHash: process.env.ADMIN_PASSWORD || "",
+  adminUsername: process.env.ADMIN_USERNAME || "admin",
+  adminPasswordHash: process.env.ADMIN_PASSWORD || "Skora@admin2026",
   packages: defaultPackages,
   services: defaultServices,
   textOverrides: {},
@@ -393,15 +395,99 @@ export async function updateSiteContent(partialContent: Partial<SiteContent>): P
   return updatedContent;
 }
 
+export interface AdminUser {
+  username: string;
+  passwordHash: string;
+  role: string;
+  updatedAt: string;
+}
+
+export async function getAdminUser(): Promise<AdminUser> {
+  try {
+    const client = await getMongoClient();
+    if (client) {
+      const db = client.db("skora_db");
+      const collection = db.collection<AdminUser>("admin");
+      let user = await collection.findOne({ key: "admin_user" });
+      if (!user) {
+        user = await collection.findOne({});
+      }
+      if (user) {
+        const { _id, ...cleanUser } = user as any;
+        return {
+          username: String(cleanUser.username || cleanUser.name || ""),
+          passwordHash: String(cleanUser.passwordHash || cleanUser.password || ""),
+          role: String(cleanUser.role || "SuperAdmin"),
+          updatedAt: cleanUser.updatedAt || new Date().toISOString(),
+        };
+      }
+    }
+  } catch (e) {
+    console.error("MongoDB error loading admin user:", e);
+  }
+
+  return {
+    username: "",
+    passwordHash: "",
+    role: "SuperAdmin",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
+  const adminUser = await getAdminUser();
+  const dbUsername = (adminUser.username || "").toLowerCase().trim();
+  const dbPassword = (adminUser.passwordHash || "").trim();
+
+  const inputUsername = (username || "").toLowerCase().trim();
+  const inputPassword = (password || "").trim();
+
+  const isUsernameValid = inputUsername === dbUsername;
+  const isPasswordValid = inputPassword === dbPassword;
+
+  if (!isUsernameValid || !isPasswordValid) {
+    console.warn(`[Admin Auth] Login failed for user '${inputUsername}'. DB expects username: '${dbUsername}'`);
+  } else {
+    console.log(`[Admin Auth] Login succeeded for user '${inputUsername}'`);
+  }
+
+  return isUsernameValid && isPasswordValid;
+}
+
 export async function verifyAdminPassword(password: string): Promise<boolean> {
-  const envPassword = process.env.ADMIN_PASSWORD;
-  const content = await getSiteContent();
-  const currentPassword = content.adminPasswordHash || envPassword || "";
-  if (!currentPassword) return false;
-  return password === currentPassword;
+  const adminUser = await getAdminUser();
+  return password === adminUser.passwordHash;
+}
+
+export async function updateAdminCredentials(newUsername?: string, newPassword?: string): Promise<boolean> {
+  const current = await getAdminUser();
+  const updatedUser: AdminUser = {
+    ...current,
+    ...(newUsername && newUsername.trim().length > 0 ? { username: newUsername.trim() } : {}),
+    ...(newPassword && newPassword.trim().length > 0 ? { passwordHash: newPassword.trim() } : {}),
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (clientPromise) {
+    try {
+      const client = await clientPromise;
+      if (client) {
+        const db = client.db("skora_db");
+        const collection = db.collection("admin");
+        await collection.updateOne(
+          { key: "admin_user" },
+          { $set: { key: "admin_user", ...updatedUser } },
+          { upsert: true }
+        );
+      }
+    } catch (e) {
+      console.error("MongoDB Atlas error updating admin user:", e);
+    }
+  }
+
+  return true;
 }
 
 export async function updateAdminPassword(newPassword: string): Promise<boolean> {
-  await updateSiteContent({ adminPasswordHash: newPassword });
-  return true;
+  return updateAdminCredentials(undefined, newPassword);
 }
