@@ -344,17 +344,17 @@ export function Navbar({ onMenuClick, title }: NavbarProps) {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/hrms/employee/profile")}>
             <User className="mr-2 h-4 w-4" />
-            Profile
+            My Profile
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/hrms/settings")}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <HelpCircle className="mr-2 h-4 w-4" />
-            Help
+          <DropdownMenuItem onClick={() => router.push("/hrms/employee/my-tasks")}>
+            <ClipboardList className="mr-2 h-4 w-4" />
+            My Tasks
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

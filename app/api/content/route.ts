@@ -21,7 +21,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { phone, email, healthcareEmail, address, responseGuarantee, packages, services, textOverrides, newPassword } = body;
+    const { phone, email, healthcareEmail, address, responseGuarantee, packages, services, textOverrides, newUsername, newPassword } = body;
 
     if (newPassword && newPassword.trim().length > 0) {
       await updateAdminPassword(newPassword.trim());
@@ -33,6 +33,7 @@ export async function PUT(request: Request) {
       ...(healthcareEmail ? { healthcareEmail } : {}),
       ...(address ? { address } : {}),
       ...(responseGuarantee ? { responseGuarantee } : {}),
+      ...(newUsername ? { adminUsername: newUsername.trim() } : {}),
       ...(packages ? { packages } : {}),
       ...(services ? { services } : {}),
       ...(textOverrides ? { textOverrides } : {}),

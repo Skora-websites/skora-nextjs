@@ -33,6 +33,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useBreakpoint } from "@/hooks/use-media-query";
 import {
   NAV_ITEMS,
+  NAV_ITEMS_BY_ROLE,
   NAV_GROUPS,
   NAV_GROUP_ORDER,
   EXPANDABLE_GROUPS,
@@ -123,8 +124,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const isCollapsed = isSidebarMini && !isMobile && !isTablet;
 
+  const roleNavItems = (user?.role && NAV_ITEMS_BY_ROLE[user.role]) || NAV_ITEMS;
   // Filter nav items based on the user's role
-  const visibleNavItems = NAV_ITEMS.filter((item) =>
+  const visibleNavItems = roleNavItems.filter((item) =>
     canAccessRoute(user?.role ?? null, item.href)
   );
 

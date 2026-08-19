@@ -1,32 +1,47 @@
 import { MongoClient } from "mongodb";
+import dns from "dns";
+
+// Ensure Node.js on Windows resolves MongoDB Atlas SRV records reliably
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch (e) {}
 
 const uri = process.env.MONGODB_URI;
-const isPlaceholder = !uri || uri.includes("username:password") || uri.includes("<username>");
+const isPlaceholder = !uri || uri.includes("<username>") || uri.includes("<password>");
 
-let clientPromise: Promise<MongoClient | null> | undefined;
+export async function getMongoClient(): Promise<MongoClient | null> {
+  if (!uri || isPlaceholder) return null;
 
-if (uri && !isPlaceholder) {
-  const options = {
-    serverSelectionTimeoutMS: 2000, // 2s quick timeout if MongoDB is offline
+  const globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient | null>;
   };
 
-  if (process.env.NODE_ENV === "development") {
-    const globalWithMongo = global as typeof globalThis & {
-      _mongoClientPromise?: Promise<MongoClient | null>;
-    };
-
-    if (!globalWithMongo._mongoClientPromise) {
-      const client = new MongoClient(uri, options);
-      globalWithMongo._mongoClientPromise = client.connect().catch((err) => {
-        // Silently handle offline MongoDB service without crashing
-        return null;
-      });
-    }
-    clientPromise = globalWithMongo._mongoClientPromise;
-  } else {
-    const client = new MongoClient(uri, options);
-    clientPromise = client.connect().catch(() => null);
+  if (globalWithMongo._mongoClientPromise) {
+    const client = await globalWithMongo._mongoClientPromise;
+    if (client) return client;
+    // Reset if previously failed
+    globalWithMongo._mongoClientPromise = undefined;
   }
+
+  try {
+    const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+    const connectPromise = client.connect().catch((err) => {
+      console.warn("[MongoDB] Connection error:", err.message);
+      globalWithMongo._mongoClientPromise = undefined;
+      return null;
+    });
+
+    globalWithMongo._mongoClientPromise = connectPromise;
+    return await connectPromise;
+  } catch {
+    globalWithMongo._mongoClientPromise = undefined;
+    return null;
+  }
+}
+
+let clientPromise: Promise<MongoClient | null> | undefined;
+if (uri && !isPlaceholder) {
+  clientPromise = getMongoClient();
 }
 
 export default clientPromise;

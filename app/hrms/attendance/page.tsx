@@ -1,341 +1,245 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { PageHeader } from "@/components/shared/page-header";
-import { FormInput } from "@/components/ui/form-input";
-import { FormSelect } from "@/components/ui/form-select";
-import { FormSection } from "@/components/ui/form-section";
-import { FormActions } from "@/components/ui/form-actions";
+import { AttendancePunchCard } from "@/components/hr/attendance-punch-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/shared/data-table";
-import type { Column, Action } from "@/components/shared/data-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Calendar,
-  Download,
-  Plus,
-  Pencil,
-  Trash2,
-  User,
-  LogIn,
-  LogOut,
-} from "lucide-react";
-import { useAttendance } from "@/hooks/hrm/use-attendance";
-import { useMutation } from "@/hooks/use-mutation";
-import { formatDate } from "@/lib/utils";
-
-const statusConfig: Record<string, { label: string; variant: "success" | "danger" | "warning" | "info" | "primary" }> = {
-  present: { label: "Present", variant: "success" },
-  absent: { label: "Absent", variant: "danger" },
-  half_day: { label: "Half Day", variant: "warning" },
-  late: { label: "Late", variant: "warning" },
-  week_off: { label: "Week Off", variant: "info" },
-  holiday: { label: "Holiday", variant: "info" },
-  on_leave: { label: "On Leave", variant: "primary" },
-};
-
-const ATTENDANCE_STATUSES = ["present", "absent", "half_day", "late", "week_off", "holiday", "on_leave"];
-
-const emptyForm = { userId: "", date: "", checkIn: "", checkOut: "", status: "present", shiftId: "" };
+import { CalendarDays, Download, Table as TableIcon, CheckCircle2, AlertCircle, Clock, MapPin, Search } from "lucide-react";
+import { fetchAttendanceRecordsAction } from "@/lib/actions/attendance-actions";
+import { AttendanceRecord } from "@/lib/db/attendance";
 
 export default function AttendancePage() {
-  const { data: records, loading, error, refetch } = useAttendance();
-  const mutation = useMutation();
+  const [activeTab, setActiveTab] = useState<"table" | "calendar">("table");
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [form, setForm] = useState(emptyForm);
+  const loadAttendance = async () => {
+    setLoading(true);
+    const res = await fetchAttendanceRecordsAction();
+    if (res.success && res.records) {
+      setRecords(res.records);
+    }
+    setLoading(false);
+  };
 
-  const resetForm = useCallback(() => setForm(emptyForm), []);
+  useEffect(() => {
+    loadAttendance();
+  }, []);
 
-  const handleAdd = async () => {
-    const result = await mutation.createRecord("/api/hrm/v2/attendance", {
-      ...form,
-      date: form.date || new Date().toISOString().split("T")[0],
-      calculateStats: true,
+  const handleExportCSV = () => {
+    if (records.length === 0) return;
+
+    const headers = ["Date", "Employee Name", "Email", "Employee Code", "Status", "Punch In", "Punch Out", "Work Hours", "Location"];
+    const csvRows = [headers.join(",")];
+
+    records.forEach((r) => {
+      const row = [
+        r.date,
+        `"${r.userName}"`,
+        `"${r.userEmail}"`,
+        `"${r.employeeCode || ""}"`,
+        r.status,
+        r.punchInTime ? new Date(r.punchInTime).toLocaleTimeString() : "",
+        r.punchOutTime ? new Date(r.punchOutTime).toLocaleTimeString() : "",
+        r.workHours || 0,
+        `"${r.location || ""}"`,
+      ];
+      csvRows.push(row.join(","));
     });
-    if (result) {
-      setShowAddDialog(false);
-      resetForm();
-      refetch();
-    }
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.setAttribute("download", `attendance_export_${new Date().toISOString().split("T")[0]}.csv`);
+    a.click();
   };
 
-  const handleEdit = async () => {
-    if (!selectedRecord) return;
-    const result = await mutation.updateRecord(
-      `/api/hrm/v2/attendance?id=${selectedRecord.id}`,
-      form
-    );
-    if (result) {
-      setShowEditDialog(false);
-      setSelectedRecord(null);
-      resetForm();
-      refetch();
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedRecord) return;
-    const result = await mutation.deleteRecord(
-      `/api/hrm/v2/attendance?id=${selectedRecord.id}`
-    );
-    if (result) {
-      setShowDeleteDialog(false);
-      setSelectedRecord(null);
-      refetch();
-    }
-  };
-
-  const openEdit = (rec: any) => {
-    setSelectedRecord(rec);
-    setForm({
-      userId: rec.userId || "",
-      date: rec.date ? new Date(rec.date).toISOString().split("T")[0] : "",
-      checkIn: rec.checkIn ? new Date(rec.checkIn).toISOString().slice(0, 16) : "",
-      checkOut: rec.checkOut ? new Date(rec.checkOut).toISOString().slice(0, 16) : "",
-      status: rec.status || "present",
-      shiftId: rec.shiftId || "",
-    });
-    setShowEditDialog(true);
-  };
-
-  const openDelete = (rec: any) => {
-    setSelectedRecord(rec);
-    setShowDeleteDialog(true);
-  };
-
-  // ── Columns ────────────────────────────────────────────
-  const columns: Column<any>[] = useMemo(
-    () => [
-      {
-        key: "userId",
-        header: "User ID",
-        sortable: true,
-        cell: (record: any) => (
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-gradient-info flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {record.userId?.charAt(0) || "?"}
-            </div>
-            <span className="text-sm font-medium text-dark dark:text-white">{record.userId || "—"}</span>
-          </div>
-        ),
-      },
-      {
-        key: "date",
-        header: "Date",
-        sortable: true,
-        cell: (record: any) => (
-          <span className="text-sm text-muted">{record.date ? formatDate(record.date as any) : "—"}</span>
-        ),
-      },
-      {
-        key: "checkIn",
-        header: "Check In",
-        cell: (record: any) => (
-          <span className="text-sm text-muted">{record.checkIn ? formatDate(record.checkIn as any) : "—"}</span>
-        ),
-      },
-      {
-        key: "checkOut",
-        header: "Check Out",
-        cell: (record: any) => (
-          <span className="text-sm text-muted">{record.checkOut ? formatDate(record.checkOut as any) : "—"}</span>
-        ),
-      },
-      {
-        key: "totalHours",
-        header: "Hours",
-        sortable: true,
-        cell: (record: any) => (
-          <span className="text-sm text-muted">{record.totalHours ? `${record.totalHours}h` : "—"}</span>
-        ),
-      },
-      {
-        key: "status",
-        header: "Status",
-        sortable: true,
-        cell: (record: any) => {
-          const cfg = statusConfig[record.status as keyof typeof statusConfig] || { label: record.status || "—", variant: "info" as const };
-          return <Badge variant={cfg.variant} size="sm">{cfg.label}</Badge>;
-        },
-      },
-    ],
-    []
-  );
-
-  // ── Actions ────────────────────────────────────────────
-  const actions: Action<any>[] = useMemo(
-    () => [
-      {
-        label: "Edit",
-        icon: Pencil,
-        onClick: (rec: any) => openEdit(rec),
-        variant: "ghost",
-      },
-      {
-        label: "Delete",
-        icon: Trash2,
-        onClick: (rec: any) => openDelete(rec),
-        variant: "ghost",
-      },
-    ],
-    []
+  const filteredRecords = records.filter(
+    (r) =>
+      r.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.userEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.employeeCode && r.employeeCode.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
-    <AppShell title="Attendance">
-      <PageHeader
-        title="Attendance"
-        description="Track employee attendance, check-ins, and work hours."
-      >
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Calendar className="mr-2 h-4 w-4" />
-            Calendar View
-          </Button>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button onClick={() => { resetForm(); setShowAddDialog(true); }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Mark Attendance
+    <AppShell title="Attendance & Shift Logs">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Attendance Control & Shift Logs</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Office Hours: <strong>10:00 AM – 7:00 PM</strong> · GPS Geofenced Punch Records
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleExportCSV}
+            variant="outline"
+            className="gap-2 border-gray-300 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-semibold"
+          >
+            <Download className="h-4 w-4" /> Export CSV
           </Button>
         </div>
-      </PageHeader>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Present Today", value: "—", color: "text-success", icon: CheckCircle2 },
-          { label: "Absent Today", value: "—", color: "text-danger", icon: XCircle },
-          { label: "On Leave", value: "—", color: "text-primary", icon: Clock },
-          { label: "Late Today", value: "—", color: "text-warning", icon: AlertTriangle },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-card rounded-xl border border-border p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            </div>
-            <p className="text-2xl font-bold text-dark dark:text-white">{stat.value}</p>
-            <p className="text-xs text-muted mt-1">{stat.label}</p>
-          </div>
-        ))}
       </div>
 
-      {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={records ?? []}
-        searchable
-        searchKeys={["userId"]}
-        pageSize={10}
-        entriesOptions={[5, 10, 25, 50]}
-        loading={loading}
-        error={error || undefined}
-        onRetry={refetch}
-        emptyMessage="No attendance records found"
-        actions={actions}
-        striped
-        stickyHeader
-      />
+      {/* Top Universal Punch Card */}
+      <div className="mb-8">
+        <AttendancePunchCard />
+      </div>
 
-      {/* Add Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-md">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <div>
-                <DialogTitle>Mark Attendance</DialogTitle>
-                <DialogDescription>Record attendance for an employee.</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); handleAdd(); }}>
-            <div className="space-y-5 max-h-[60vh] overflow-y-auto px-0.5">
-              <FormSection title="Employee & Date" icon={<Calendar className="h-4 w-4" />} columns={2} gradient>
-                <FormInput label="User ID" icon={<User className="h-4 w-4" />} value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })} placeholder="user_123" required />
-                <FormInput label="Date" type="date" icon={<Calendar className="h-4 w-4" />} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
-              </FormSection>
-              <FormSection title="Timings" icon={<Clock className="h-4 w-4" />} columns={2}>
-                <FormInput label="Check In" type="datetime-local" icon={<LogIn className="h-4 w-4" />} value={form.checkIn} onChange={(e) => setForm({ ...form, checkIn: e.target.value })} />
-                <FormInput label="Check Out" type="datetime-local" icon={<LogOut className="h-4 w-4" />} value={form.checkOut} onChange={(e) => setForm({ ...form, checkOut: e.target.value })} />
-              </FormSection>
-              <FormSection title="Status" columns={1}>
-                <FormSelect label="Status" icon={<Clock className="h-4 w-4" />} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={ATTENDANCE_STATUSES.map((s) => ({ value: s, label: s.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()) }))} />
-              </FormSection>
-            </div>
-            <FormActions onCancel={() => setShowAddDialog(false)} submitLabel="Save Record" submitIcon={<CheckCircle2 className="h-4 w-4" />} loading={mutation.loading} error={mutation.error} />
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Main Content Card with Tabs */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
+        {/* Tab Switcher & Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
+          <div className="flex items-center gap-2 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+            <button
+              onClick={() => setActiveTab("table")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "table"
+                  ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <TableIcon className="h-4 w-4" /> Table View
+            </button>
+            <button
+              onClick={() => setActiveTab("calendar")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "calendar"
+                  ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <CalendarDays className="h-4 w-4" /> Calendar View
+            </button>
+          </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-white shadow-md">
-                <Pencil className="h-5 w-5" />
-              </div>
-              <div>
-                <DialogTitle>Edit Attendance</DialogTitle>
-                <DialogDescription>Update attendance record details.</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }}>
-            <div className="space-y-5 max-h-[60vh] overflow-y-auto px-0.5">
-              <FormSection title="Employee & Date" icon={<Calendar className="h-4 w-4" />} columns={2}>
-                <FormInput label="Date" type="date" icon={<Calendar className="h-4 w-4" />} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-              </FormSection>
-              <FormSection title="Timings" icon={<Clock className="h-4 w-4" />} columns={2}>
-                <FormInput label="Check In" type="datetime-local" icon={<LogIn className="h-4 w-4" />} value={form.checkIn} onChange={(e) => setForm({ ...form, checkIn: e.target.value })} />
-                <FormInput label="Check Out" type="datetime-local" icon={<LogOut className="h-4 w-4" />} value={form.checkOut} onChange={(e) => setForm({ ...form, checkOut: e.target.value })} />
-              </FormSection>
-              <FormSection title="Status" columns={1}>
-                <FormSelect label="Status" icon={<Clock className="h-4 w-4" />} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} options={ATTENDANCE_STATUSES.map((s) => ({ value: s, label: s.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()) }))} />
-              </FormSection>
-            </div>
-            <FormActions onCancel={() => setShowEditDialog(false)} submitLabel="Save Changes" submitIcon={<Pencil className="h-4 w-4" />} loading={mutation.loading} error={mutation.error} />
-          </form>
-        </DialogContent>
-      </Dialog>
+          {/* Search bar */}
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by name, email, code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 text-slate-900 dark:text-white focus:outline-none focus:border-primary"
+            />
+          </div>
+        </div>
 
-      {/* Delete Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-danger text-white shadow-md">
-                <Trash2 className="h-5 w-5" />
+        {/* Tab 1: Table View */}
+        {activeTab === "table" && (
+          <div>
+            {loading ? (
+              <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">Loading attendance records...</div>
+            ) : filteredRecords.length === 0 ? (
+              <div className="p-8 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-500 dark:text-slate-400 text-xs">
+                No attendance punch records found for today. Use the punch card above to mark attendance!
               </div>
-              <div>
-                <DialogTitle>Delete Record</DialogTitle>
-                <DialogDescription>Are you sure you want to delete this attendance record? This cannot be undone.</DialogDescription>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400">
+                    <tr>
+                      <th className="pb-3 font-semibold">Date</th>
+                      <th className="pb-3 font-semibold">Employee</th>
+                      <th className="pb-3 font-semibold">Code</th>
+                      <th className="pb-3 font-semibold">Punch In</th>
+                      <th className="pb-3 font-semibold">Punch Out</th>
+                      <th className="pb-3 font-semibold">Status</th>
+                      <th className="pb-3 font-semibold">Location</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-slate-800 dark:text-slate-200">
+                    {filteredRecords.map((r) => (
+                      <tr key={r._id}>
+                        <td className="py-3 font-mono font-medium">{r.date}</td>
+                        <td className="py-3 font-bold text-slate-900 dark:text-white">
+                          {r.userName}
+                          <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-normal">{r.userEmail}</span>
+                        </td>
+                        <td className="py-3 font-mono text-primary font-semibold">{r.employeeCode || "EMP-2026-1001"}</td>
+                        <td className="py-3 font-mono">
+                          {r.punchInTime ? new Date(r.punchInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                        </td>
+                        <td className="py-3 font-mono">
+                          {r.punchOutTime ? new Date(r.punchOutTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Active Shift"}
+                        </td>
+                        <td className="py-3">
+                          {r.status === "PRESENT" ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                              PRESENT
+                            </span>
+                          ) : r.status === "LATE" ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-0.5 text-[10px] font-bold text-yellow-600 dark:text-yellow-400">
+                              LATE
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                              HALF DAY
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 text-slate-500 dark:text-slate-400 text-[11px] truncate max-w-[150px]">
+                          {r.location || "Office"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 2: Calendar View */}
+        {activeTab === "calendar" && (
+          <div className="space-y-4">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Monthly Attendance Calendar Overview</h4>
+
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-500 dark:text-slate-400 pb-2 border-b border-gray-200 dark:border-white/10">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
             </div>
-          </DialogHeader>
-          <FormActions onCancel={() => setShowDeleteDialog(false)} submitLabel="Delete" submitIcon={<Trash2 className="h-4 w-4" />} submitVariant="danger" loading={mutation.loading} error={mutation.error} sticky={false} />
-        </DialogContent>
-      </Dialog>
+
+            {/* 31 Calendar Days Grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {Array.from({ length: 31 }, (_, i) => {
+                const dayNum = i + 1;
+                const match = filteredRecords.find((r) => {
+                  const day = new Date(r.date).getDate();
+                  return day === dayNum;
+                });
+
+                return (
+                  <div
+                    key={dayNum}
+                    className={`h-20 p-2 rounded-xl border flex flex-col justify-between text-xs font-semibold ${
+                      match
+                        ? "border-emerald-500/30 bg-emerald-500/5 text-slate-900 dark:text-white"
+                        : "border-gray-200 dark:border-white/5 bg-slate-50 dark:bg-black/20 text-slate-400 dark:text-slate-500"
+                    }`}
+                  >
+                    <span className="font-mono text-xs">{dayNum}</span>
+                    {match ? (
+                      <div>
+                        <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400">{match.status}</span>
+                        <span className="text-[9px] text-slate-500 font-mono">
+                          {new Date(match.punchInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[9px] text-slate-400">—</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }

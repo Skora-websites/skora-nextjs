@@ -37,6 +37,7 @@ export const NAV_ITEMS: NavItem[] = [
   { title: "Payroll", href: "/hrms/payroll", icon: "DollarSign", group: "hrm" },
   { title: "Organization", href: "/hrms/organization", icon: "Building2", group: "hrm" },
   // ── Operations ──
+  { title: "Projects", href: "/hrms/projects", icon: "ClipboardList", group: "operations" },
   { title: "Assets", href: "/hrms/assets", icon: "Package", group: "operations" },
   { title: "Documents", href: "/hrms/documents", icon: "FileText", group: "operations" },
   { title: "Engage", href: "/hrms/engage", icon: "MessageSquare", group: "operations" },
@@ -45,22 +46,66 @@ export const NAV_ITEMS: NavItem[] = [
   { title: "Exit Mgmt", href: "/hrms/exit", icon: "LogOut", group: "lifecycle" },
   { title: "Holidays", href: "/hrms/holidays", icon: "Sun", group: "lifecycle" },
   { title: "Probation", href: "/hrms/probation", icon: "ClipboardList", group: "lifecycle" },
-  // ── CRM ──
+  // ── CRM / Reports ──
   { title: "Reports", href: "/hrms/reports", icon: "BarChart3", group: "crm" },
-  { title: "Leads", href: "/hrms/leads", icon: "TrendingUp", group: "crm" },
-  { title: "Customers", href: "/hrms/customers", icon: "Building2", group: "crm" },
-  { title: "Contacts", href: "/hrms/contacts", icon: "Contact2", group: "crm" },
-  { title: "Analytics", href: "/hrms/analytics", icon: "BarChart3", group: "crm" },
-  // ── New Modules ──
   { title: "Recruitment", href: "/hrms/recruitment", icon: "UserCheck", group: "hrm" },
   { title: "Performance", href: "/hrms/performance", icon: "TrendingUp", group: "hrm" },
-  // ── Task & Ticket Management ──
   { title: "Tasks", href: "/hrms/tasks", icon: "ClipboardList", group: "hrm" },
   { title: "Tickets", href: "/hrms/tickets", icon: "MessageSquare", group: "hrm" },
-  { title: "Projects", href: "/hrms/projects", icon: "ClipboardList", group: "operations" },
   // ── System ──
   { title: "Settings", href: "/hrms/settings", icon: "Settings", group: "system" },
 ];
+
+export const NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
+  super_admin: [
+    { title: "Platform Overview", href: "/hrms/superadmin", icon: "LayoutDashboard", group: "overview" },
+    { title: "Tenants (Companies)", href: "/hrms/superadmin/tenants", icon: "Building2", group: "system" },
+    { title: "Module Toggles", href: "/hrms/superadmin/modules", icon: "Settings", group: "system" },
+    { title: "Audit Logs", href: "/hrms/superadmin/audit-logs", icon: "FileText", group: "system" },
+    { title: "HR Dashboard", href: "/hrms/dashboard", icon: "LayoutDashboard", group: "hrm" },
+    { title: "Employees", href: "/hrms/employees", icon: "Users", group: "hrm" },
+    { title: "Projects (PMS)", href: "/hrms/projects", icon: "ClipboardList", group: "operations" },
+  ],
+  hr_admin: [
+    { title: "Dashboard", href: "/hrms/dashboard", icon: "LayoutDashboard", group: "overview" },
+    { title: "Employees", href: "/hrms/employees", icon: "Users", group: "hrm" },
+    { title: "Attendance", href: "/hrms/attendance", icon: "Clock", group: "hrm" },
+    { title: "Leaves", href: "/hrms/leaves", icon: "CalendarDays", group: "hrm" },
+    { title: "Payroll", href: "/hrms/payroll", icon: "DollarSign", group: "hrm" },
+    { title: "Projects (PMS)", href: "/hrms/projects", icon: "ClipboardList", group: "operations" },
+    { title: "Recruitment (ATS)", href: "/hrms/recruitment", icon: "UserCheck", group: "hrm" },
+    { title: "Onboarding", href: "/hrms/onboarding", icon: "UserCheck", group: "lifecycle" },
+    { title: "Organization", href: "/hrms/organization", icon: "Building2", group: "hrm" },
+    { title: "Reports", href: "/hrms/reports", icon: "BarChart3", group: "crm" },
+    { title: "Settings", href: "/hrms/settings", icon: "Settings", group: "system" },
+  ],
+  admin: [
+    { title: "Dashboard", href: "/hrms/dashboard", icon: "LayoutDashboard", group: "overview" },
+    { title: "Employees", href: "/hrms/employees", icon: "Users", group: "hrm" },
+    { title: "Attendance", href: "/hrms/attendance", icon: "Clock", group: "hrm" },
+    { title: "Leaves", href: "/hrms/leaves", icon: "CalendarDays", group: "hrm" },
+    { title: "Payroll", href: "/hrms/payroll", icon: "DollarSign", group: "hrm" },
+    { title: "Projects (PMS)", href: "/hrms/projects", icon: "ClipboardList", group: "operations" },
+    { title: "Settings", href: "/hrms/settings", icon: "Settings", group: "system" },
+  ],
+  manager: [
+    { title: "Manager Dashboard", href: "/hrms/manager", icon: "LayoutDashboard", group: "overview" },
+    { title: "My Team Roster", href: "/hrms/manager/my-team", icon: "Users", group: "hrm" },
+    { title: "Team Projects", href: "/hrms/manager/projects", icon: "ClipboardList", group: "operations" },
+    { title: "Leave Approvals", href: "/hrms/manager/leave-approvals", icon: "CalendarDays", group: "hrm" },
+    { title: "Team Performance", href: "/hrms/manager/performance", icon: "TrendingUp", group: "hrm" },
+    { title: "Support Tickets", href: "/hrms/tickets", icon: "MessageSquare", group: "operations" },
+  ],
+  employee: [
+    { title: "Self-Service Home", href: "/hrms/employee", icon: "LayoutDashboard", group: "overview" },
+    { title: "Punch In / Out", href: "/hrms/attendance", icon: "Clock", group: "hrm" },
+    { title: "My Tasks (Kanban)", href: "/hrms/employee/my-tasks", icon: "ClipboardList", group: "operations" },
+    { title: "Log Timesheet", href: "/hrms/employee/timesheet", icon: "FileText", group: "operations" },
+    { title: "Apply Leave", href: "/hrms/leaves", icon: "CalendarDays", group: "hrm" },
+    { title: "My Payslips", href: "/hrms/payroll", icon: "DollarSign", group: "hrm" },
+    { title: "My Profile", href: "/hrms/employee/profile", icon: "UserCheck", group: "lifecycle" },
+  ],
+};
 
 // ══════════════════════════════════════════════════════════════════
 // HRM Constants
@@ -75,7 +120,12 @@ export const NAV_ITEMS: NavItem[] = [
  * The first user to sign up also becomes super_admin automatically.
  * Add additional emails here to designate multiple super admins.
  */
-export const SUPER_ADMIN_EMAILS = ["sudarshank264@gmail.com"];
+export const SUPER_ADMIN_EMAILS = [
+  "ashish17427@gmail.com",
+  process.env.SUPER_ADMIN_EMAIL || "",
+  "admin@skora.info",
+  "admin@edskora.com",
+].filter(Boolean);
 
 // ══════════════════════════════════════════════════════════════════
 // HRM Constants
