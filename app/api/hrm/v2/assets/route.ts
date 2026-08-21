@@ -15,7 +15,6 @@ import {
   returnAsset,
   getAssetsDashboard,
 } from "@/services/hrm/assets";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { requireAuth, requireAdmin, isErrorResponse } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
@@ -23,9 +22,7 @@ export async function GET(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -80,9 +77,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireAdmin();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const body = await request.json();
     const action = body.action;

@@ -4,33 +4,18 @@ import type { NextRequest } from "next/server";
 // ── Route Lists ────────────────────────────────────────
 
 const protectedRoutes = [
+  "/superadmin",
+  "/hr-admin",
+  "/manager",
+  "/employee",
+  "/hrms/superadmin",
+  "/hrms/hr-admin",
+  "/hrms/manager",
+  "/hrms/employee",
   "/dashboard",
-  "/leads",
-  "/customers",
-  "/contacts",
-  "/pipeline",
-  "/tasks",
-  "/tickets",
-  "/employees",
-  "/attendance",
-  "/leaves",
-  "/payroll",
-  "/assets",
-  "/holidays",
-  "/documents",
-  "/organization",
-  "/settings",
-  "/projects",
-  "/recruitment",
-  "/performance",
-  "/onboarding",
-  "/probation",
-  "/exit",
-  "/engage",
-  "/analytics",
 ];
 
-const authRoutes = ["/login", "/register", "/forgot-password"];
+const authRoutes = ["/login", "/register", "/forgot-password", "/hrms/login"];
 
 // ── Middleware ─────────────────────────────────────────
 
@@ -40,26 +25,31 @@ export function middleware(request: NextRequest) {
   // Check for session cookie (lightweight; full verification happens server-side)
   const hasSession = request.cookies.has("session") || request.cookies.has("token");
 
-  // Redirect unauthenticated users away from protected routes
+  // Redirect unauthenticated users away from protected role routes
   if (!hasSession) {
     const isProtected = protectedRoutes.some(
       (route) => pathname === route || pathname.startsWith(route + "/")
     );
     if (isProtected) {
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/hrms/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages to their dashboard
   if (hasSession) {
     const isAuthRoute = authRoutes.some(
       (route) => pathname === route || pathname.startsWith(route + "/")
     );
-    if (isAuthRoute || pathname === "/") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (isAuthRoute) {
+      return NextResponse.redirect(new URL("/hrms", request.url));
     }
+  }
+
+  // Redirect legacy /dashboard to /hrms
+  if (pathname === "/dashboard") {
+    return NextResponse.redirect(new URL("/hrms", request.url));
   }
 
   return NextResponse.next();

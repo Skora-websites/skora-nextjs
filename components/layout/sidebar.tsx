@@ -71,6 +71,14 @@ const iconMap: Record<string, React.ElementType> = {
   UserCheck,
 };
 
+const roleSettingsMap: Record<string, string> = {
+  super_admin: "/hrms/superadmin/settings",
+  hr_admin: "/hrms/hr-admin/settings",
+  admin: "/hrms/hr-admin/settings",
+  manager: "/hrms/manager/settings",
+  employee: "/hrms/employee/settings",
+};
+
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
@@ -346,7 +354,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           )}
         >
           <Link
-            href="/dashboard"
+            href="/hrms"
             className={cn(
               "flex items-center gap-3 group",
               isCollapsed && "justify-center"
@@ -469,7 +477,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/settings"
+                  href={roleSettingsMap[user?.role || "employee"] || "/hrms/employee/settings"}
                   className={cn(
                     "flex items-center gap-3 rounded-xl transition-all duration-200 hover:bg-sidebar-accent/60 px-2.5 py-2 flex-1 min-w-0 group/user",
                     isCollapsed && "px-0 py-0 justify-center"

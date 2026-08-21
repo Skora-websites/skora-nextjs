@@ -86,32 +86,24 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await fetch("/api/hrm/v2/auth", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "register",
+          name: formData.name,
           email: formData.email,
           password: formData.password,
-          displayName: formData.name,
-          firstName: formData.name.split(" ")[0] || formData.name,
-          lastName: formData.name.split(" ").slice(1).join(" ") || "",
+          role: "SUPER_ADMIN"
         }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Registration failed");
       }
 
-      const data = await res.json();
-      if (data.data?.sessionCreated) {
-        setSuccess("Account created successfully! Redirecting...");
-        setTimeout(() => router.push("/dashboard"), 1500);
-      } else {
-        setSuccess("Account created successfully! Redirecting to login...");
-        setTimeout(() => router.push("/login"), 2000);
-      }
+      setSuccess("Super Admin registered successfully! Redirecting to Command Center...");
+      setTimeout(() => router.push(data.redirectUrl || "/hrms/superadmin"), 1200);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -121,26 +113,31 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-md animate-section-in">
+      <Card className="w-full max-w-md animate-section-in shadow-2xl border-slate-800 bg-slate-900 text-slate-100">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-primary shadow-lg shadow-primary/25">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/25">
             <Building2 className="h-7 w-7 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold">Create account</CardTitle>
-          <CardDescription>Register for your HRMS account</CardDescription>
+          <div className="inline-flex items-center justify-center gap-1 bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full text-xs font-semibold text-blue-400">
+            <span>🛡️ System Super Admin Registration</span>
+          </div>
+          <CardTitle className="text-2xl font-black text-white">Create Super Admin</CardTitle>
+          <CardDescription className="text-xs text-slate-400">
+            Setup your primary governance credentials to provision organizations &amp; HR Admins
+          </CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-4">
             {error && (
-              <div className="flex items-center gap-2 p-3 text-sm text-danger bg-danger/10 rounded-xl border border-danger/20 animate-form-error">
+              <div className="flex items-center gap-2 p-3 text-xs text-red-400 bg-red-500/10 rounded-xl border border-red-500/20 animate-form-error">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="flex items-center gap-2 p-3 text-sm text-success bg-success/10 rounded-xl border border-success/20 animate-form-error">
+              <div className="flex items-center gap-2 p-3 text-xs text-emerald-400 bg-emerald-500/10 rounded-xl border border-emerald-500/20 animate-form-error">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                 {success}
               </div>
@@ -217,26 +214,26 @@ export default function RegisterPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full h-11" disabled={loading}>
+            <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-500 text-white font-bold" disabled={loading}>
               {loading ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Creating account...
+                  Registering Super Admin...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
-                  Create Account
+                  Register &amp; Launch Super Admin Portal
                 </span>
               )}
             </Button>
 
-            <p className="text-sm text-dark/70 dark:text-gray-400 text-center">
+            <p className="text-xs text-slate-400 text-center">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:underline font-semibold">
+              <Link href="/hrms/login" className="text-blue-400 hover:underline font-semibold">
                 Sign in
               </Link>
             </p>

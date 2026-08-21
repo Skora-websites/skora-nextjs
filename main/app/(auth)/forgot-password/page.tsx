@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
                 Send again
               </Button>
               <Link
-                href="/login"
+                href="/hrms/login"
                 className="text-sm text-primary hover:underline font-semibold text-center"
               >
                 <ArrowLeft className="h-3 w-3 inline mr-1" />
@@ -161,7 +161,7 @@ export default function ForgotPasswordPage() {
               </Button>
 
               <Link
-                href="/login"
+                href="/hrms/login"
                 className="text-sm text-primary hover:underline font-semibold text-center"
               >
                 <ArrowLeft className="h-3 w-3 inline mr-1" />

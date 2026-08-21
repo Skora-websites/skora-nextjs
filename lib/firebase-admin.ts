@@ -38,6 +38,7 @@ function ensureInitialized(): boolean {
       initializeApp({
         credential: cert({ projectId, clientEmail, privateKey }),
         projectId,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
     }
 

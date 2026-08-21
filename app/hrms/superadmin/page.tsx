@@ -1,160 +1,1133 @@
-import { AppShell } from "@/components/layout/app-shell";
-import { getTenants } from "@/lib/db/tenants";
-import { Building2, ShieldCheck, DollarSign, ArrowUpRight, Activity, Shield, LayoutDashboard } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+"use client";
 
-export default async function SuperadminOverviewPage() {
-  const tenants = await getTenants();
-  const activeTenants = tenants.filter((t) => t.isActive);
+import { useState, useEffect } from "react";
+import {
+  Users,
+  UserCheck,
+  Clock,
+  CalendarDays,
+  DollarSign,
+  ClipboardList,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  MapPin,
+  CheckCircle2,
+  Activity,
+  TrendingUp,
+  AlertCircle,
+  Briefcase,
+  Search,
+  ArrowUpRight,
+  BarChart3,
+  ChevronRight,
+  Loader2,
+  XCircle,
+  FileText,
+} from "lucide-react";
+import Link from "next/link";
+import { AppShell } from "@/components/layout/app-shell";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/providers/auth-provider";
+
+// ── Types ──────────────────────────────────────────────────
+
+interface Employee {
+  _id?: string;
+  id?: string;
+  name?: string;
+  displayName?: string;
+  email: string;
+  department?: string;
+  designation?: string;
+  status?: string;
+  employeeCode?: string;
+  role?: string;
+  reportingManager?: string;
+  joiningDate?: string;
+  attendanceStatus?: string;
+}
+
+interface AttendanceRecord {
+  _id: string;
+  userId: string;           // Firebase UID
+  userName: string;
+  userEmail: string;
+  employeeCode?: string;
+  date: string;
+  punchInTime?: string;     // ISO string from MongoDB
+  punchOutTime?: string;    // ISO string from MongoDB
+  location?: string;
+  distanceMeters?: number;  // parsed from location string
+  status?: string;
+  workHours?: number;
+  managerId?: string;
+  overtimeHours?: number;
+  regularizationStatus?: string;
+}
+
+interface EscalationRecord {
+  id: string;
+  employeeName: string;
+  email: string;
+  department: string;
+  rejectionDate: string;
+  deadlineHoursRemaining: number;
+  status: string;
+}
+
+interface LeaveRequest {
+  id: string;
+  employeeName: string;
+  type: string;
+  fromDate: string;
+  toDate: string;
+  totalDays: number;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  requestedBy: "employee" | "manager";
+}
+
+interface Project {
+  _id: string;
+  name: string;
+  status: string;
+  progress?: number;
+  members?: any[];
+  budget?: number;
+}
+
+interface UserRecord {
+  id: string;
+  displayName?: string;
+  firstName?: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
+// ── Main Component ─────────────────────────────────────────
+
+export default function SuperadminOverviewPage() {
+  const { user } = useAuth();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [escalations, setEscalations] = useState<EscalationRecord[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [hrAdmins, setHrAdmins] = useState<UserRecord[]>([]);
+  const [managers, setManagers] = useState<UserRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Edit/Delete modal state
+  const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
+  const [editRole, setEditRole] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<UserRecord | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [empRes, attRes, escRes, leaveRes, projRes, hrRes, mgrRes] =
+        await Promise.allSettled([
+          fetch("/api/hrm/v2/users?action=list&status=active").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/attendance").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/escalations").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/leaves?status=pending").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/projects").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/users?action=list&role=hr_admin").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/users?action=list&role=manager").then((r) => (r.ok ? r.json() : null)),
+        ]);
+
+      if (empRes.status === "fulfilled" && empRes.value) {
+        const d = empRes.value.data;
+        setEmployees(Array.isArray(d) ? d.filter((e: any) => {
+        const r = (e.role || "").toLowerCase();
+        return r !== "super_admin" && r !== "superadmin" && r !== "ceo";
+      }) : []);
+      }
+      if (attRes.status === "fulfilled" && attRes.value) {
+        const d = attRes.value.data;
+        setAttendance(Array.isArray(d) ? d : []);
+      }
+      if (escRes.status === "fulfilled" && escRes.value) {
+        const d = escRes.value.data;
+        setEscalations(Array.isArray(d) ? d : []);
+      }
+      if (leaveRes.status === "fulfilled" && leaveRes.value) {
+        const d = leaveRes.value.data;
+        setLeaveRequests(Array.isArray(d) ? d : []);
+      }
+      if (projRes.status === "fulfilled" && projRes.value) {
+        const d = projRes.value.data;
+        setProjects(Array.isArray(d) ? d : []);
+      }
+      if (hrRes.status === "fulfilled" && hrRes.value) {
+        const d = hrRes.value.data;
+        setHrAdmins(Array.isArray(d) ? d : []);
+      }
+      if (mgrRes.status === "fulfilled" && mgrRes.value) {
+        const d = mgrRes.value.data;
+        setManagers(Array.isArray(d) ? d : []);
+      }
+    } catch {
+      // use empty state
+    }
+    setLoading(false);
+  };
+
+  // ── Computed KPIs ──
+
+  const totalEmployees = employees.length;
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayAttendance = attendance.filter((a) => {
+    const punchDate = a.punchInTime ? new Date(a.punchInTime).toISOString().split("T")[0] : (a.date || "");
+    return punchDate === todayStr;
+  });
+  const presentCount = todayAttendance.filter(
+    (a) => a.status === "PRESENT" || a.status === "LATE" || a.status === "HALF_DAY" || a.status === "present" || a.status === "half_day"
+  ).length;
+  const absentCount = totalEmployees - presentCount;
+  const pendingLeaves = leaveRequests.filter((l) => l.status === "pending");
+  const activeProjects = projects.filter(
+    (p) => p.status === "active" || p.status === "in_progress"
+  ).length;
+  const overtimeHours = todayAttendance.reduce(
+    (sum, a) => sum + (a.overtimeHours || 0),
+    0
+  );
+
+  const filteredEmployees = searchQuery
+    ? employees.filter(
+        (e) =>
+          (e.displayName || e.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          e.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          e.department?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : employees;
+
+  // ── Handlers ──
+
+  const handleEditUser = async () => {
+    if (!editingUser) return;
+    setSaving(true);
+    try {
+      if (editRole && editRole !== editingUser.role) {
+        await fetch("/api/hrm/v2/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: editingUser.id,
+            action: "role",
+            role: editRole,
+          }),
+        });
+      }
+      if (editStatus && editStatus !== editingUser.status) {
+        await fetch("/api/hrm/v2/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: editingUser.id,
+            action: "status",
+            status: editStatus,
+          }),
+        });
+      }
+      setSuccessMsg("User updated successfully");
+      setEditingUser(null);
+      setTimeout(() => setSuccessMsg(null), 3000);
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+    setSaving(false);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!confirmDelete) return;
+    setSaving(true);
+    try {
+      await fetch(`/api/hrm/v2/users?userId=${confirmDelete.id}`, {
+        method: "DELETE",
+      });
+      setSuccessMsg("User deleted successfully");
+      setConfirmDelete(null);
+      setTimeout(() => setSuccessMsg(null), 3000);
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+    setSaving(false);
+  };
 
   return (
-    <AppShell title="Superadmin Platform Overview">
-      {/* Header */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <AppShell title="CEO Command Center">
+      {/* ── Success Toast ── */}
+      {successMsg && (
+        <div className="fixed top-4 right-4 z-[60] flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shadow-lg">
+          <CheckCircle2 className="h-4 w-4" />
+          {successMsg}
+        </div>
+      )}
+
+      {/* ═══ HEADER ═══ */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/10 pb-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" /> Superadmin Platform Overview
-          </h2>
+          <span className="text-xs font-semibold text-primary uppercase tracking-widest">
+            Command Center
+          </span>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+            Welcome back, {user?.name || "CEO"}
+          </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Multi-Tenant SaaS Platform Health, Active Organization Tenants &amp; System Infrastructure
+            Full visibility across your organization — employees, attendance,
+            projects, leaves, and escalations
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/hrms/dashboard">
-            <Button variant="outline" className="gap-2 font-bold text-xs border-gray-200 dark:border-white/10">
-              <LayoutDashboard className="h-4 w-4 text-primary" /> HR &amp; Operations Dashboard
-            </Button>
-          </Link>
-          <Link href="/hrms/superadmin/tenants">
-            <Button className="bg-primary text-white hover:bg-primary/90 gap-2 font-bold shadow-md text-xs">
-              <Building2 className="h-4 w-4" /> Manage SaaS Tenants
-            </Button>
-          </Link>
-        </div>
+        <Link
+          href="/hrms/superadmin/settings"
+          className="flex items-center space-x-2 bg-white dark:bg-[#0B0F19]/90 hover:bg-gray-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 border border-gray-200 dark:border-white/10 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-colors"
+        >
+          <Shield className="w-4 h-4 text-primary" />
+          <span>Platform Settings</span>
+        </Link>
       </div>
 
-      {/* Platform SaaS Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Active SaaS Tenants</span>
-            <Building2 className="h-5 w-5 text-primary" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{activeTenants.length}</p>
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1 font-semibold">
-            <ArrowUpRight className="h-3 w-3" /> {tenants.length} total registered
-          </span>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">System Uptime</span>
-            <Activity className="h-5 w-5 text-emerald-500" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">99.98%</p>
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1 font-semibold">
-            All services operational
-          </span>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">PMS Active Modules</span>
-            <ShieldCheck className="h-5 w-5 text-yellow-500" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
-            {tenants.filter((t) => t.modulesEnabled?.pms).length}
-          </p>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">Tenants with PMS module enabled</span>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monthly SaaS Revenue</span>
-            <DollarSign className="h-5 w-5 text-cyan-500" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">₹1,45,000</p>
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1 font-semibold">
-            <ArrowUpRight className="h-3 w-3" /> +15.4% from last month
-          </span>
-        </div>
+      {/* ═══ KPI CARDS ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <KPICard
+          icon={<Users className="h-5 w-5 text-primary" />}
+          label="Total Employees"
+          value={totalEmployees}
+          trend="+2 this month"
+          trendUp
+        />
+        <KPICard
+          icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+          label="Present Today"
+          value={presentCount}
+          trend={`${todayAttendance.length > 0 ? Math.round((presentCount / totalEmployees) * 100) : 0}% attendance`}
+          trendUp
+        />
+        <KPICard
+          icon={<AlertCircle className="h-5 w-5 text-red-500" />}
+          label="Absent Today"
+          value={absentCount > 0 ? absentCount : 0}
+          trend={absentCount > 0 ? "Needs attention" : "All here!"}
+          trendUp={absentCount === 0}
+        />
+        <KPICard
+          icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+          label="Pending Leaves"
+          value={pendingLeaves.length}
+          trend={
+            pendingLeaves.length > 0
+              ? `${pendingLeaves.filter((l) => l.requestedBy === "manager").length} from managers`
+              : "All clear"
+          }
+          trendUp={pendingLeaves.length === 0}
+        />
+        <KPICard
+          icon={<Briefcase className="h-5 w-5 text-blue-500" />}
+          label="Active Projects"
+          value={activeProjects}
+          trend={`${projects.length} total`}
+          trendUp
+        />
+        <KPICard
+          icon={<Clock className="h-5 w-5 text-purple-500" />}
+          label="Overtime Today"
+          value={`${overtimeHours.toFixed(1)}h`}
+          trend={overtimeHours > 0 ? "Approved hours" : "None logged"}
+          trendUp
+        />
       </div>
 
-      {/* Tenants Table */}
-      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-base">Registered Organization Tenants</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Manage tenant companies, subscriptions &amp; module flags</p>
+      {/* ═══ QUICK ACTIONS ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <QuickAction
+          href="/hrms/hr-admin/employees"
+          icon={<Users className="h-5 w-5" />}
+          label="Manage Employees"
+          color="primary"
+        />
+        <QuickAction
+          href="/hrms/hr-admin/onboarding"
+          icon={<UserCheck className="h-5 w-5" />}
+          label="Onboarding"
+          color="emerald"
+        />
+        <QuickAction
+          href="/hrms/hr-admin/payroll"
+          icon={<DollarSign className="h-5 w-5" />}
+          label="Run Payroll"
+          color="blue"
+        />
+        <QuickAction
+          href="/hrms/superadmin/audit-logs"
+          icon={<FileText className="h-5 w-5" />}
+          label="Audit Logs"
+          color="orange"
+        />
+      </div>
+
+      {/* ═══ EMPLOYEE DIRECTORY ═══ */}
+      <SectionCard
+        title="Employee Directory"
+        subtitle="All employees across the organization"
+        icon={<Users className="h-5 w-5 text-primary" />}
+        count={totalEmployees}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by name, email, or department..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary"
+            />
           </div>
-          <Link href="/hrms/superadmin/tenants">
-            <Button size="sm" className="bg-primary text-white font-bold text-xs">
-              View All Tenants
-            </Button>
-          </Link>
         </div>
 
-        {tenants.length === 0 ? (
-          <div className="p-8 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-500 dark:text-slate-400 text-sm">
-            No tenants registered yet. Create your first tenant company to start multi-tenant SaaS onboarding.
-          </div>
+        {filteredEmployees.length === 0 ? (
+          <EmptyState message={loading ? "Loading employees..." : "No employees found. Add employees through the HR Admin dashboard."} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400">
+              <thead className="border-b border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold">
                 <tr>
-                  <th className="pb-3 font-semibold">Company Name</th>
-                  <th className="pb-3 font-semibold">Subscription Plan</th>
-                  <th className="pb-3 font-semibold">PMS Module</th>
-                  <th className="pb-3 font-semibold">Payroll Module</th>
-                  <th className="pb-3 font-semibold">Status</th>
-                  <th className="pb-3 font-semibold">Created Date</th>
+                  <th className="pb-3 pr-4">Name</th>
+                  <th className="pb-3 pr-4">Department</th>
+                  <th className="pb-3 pr-4">Designation</th>
+                  <th className="pb-3 pr-4">Code</th>
+                  <th className="pb-3 pr-4">Status</th>
+                  <th className="pb-3">Manager</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-slate-800 dark:text-slate-200">
-                {tenants.map((t) => (
-                  <tr key={t._id?.toString()}>
-                    <td className="py-3 font-medium text-slate-900 dark:text-white flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-primary" />
-                      {t.name}
+              <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                {filteredEmployees.slice(0, 15).map((emp) => (
+                  <tr
+                    key={emp._id || emp.id}
+                    className="hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                  >
+                    <td className="py-3 pr-4">
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {emp.displayName || emp.name}
+                      </span>
+                      <span className="block text-[10px] text-slate-500 font-normal">
+                        {emp.email}
+                      </span>
                     </td>
-                    <td className="py-3 uppercase text-primary font-mono font-semibold">{t.subscriptionTier || "Pro"}</td>
-                    <td className="py-3">
-                      {t.modulesEnabled?.pms ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Active</span>
-                      ) : (
-                        <span className="text-slate-500">Disabled</span>
-                      )}
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
+                      {emp.department || "—"}
                     </td>
-                    <td className="py-3">
-                      {t.modulesEnabled?.payroll ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Active</span>
-                      ) : (
-                        <span className="text-slate-500">Disabled</span>
-                      )}
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
+                      {emp.designation || "—"}
                     </td>
-                    <td className="py-3">
-                      {t.isActive ? (
-                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-red-500/10 px-2.5 py-0.5 text-[11px] font-bold text-red-600 dark:text-red-400 border border-red-500/20">
-                          Inactive
-                        </span>
-                      )}
+                    <td className="py-3 pr-4 font-mono font-bold text-primary text-[11px]">
+                      {emp.employeeCode || "—"}
                     </td>
-                    <td className="py-3 text-slate-500 dark:text-slate-400 font-mono">
-                      {new Date(t.createdAt).toLocaleDateString()}
+                    <td className="py-3 pr-4">
+                      <StatusChip status={emp.status || "active"} />
+                    </td>
+                    <td className="py-3 text-slate-500 dark:text-slate-400">
+                      {emp.reportingManager || "—"}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {filteredEmployees.length > 15 && (
+              <div className="text-center pt-3">
+                <Link
+                  href="/hrms/hr-admin/employees"
+                  className="text-xs text-primary hover:underline font-semibold"
+                >
+                  View all {filteredEmployees.length} employees →
+                </Link>
+              </div>
+            )}
           </div>
         )}
+      </SectionCard>
+
+      {/* ═══ TODAY'S ATTENDANCE ═══ */}
+      <SectionCard
+        title="Today's Attendance Overview"
+        subtitle="Punch-in/out records, geofence distances, and regularization requests"
+        icon={<MapPin className="h-5 w-5 text-indigo-500" />}
+        count={todayAttendance.length}
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="border-b border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold">
+              <tr>
+                <th className="pb-3 pr-4">Employee</th>
+                <th className="pb-3 pr-4">Punch In</th>
+                <th className="pb-3 pr-4">Punch Out</th>
+                <th className="pb-3 pr-4">Geofence</th>
+                <th className="pb-3 pr-4">Status</th>
+                <th className="pb-3">Overtime / Escalation</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+              {todayAttendance.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyState
+                      message={
+                        loading
+                          ? "Loading attendance data..."
+                          : "No attendance records for today yet."
+                      }
+                    />
+                  </td>
+                </tr>
+              ) : (
+                todayAttendance.map((rec) => (
+                  <tr
+                    key={rec._id}
+                    className="hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                  >
+                    <td className="py-3 pr-4">
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {rec.userName || "Unknown"}
+                      </span>
+                      {rec.employeeCode && (
+                        <span className="ml-1.5 text-[10px] bg-gray-100 dark:bg-white/10 text-indigo-500 px-2 py-0.5 rounded font-mono">
+                          {rec.employeeCode}
+                        </span>
+                      )}
+                      {rec.userEmail && (
+                        <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          {rec.userEmail}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4 font-mono">
+                      {rec.punchInTime ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                          {new Date(rec.punchInTime).toLocaleTimeString()}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4 font-mono">
+                      {rec.punchOutTime ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                          {new Date(rec.punchOutTime).toLocaleTimeString()}
+                        </span>
+                      ) : rec.punchInTime ? (
+                        <span className="text-yellow-500 text-[10px] font-bold">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4 text-[10px] font-mono">
+                      {rec.distanceMeters !== undefined ? (
+                        <span
+                          className={
+                            rec.distanceMeters <= 100
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-red-600 dark:text-red-400"
+                          }
+                        >
+                          {rec.distanceMeters}m
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <AttendanceStatusBadge status={rec.status} />
+                    </td>
+                    <td className="py-3">
+                      {rec.regularizationStatus === "PENDING" ? (
+                        <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] font-bold">
+                          Pending Regularization
+                        </span>
+                      ) : rec.overtimeHours && rec.overtimeHours > 0 ? (
+                        <span className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded text-[10px] font-bold">
+                          {rec.overtimeHours}h OT
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-[10px]">
+                          Standard
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
+
+      {/* ═══ TWO-COLUMN: LEAVE REQUESTS + HR/MANAGER ROSTER ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pending Leave Requests */}
+        <SectionCard
+          title="Pending Leave Requests"
+          subtitle="Approve or reject employee and manager leaves"
+          icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+          count={pendingLeaves.length}
+        >
+          {pendingLeaves.length === 0 ? (
+            <EmptyState message="No pending leave requests. All clear!" />
+          ) : (
+            <div className="space-y-2">
+              {pendingLeaves.slice(0, 8).map((l) => (
+                <div
+                  key={l.id}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 text-xs"
+                >
+                  <div className="min-w-0">
+                    <span className="font-bold text-slate-900 dark:text-white block truncate">
+                      {l.employeeName}
+                    </span>
+                    <span className="text-slate-500 text-[10px]">
+                      {l.type} · {l.totalDays}d · {l.reason}
+                    </span>
+                    {l.requestedBy === "manager" && (
+                      <span className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded mt-1 inline-block font-bold">
+                        MANAGER REQUEST
+                      </span>
+                    )}
+                  </div>
+                  <Link
+                    href="/hrms/hr-admin"
+                    className="shrink-0 ml-2 text-primary text-[10px] font-bold hover:underline"
+                  >
+                    Review →
+                  </Link>
+                </div>
+              ))}
+              {pendingLeaves.length > 8 && (
+                <div className="text-center pt-1">
+                  <Link
+                    href="/hrms/hr-admin"
+                    className="text-xs text-primary hover:underline font-semibold"
+                  >
+                    View all {pendingLeaves.length} requests →
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </SectionCard>
+
+        {/* HR Admin & Manager Roster */}
+        <SectionCard
+          title="HR Admin & Manager Roster"
+          subtitle="Assigned HR administrator and management team"
+          icon={<ShieldCheck className="h-5 w-5 text-primary" />}
+          count={hrAdmins.length + managers.length}
+        >
+          <div className="space-y-4">
+            {/* HR Admins */}
+            <div>
+              <h4 className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">
+                HR Administrator
+              </h4>
+              {hrAdmins.length === 0 ? (
+                <div className="p-4 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-400 text-[11px]">
+                  No HR Admin assigned yet
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {hrAdmins.map((u) => (
+                    <RosterRow
+                      key={u.id}
+                      user={u}
+                      onEdit={() => {
+                        setEditingUser(u);
+                        setEditRole(u.role);
+                        setEditStatus(u.status);
+                      }}
+                      onDelete={() => setConfirmDelete(u)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Managers */}
+            <div>
+              <h4 className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">
+                Managers
+              </h4>
+              {managers.length === 0 ? (
+                <div className="p-4 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-400 text-[11px]">
+                  No managers assigned yet
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {managers.map((u) => (
+                    <RosterRow
+                      key={u.id}
+                      user={u}
+                      onEdit={() => {
+                        setEditingUser(u);
+                        setEditRole(u.role);
+                        setEditStatus(u.status);
+                      }}
+                      onDelete={() => setConfirmDelete(u)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </SectionCard>
       </div>
+
+      {/* ═══ PROJECT PROGRESS ═══ */}
+      <SectionCard
+        title="Active Projects"
+        subtitle="Project progress and budget tracking"
+        icon={<Briefcase className="h-5 w-5 text-blue-500" />}
+        count={activeProjects}
+      >
+        {projects.length === 0 ? (
+          <EmptyState message="No projects created yet. HR Admin can create projects from the HR Admin dashboard." />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.slice(0, 6).map((p) => (
+              <div
+                key={p._id}
+                className="p-4 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                    {p.name}
+                  </span>
+                  <ProjectStatusBadge status={p.status} />
+                </div>
+                {p.progress !== undefined && (
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] mb-1">
+                      <span className="text-slate-500">Progress</span>
+                      <span className="font-bold text-primary">
+                        {p.progress}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${p.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {p.members && (
+                  <p className="text-[10px] text-slate-500">
+                    {p.members.length} member{p.members.length !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* ═══ ONBOARDING ESCALATION QUEUE ═══ */}
+      <SectionCard
+        title="Onboarding Escalation Queue"
+        subtitle="Employees who missed their 48-hour document re-upload deadline"
+        icon={<ShieldAlert className="h-5 w-5 text-red-500" />}
+        count={escalations.length}
+        variant="danger"
+      >
+        {escalations.length === 0 ? (
+          <div className="text-center py-6">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              No Onboarding Escalations
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              All document re-upload deadlines are currently compliant.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {escalations.map((u) => (
+              <div
+                key={u.id}
+                className="p-4 rounded-xl bg-slate-50 dark:bg-black/30 border border-red-200 dark:border-red-500/20 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                    {u.employeeName}
+                  </h3>
+                  <span className="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-[10px] font-bold px-2 py-0.5 rounded">
+                    48H DEADLINE EXPIRED
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  {u.email} · {u.department}
+                </p>
+                <div className="pt-2 flex items-center justify-between border-t border-gray-200 dark:border-white/5 text-[11px]">
+                  <span className="text-slate-400 font-mono">
+                    Escalated: {u.rejectionDate}
+                  </span>
+                  <Link
+                    href="/hrms/hr-admin/onboarding"
+                    className="text-primary font-bold hover:underline"
+                  >
+                    Resolve →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* ═══ EDIT USER MODAL ═══ */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#0B0F19] border border-gray-200 dark:border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white">
+            <h3 className="font-bold text-lg">Edit User Role & Status</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Editing: {editingUser.email}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold mb-1">Role</label>
+                <select
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="hr_admin">HR Admin</option>
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="employee">Employee</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Status
+                </label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="active">Active</option>
+                  <option value="disabled">Disabled</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-white/10">
+              <button
+                onClick={() => setEditingUser(null)}
+                className="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditUser}
+                disabled={saving}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ DELETE CONFIRMATION MODAL ═══ */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#0B0F19] border border-gray-200 dark:border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white">
+            <h3 className="font-bold text-lg text-red-600 dark:text-red-400">
+              Delete User
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Are you sure you want to delete{" "}
+              <strong>
+                {confirmDelete.displayName || confirmDelete.email}
+              </strong>
+              ? This removes their Firebase Auth account and cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-white/10">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={saving}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {saving ? "Deleting..." : "Delete User"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
+  );
+}
+
+// ── Sub-components ─────────────────────────────────────────
+
+function KPICard({
+  icon,
+  label,
+  value,
+  trend,
+  trendUp,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  trend: string;
+  trendUp: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-4 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
+      <div className="flex items-center justify-between mb-2">{icon}</div>
+      <p className="text-2xl font-extrabold">{value}</p>
+      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+        {label}
+      </p>
+      <p
+        className={`text-[10px] mt-1 font-semibold ${
+          trendUp
+            ? "text-emerald-600 dark:text-emerald-400"
+            : "text-orange-600 dark:text-orange-400"
+        }`}
+      >
+        {trend}
+      </p>
+    </div>
+  );
+}
+
+function QuickAction({
+  href,
+  icon,
+  label,
+  color,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  color: string;
+}) {
+  const colors: Record<string, string> = {
+    primary: "text-primary bg-primary/10 border-primary/20",
+    emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    blue: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+    orange: "text-orange-500 bg-orange-500/10 border-orange-500/20",
+  };
+
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 hover:border-primary/30 transition-colors group"
+    >
+      <div
+        className={`p-2 rounded-lg border ${colors[color] || colors.primary}`}
+      >
+        {icon}
+      </div>
+      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">
+        {label}
+      </span>
+      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 ml-auto group-hover:text-primary transition-colors" />
+    </Link>
+  );
+}
+
+function SectionCard({
+  title,
+  subtitle,
+  icon,
+  count,
+  variant,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  count: number;
+  variant?: "danger";
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white ${
+        variant === "danger"
+          ? "border-red-200 dark:border-red-500/20"
+          : "border-gray-200 dark:border-white/10"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-2.5 rounded-xl border ${
+              variant === "danger"
+                ? "bg-red-500/10 border-red-500/20"
+                : "bg-primary/10 border-primary/20"
+            }`}
+          >
+            {icon}
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              {title}
+            </h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {subtitle}
+            </p>
+          </div>
+        </div>
+        <span className="text-xs font-mono text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full font-bold">
+          {count}
+        </span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function RosterRow({
+  user,
+  onEdit,
+  onDelete,
+}: {
+  user: UserRecord;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 text-xs">
+      <div className="min-w-0">
+        <span className="font-bold text-slate-900 dark:text-white block truncate">
+          {user.displayName || user.firstName || user.email}
+        </span>
+        <span className="text-[10px] text-slate-500 block truncate">
+          {user.email}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 shrink-0 ml-3">
+        <span
+          className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+            user.status === "active"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+          }`}
+        >
+          {user.status === "active" ? "Active" : "Disabled"}
+        </span>
+        <button
+          onClick={onEdit}
+          className="text-[10px] font-semibold text-primary hover:underline px-1.5 py-0.5 rounded hover:bg-primary/10"
+        >
+          Edit
+        </button>
+        <button
+          onClick={onDelete}
+          className="text-[10px] font-semibold text-red-500 hover:underline px-1.5 py-0.5 rounded hover:bg-red-500/10"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StatusChip({ status }: { status: string }) {
+  const isActive = status === "active" || status === "ACTIVE";
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+        isActive
+          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+          : "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20"
+      }`}
+    >
+      {isActive ? "Active" : status}
+    </span>
+  );
+}
+
+function AttendanceStatusBadge({ status }: { status?: string }) {
+  const map: Record<string, { bg: string; text: string; label: string }> = {
+    PRESENT: {
+      bg: "bg-emerald-500/10 border-emerald-500/20",
+      text: "text-emerald-600 dark:text-emerald-400",
+      label: "PRESENT",
+    },
+    LATE: {
+      bg: "bg-yellow-500/10 border-yellow-500/20",
+      text: "text-yellow-600 dark:text-yellow-400",
+      label: "LATE",
+    },
+    HALF_DAY: {
+      bg: "bg-blue-500/10 border-blue-500/20",
+      text: "text-blue-600 dark:text-blue-400",
+      label: "HALF DAY",
+    },
+    ABSENT: {
+      bg: "bg-red-500/10 border-red-500/20",
+      text: "text-red-600 dark:text-red-400",
+      label: "ABSENT",
+    },
+  };
+  const s = map[status || ""] || map.ABSENT;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border ${s.bg} ${s.text}`}
+    >
+      {s.label}
+    </span>
+  );
+}
+
+function ProjectStatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    in_progress: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    completed: "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20",
+    on_hold: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20",
+  };
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+        colors[status] || colors.active
+      }`}
+    >
+      {status.replace(/_/g, " ").toUpperCase()}
+    </span>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="p-6 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-500 dark:text-slate-400 text-xs">
+      {message}
+    </div>
   );
 }

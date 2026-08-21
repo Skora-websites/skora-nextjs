@@ -5,6 +5,8 @@ import { getAdminAuth } from "./firebase-admin";
 import { usersService } from "./firestore";
 import { normalizeRole } from "./rbac";
 import { logger } from "./logger";
+import { connectDB } from "./db/db";
+import { User } from "./db/models";
 
 // ── Types ───────────────────────────────────────────────
 
@@ -30,6 +32,24 @@ export async function auth(): Promise<Session> {
 
   if (!cookie) return { user: null };
 
+  if (cookie.startsWith("hrms_session_")) {
+    try {
+      const raw = Buffer.from(cookie.replace("hrms_session_", ""), "base64").toString("utf-8");
+      const parsed = JSON.parse(raw);
+      return {
+        user: {
+          id: parsed.id || parsed._id || "hrms-user",
+          name: parsed.name || null,
+          email: parsed.email || null,
+          image: parsed.image || null,
+          role: parsed.role || "employee",
+        },
+      };
+    } catch (e) {
+      // Fallback
+    }
+  }
+
   try {
     // checkRevoked: false — avoids intermittent 401s from Firebase's
     // revocation API propagation delays. When a user logs out,
@@ -38,13 +58,32 @@ export async function auth(): Promise<Session> {
     // so stale sessions are not a security concern.
     const decoded = await getAdminAuth().verifySessionCookie(cookie, false);
 
-    // Get role: first check custom claims, fall back to Firestore, then normalize
-    let role = (decoded as Record<string, unknown>).role as string | undefined;
-    if (!role) {
-      const userDoc = await usersService.findById(decoded.uid);
-      role = normalizeRole(userDoc?.role);
-    } else {
-      role = normalizeRole(role);
+    // Get the actual HRMS role from MongoDB (preserves MANAGER, HR_ADMIN, etc.)
+    let role = "employee";
+    try {
+      const conn = await connectDB();
+      if (conn) {
+        const sessionEmail = decoded.email || "";
+        if (sessionEmail) {
+          try {
+            const mongoUser = await User.findOne({ email: sessionEmail.toLowerCase().trim() }).maxTimeMS(5000);
+            if (mongoUser) {
+              role = mongoUser.role || "employee";
+            } else {
+              role = (decoded as Record<string, unknown>).role as string || "employee";
+            }
+          } catch (queryErr) {
+            console.warn("[auth] MongoDB query failed:", (queryErr as Error).message);
+            role = (decoded as Record<string, unknown>).role as string || "employee";
+          }
+        }
+      } else {
+        console.warn("[auth] MongoDB not connected, using session role");
+        role = (decoded as Record<string, unknown>).role as string || "employee";
+      }
+    } catch (e) {
+      console.warn("[auth] Role lookup failed:", (e as Error).message);
+      role = (decoded as Record<string, unknown>).role as string || "employee";
     }
 
     return {

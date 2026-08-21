@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth } from "@/lib/firebase-admin";
 import { hrmUsersService } from "@/lib/hrm/firestore";
-import { resolveTenantFromOrigin, createTenant } from "@/services/hrm/tenant";
 import { ROLE_DEFINITIONS } from "@/services/hrm/auth";
 import { normalizeRole, isSuperAdminEmail } from "@/lib/rbac";
 import { requireAuth, requireAdmin, requireSuperAdmin, isErrorResponse } from "@/lib/api-auth";
@@ -142,9 +141,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     case "tenant-setup": {
-      const { name, domain, email, plan } = body;
-      const tenant = await createTenant({ name, domain, email, plan });
-      return NextResponse.json({ data: tenant }, { status: 201 });
+      return NextResponse.json({ error: "Multi-tenancy disabled. Single company mode." }, { status: 400 });
     }
 
     default:
@@ -185,9 +182,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       if (auth.role === "employee") {
         return forbidden();
       }
-      const origin = request.headers.get("origin");
-      const tenantCtx = await resolveTenantFromOrigin(origin);
-      const tenantId = tenantCtx?.tenantId || "default";
+      const tenantId = "default";
 
       const users = await hrmUsersService.findManyInTenant(tenantId);
       return NextResponse.json({ data: users });

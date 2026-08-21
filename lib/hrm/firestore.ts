@@ -1,12 +1,39 @@
+// Firestore.ts — now backed by MongoDB (drop-in replacement)
+// Firebase Admin is used ONLY for Auth, not for data storage.
 import "server-only";
-import { getAdminDb } from "@/lib/firebase-admin";
-import type { DocumentData, Timestamp } from "firebase-admin/firestore";
+import { createMongoService, WhereClause, QueryOptions, FirestoreWhereOp, FirestoreOrderDirection } from "@/lib/hrm/mongo";
 
-// ══════════════════════════════════════════════════════════════════
-// HRM Firestore Service Factory
-// ══════════════════════════════════════════════════════════════════
+// Re-export types for backward compatibility
+export type { WhereClause, QueryOptions, FirestoreWhereOp, FirestoreOrderDirection };
 
-// ── Collection Names ───────────────────────────────────
+// Alias: createFirestoreService now delegates to MongoDB
+// Type imports for service instances
+import type {
+  Tenant, TenantLanguage, Organization, Department, Designation, BusinessUnit, Location,
+  HRMUser, EmployeeJob, EmployeeDetail, EmployeeJobEvent, FamilyDetail, PastEmployer,
+  EmployeeEducation, EmployeeCertification, EmployeeSalary, EmployeeSalaryHistory, ReportingManager,
+  Role, Permission, ApprovalChain,
+  Shift, WeeklyOff, EmployeeAttendance, AttendanceStats, RegularizationRequest,
+  LeavePlan, LeaveType, LeaveBalance, LeaveBalanceHistory, LeaveRequest,
+  OvertimePolicy, OvertimeRequest, OvertimeTerm,
+  HolidayPlan, Holiday, CalendarEvent,
+  PayGroup, PayGroupComponent, SalaryComponent, PayrollRun, PayrollTransaction, PayslipTemplate,
+  AssetCategory, AssetType, Asset, AssetAssignment,
+  Document, DocumentCategory, DocumentTemplate,
+  Post, Comment, Reaction, Poll, PollVote,
+  Onboarding, EmployeeOnboardingTask,
+  EmployeeExit, EmployeeExitSetting,
+  ProbationPolicy, ProbationReview, NoticePeriod,
+  NotificationTemplate, Notification, Setting, Language, Translation, ContactSupport,
+  Project, ProjectMember, ProjectTask, TaskComment, TaskAttachment, Milestone,
+  IDCardTemplate, AIChatMessage, AuditLog,
+  Goal, PerformanceReview, PerformanceFeedback, Kpi,
+  HRMTask, HRMTaskComment, TaskAuditLog,
+  Ticket, TicketReply, TicketTimeline,
+} from "@/types";
+
+
+export const createFirestoreService = createMongoService;
 
 export const COLLECTIONS = {
   tenants: "tenants",
@@ -105,414 +132,6 @@ export const COLLECTIONS = {
   performanceFeedback: "performance_feedback",
   kpis: "kpis",
 } as const;
-
-// ── Type Helpers ────────────────────────────────────────
-
-type FirestoreWhereOp =
-  | "<" | "<=" | "==" | ">=" | ">"
-  | "!=" | "array-contains" | "array-contains-any"
-  | "in" | "not-in";
-
-type FirestoreOrderDirection = "asc" | "desc";
-
-export interface WhereClause {
-  field: string;
-  op: FirestoreWhereOp;
-  value: unknown;
-}
-
-export interface QueryOptions {
-  where?: WhereClause[];
-  orderByField?: string;
-  orderByDirection?: FirestoreOrderDirection;
-  limitCount?: number;
-  startAfter?: unknown;
-}
-
-/**
- * Converts Firestore Timestamps to native Date objects recursively.
- */
-function serializeDoc<T extends DocumentData>(id: string, data: DocumentData): T {
-  const out: Record<string, unknown> = { id };
-  for (const [key, value] of Object.entries(data)) {
-    if (value && typeof value === "object" && "toDate" in value) {
-      out[key] = (value as Timestamp).toDate();
-    } else {
-      out[key] = value;
-    }
-  }
-  return out as T;
-}
-
-/**
- * Creates a typed Firestore service for a given collection.
- * All queries include tenant isolation via tenantId field.
- */
-export function createFirestoreService<T extends { id?: string; tenantId?: string }>(
-  collectionName: string
-) {
-  // Lazily initialize the collection reference to avoid crashing at module import time
-  // when Firebase Admin SDK is not yet configured (e.g., missing .env).
-  let _collRef: FirebaseFirestore.CollectionReference | null = null;
-
-  function coll() {
-    if (!_collRef) {
-      _collRef = getAdminDb().collection(collectionName);
-    }
-    return _collRef;
-  }
-
-  return {
-    /** Find a document by ID */
-    async findById(id: string): Promise<T | null> {
-      const snap = await coll().doc(id).get();
-      if (!snap.exists) return null;
-      return serializeDoc<T>(snap.id, snap.data()!);
-    },
-
-    /** Find all documents within a tenant, optionally filtered/sorted */
-    async findManyInTenant(tenantId: string, options: QueryOptions = {}): Promise<T[]> {
-      let query: FirebaseFirestore.Query = coll().where("tenantId", "==", tenantId);
-
-      if (options.where) {
-        for (const clause of options.where) {
-          query = query.where(clause.field, clause.op, clause.value);
-        }
-      }
-
-      if (options.orderByField) {
-        query = query.orderBy(options.orderByField, options.orderByDirection ?? "asc");
-      }
-
-      if (options.limitCount) {
-        query = query.limit(options.limitCount);
-      }
-
-      try {
-        const snap = await query.get();
-        return snap.docs.map((d) => serializeDoc<T>(d.id, d.data()));
-      } catch (err) {
-        // Firestore requires composite indexes for queries combining `where` + `orderBy`.
-        // If the query fails (e.g., missing index), fall back to fetching all and sorting
-        // in-memory so the app doesn't crash on first load.
-        if (
-          err instanceof Error &&
-          err.message.includes("requires an index")
-        ) {
-          console.warn(
-            `[Firestore] Missing composite index for "${collectionName}". ` +
-            `Falling back to in-memory sort. Create an index at: ` +
-            `https://console.firebase.google.com/project/${process.env.FIREBASE_PROJECT_ID || "?"}/firestore/indexes`
-          );
-          // Retry without ordering
-          let fallbackQuery: FirebaseFirestore.Query = coll().where("tenantId", "==", tenantId);
-          if (options.where) {
-            for (const clause of options.where) {
-              fallbackQuery = fallbackQuery.where(clause.field, clause.op, clause.value);
-            }
-          }
-          if (options.limitCount) {
-            fallbackQuery = fallbackQuery.limit(options.limitCount);
-          }
-          const snap = await fallbackQuery.get();
-          const docs = snap.docs.map((d) => serializeDoc<T>(d.id, d.data()));
-
-          // In-memory sort
-          if (options.orderByField) {
-            const dir = options.orderByDirection === "desc" ? -1 : 1;
-            docs.sort((a: any, b: any) => {
-              const va = a[options.orderByField!];
-              const vb = b[options.orderByField!];
-              if (va == null && vb == null) return 0;
-              if (va == null) return 1;
-              if (vb == null) return -1;
-              if (typeof va === "string") return va.localeCompare(vb) * dir;
-              return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
-            });
-          }
-
-          return docs;
-        }
-        // Re-throw non-index errors
-        throw err;
-      }
-    },
-
-    /** Find a single document by a field value within a tenant */
-    async findOneInTenant(tenantId: string, field: string, value: unknown): Promise<T | null> {
-      const q = coll()
-        .where("tenantId", "==", tenantId)
-        .where(field, "==", value)
-        .limit(1);
-      const snap = await q.get();
-      if (snap.empty) return null;
-      const doc = snap.docs[0];
-      return serializeDoc<T>(doc.id, doc.data());
-    },
-
-    /** Find first item by a field value (global, use with caution) */
-    async findOne(field: string, value: unknown): Promise<T | null> {
-      const q = coll().where(field, "==", value).limit(1);
-      const snap = await q.get();
-      if (snap.empty) return null;
-      const doc = snap.docs[0];
-      return serializeDoc<T>(doc.id, doc.data());
-    },
-
-    /** Find all documents, optionally filtered/sorted (global) */
-    async findMany(options: QueryOptions = {}): Promise<T[]> {
-      let query: FirebaseFirestore.Query = coll();
-
-      if (options.where) {
-        for (const clause of options.where) {
-          query = query.where(clause.field, clause.op, clause.value);
-        }
-      }
-
-      if (options.orderByField) {
-        query = query.orderBy(options.orderByField, options.orderByDirection ?? "asc");
-      }
-
-      if (options.limitCount) {
-        query = query.limit(options.limitCount);
-      }
-
-      try {
-        const snap = await query.get();
-        return snap.docs.map((d) => serializeDoc<T>(d.id, d.data()));
-      } catch (err) {
-        // Firestore requires composite indexes for queries combining `where` + `orderBy`.
-        // If the query fails (e.g., missing index), fall back to fetching all and sorting
-        // in-memory so the app doesn't crash on first load.
-        if (
-          err instanceof Error &&
-          err.message.includes("requires an index")
-        ) {
-          console.warn(
-            `[Firestore] Missing composite index for "${collectionName}". ` +
-            `Falling back to in-memory sort. Create an index at: ` +
-            `https://console.firebase.google.com/project/${process.env.FIREBASE_PROJECT_ID || "?"}/firestore/indexes`
-          );
-          // Retry without ordering
-          let fallbackQuery: FirebaseFirestore.Query = coll();
-          if (options.where) {
-            for (const clause of options.where) {
-              fallbackQuery = fallbackQuery.where(clause.field, clause.op, clause.value);
-            }
-          }
-          if (options.limitCount) {
-            fallbackQuery = fallbackQuery.limit(options.limitCount);
-          }
-          const snap = await fallbackQuery.get();
-          const docs = snap.docs.map((d) => serializeDoc<T>(d.id, d.data()));
-
-          // In-memory sort
-          if (options.orderByField) {
-            const dir = options.orderByDirection === "desc" ? -1 : 1;
-            docs.sort((a: any, b: any) => {
-              const va = a[options.orderByField!];
-              const vb = b[options.orderByField!];
-              if (va == null && vb == null) return 0;
-              if (va == null) return 1;
-              if (vb == null) return -1;
-              if (typeof va === "string") return va.localeCompare(vb) * dir;
-              return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
-            });
-          }
-
-          return docs;
-        }
-        // Re-throw non-index errors
-        throw err;
-      }
-    },
-
-    /** Create a document with an auto-generated ID */
-    async create(data: Partial<T>): Promise<T> {
-      const docRef = coll().doc();
-      const now = new Date();
-      const docData = {
-        ...data,
-        id: docRef.id,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await docRef.set(docData);
-      return docData as unknown as T;
-    },
-
-    /** Create a document with a specific ID */
-    async createWithId(id: string, data: Partial<T>): Promise<T> {
-      const docRef = coll().doc(id);
-      const now = new Date();
-      const docData = {
-        ...data,
-        id,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await docRef.set(docData);
-      return docData as unknown as T;
-    },
-
-    /** Update a document (partial update) */
-    async update(id: string, data: Partial<T>): Promise<T | null> {
-      const docRef = coll().doc(id);
-      const snap = await docRef.get();
-      if (!snap.exists) return null;
-
-      const updateData = {
-        ...data,
-        updatedAt: new Date(),
-      };
-      await docRef.update(updateData);
-      const updated = await docRef.get();
-      return serializeDoc<T>(id, updated.data()!);
-    },
-
-    /** Delete a document */
-    async delete(id: string): Promise<boolean> {
-      const docRef = coll().doc(id);
-      const snap = await docRef.get();
-      if (!snap.exists) return false;
-      await docRef.delete();
-      return true;
-    },
-
-    /** Count documents with optional filters within a tenant */
-    async countInTenant(tenantId: string, options: { where?: WhereClause[] } = {}): Promise<number> {
-      let query: FirebaseFirestore.Query = coll().where("tenantId", "==", tenantId);
-      if (options.where) {
-        for (const clause of options.where) {
-          query = query.where(clause.field, clause.op, clause.value);
-        }
-      }
-      const snap = await query.get();
-      return snap.size;
-    },
-
-    /** Count documents globally */
-    async count(options: { where?: WhereClause[] } = {}): Promise<number> {
-      let query: FirebaseFirestore.Query = coll();
-      if (options.where) {
-        for (const clause of options.where) {
-          query = query.where(clause.field, clause.op, clause.value);
-        }
-      }
-      const snap = await query.get();
-      return snap.size;
-    },
-
-    /** Run a transaction */
-    async runTransaction<T>(updateFn: (transaction: FirebaseFirestore.Transaction) => Promise<T>): Promise<T> {
-      return getAdminDb().runTransaction(updateFn);
-    },
-
-    /** Get a document reference for transaction operations */
-    doc(id: string) {
-      return coll().doc(id);
-    },
-
-    /** Batch set/update/delete */
-    batch() {
-      return getAdminDb().batch();
-    },
-  };
-}
-
-// ══════════════════════════════════════════════════════════════════
-// Exported Service Instances
-// ══════════════════════════════════════════════════════════════════
-
-import type {
-  Tenant,
-  TenantLanguage,
-  Organization,
-  Department,
-  Designation,
-  BusinessUnit,
-  Location,
-  HRMUser,
-  EmployeeJob,
-  EmployeeDetail,
-  FamilyDetail,
-  PastEmployer,
-  EmployeeEducation,
-  EmployeeCertification,
-  EmployeeSalary,
-  EmployeeSalaryHistory,
-  Shift,
-  WeeklyOff,
-  EmployeeAttendance,
-  AttendanceStats,
-  RegularizationRequest,
-  LeavePlan,
-  LeaveType,
-  LeaveBalance,
-  LeaveBalanceHistory,
-  LeaveRequest,
-  OvertimePolicy,
-  OvertimeRequest,
-  OvertimeTerm,
-  HolidayPlan,
-  Holiday,
-  CalendarEvent,
-  PayGroup,
-  PayGroupComponent,
-  SalaryComponent,
-  PayrollRun,
-  PayrollTransaction,
-  PayslipTemplate,
-  AssetCategory,
-  AssetType,
-  Asset,
-  AssetAssignment,
-  Document,
-  DocumentCategory,
-  DocumentTemplate,
-  Post,
-  Comment,
-  Reaction,
-  Poll,
-  PollVote,
-  Onboarding,
-  EmployeeOnboardingTask,
-  EmployeeExit,
-  EmployeeExitSetting,
-  ProbationPolicy,
-  ProbationReview,
-  NoticePeriod,
-  NotificationTemplate,
-  Notification,
-  Setting,
-  Language,
-  Translation,
-  ContactSupport,
-  ReportingManager,
-  EmployeeJobEvent,
-  Role,
-  Permission,
-  ApprovalChain,
-  Project,
-  ProjectMember,
-  ProjectTask,
-  Milestone,
-  TaskComment,
-  TaskAttachment,
-  IDCardTemplate,
-  AIChatMessage,
-  AuditLog,
-  Goal,
-  PerformanceReview,
-  PerformanceFeedback,
-  Kpi,
-  HRMTask,
-  HRMTaskComment,
-  TaskAuditLog,
-  Ticket,
-  TicketReply,
-  TicketTimeline,
-} from "@/types";
 
 // ── Audit Log ────────────────────────────────────────
 export const auditLogsService = createFirestoreService<AuditLog>(COLLECTIONS.auditLogs);
@@ -699,3 +318,4 @@ export type {
   PerformanceFeedback,
   Kpi,
 };
+

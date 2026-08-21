@@ -1,0 +1,10 @@
+const fs = require("fs");
+const p = [];
+const a = (s) => p.push(s);
+a("\"use client\"");
+a("");
+a("import { useState, useEffect } from \"react\";");
+a("import { Building2, Shield, Clock, AlertTriangle, MapPin, CheckCircle2, Activity, X, Pencil, Trash2, Copy } from \"lucide-react\";");
+a("import { AppShell } from \"@/components/layout/app-shell\";");
+a("import { Button } from \"@/components/ui/button\";");
+a("");

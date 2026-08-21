@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getChatHistory, saveChatMessage, getAISuggestions } from "@/services/hrm/ai";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
@@ -8,9 +7,7 @@ export async function GET(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
@@ -43,9 +40,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const body = await request.json();
     const { userId, content, role, metadata } = body;

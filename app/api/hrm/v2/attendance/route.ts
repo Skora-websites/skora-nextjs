@@ -9,7 +9,6 @@ import {
   getAttendanceStats,
   calculateAttendanceStats,
 } from "@/services/hrm/attendance";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { requireAuth, requireAdmin, isErrorResponse } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
@@ -17,9 +16,7 @@ export async function GET(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -29,6 +26,7 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year");
     const dashboard = searchParams.get("dashboard");
     const stats = searchParams.get("stats");
+    const date = searchParams.get("date");
 
     if (id) {
       const record = await getAttendanceById(id);
@@ -69,7 +67,36 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: filtered });
     }
 
-    return NextResponse.json({ data: records });
+        // Enrich records: parse distance from location, flatten for dashboard
+    const enriched = records.map((rec: any) => {
+      let distanceMeters: number | undefined;
+      if (rec.location) {
+        const pi = rec.location.indexOf("(");
+        if (pi >= 0) {
+          const after = rec.location.substring(pi + 1);
+          const nums = after.split(/[^0-9]+/).filter((s: string) => s.length > 0);
+          if (nums.length > 0) distanceMeters = parseInt(nums[0]);
+        }
+      }
+      return {
+        _id: rec._id || rec.id,
+        userId: rec.userId,
+        userName: rec.userName || rec.userDisplayName || "",
+        userEmail: rec.userEmail || "",
+        employeeCode: rec.employeeCode,
+        date: rec.date || (rec.punchInTime ? new Date(rec.punchInTime).toISOString().split("T")[0] : ""),
+        punchInTime: rec.punchInTime || rec.checkIn,
+        punchOutTime: rec.punchOutTime || rec.checkOut,
+        location: rec.location,
+        distanceMeters,
+        status: rec.status,
+        workHours: rec.workHours || rec.totalHours,
+        overtimeHours: rec.overtimeHours,
+        regularizationStatus: rec.regularizationStatus,
+        managerId: rec.managerId,
+      };
+    });
+    return NextResponse.json({ data: enriched });
   } catch (error: any) {
     console.error("GET /api/hrm/v2/attendance error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
@@ -81,9 +108,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const body = await request.json();
 

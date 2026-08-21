@@ -8,7 +8,6 @@ import {
   getNotificationTemplates,
   createNotificationTemplate,
 } from "@/services/hrm/notifications";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
@@ -37,9 +36,7 @@ export async function GET(request: NextRequest) {
       if (auth.role === "employee") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
-      const origin = request.headers.get("origin");
-      const tenantCtx = await resolveTenantFromOrigin(origin);
-      const tenantId = tenantCtx?.tenantId || "default";
+      const tenantId = "default";
       const templates = await getNotificationTemplates(tenantId);
       return NextResponse.json({ data: templates });
     }
@@ -75,9 +72,7 @@ export async function POST(request: NextRequest) {
       if (auth.role === "employee") {
         return NextResponse.json({ error: "Forbidden: insufficient permissions" }, { status: 403 });
       }
-      const origin = request.headers.get("origin");
-      const tenantCtx = await resolveTenantFromOrigin(origin);
-      const tenantId = tenantCtx?.tenantId || "default";
+      const tenantId = "default";
       const template = await createNotificationTemplate(tenantId, body);
       return NextResponse.json({ data: template }, { status: 201 });
     }

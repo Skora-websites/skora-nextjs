@@ -1,172 +1,485 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Users,
+  Clock,
+  CalendarDays,
+  CheckCircle2,
+  XCircle,
+  FileText,
+  TrendingUp,
+  ClipboardList,
+  AlertCircle,
+  Briefcase,
+  Activity,
+  Shield,
+  MapPin,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
-import { getProjects } from "@/lib/db/projects";
-import { getTasks } from "@/lib/db/tasks";
-import { getTimesheets } from "@/lib/db/timesheets";
-import { Users, Clock, ClipboardList, CalendarDays, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { approveTimesheetAction, rejectTimesheetAction } from "@/lib/actions/pms-actions";
+import { useAuth } from "@/components/providers/auth-provider";
+import { AttendancePunchCard } from "@/components/hr/attendance-punch-card";
 
-export default async function ManagerDashboardPage() {
-  const projects = await getProjects();
-  const tasks = await getTasks();
-  const pendingTimesheets = await getTimesheets({ status: "PENDING" });
+// ── Types ──────────────────────────────────────────────────
 
-  const activeProjectsCount = projects.filter((p) => p.status === "ACTIVE").length;
-  const inProgressTasksCount = tasks.filter((t) => t.status === "IN_PROGRESS").length;
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+  designation: string;
+  status: string;
+  employeeCode?: string;
+  punchInTime?: string;
+  punchOutTime?: string;
+  attendanceStatus?: string;
+}
+
+interface LeaveRequest {
+  id: string;
+  employeeName: string;
+  type: string;
+  fromDate: string;
+  toDate: string;
+  totalDays: number;
+  isHalfDay?: boolean;
+  halfDaySlot?: "first_half" | "second_half";
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  requestType: "leave" | "regularization" | "overtime";
+}
+
+// ── Main Component ─────────────────────────────────────────
+
+export default function ManagerDashboardPage() {
+  const { user } = useAuth();
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<LeaveRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [teamRes, approvalsRes] = await Promise.all([
+        fetch("/api/hrm/v2/employees?role=employee"),
+        fetch("/api/hrm/v2/leaves?status=pending&approver=manager"),
+      ]);
+      if (teamRes.ok) setTeamMembers((await teamRes.json()).data || []);
+      if (approvalsRes.ok) setPendingApprovals((await approvalsRes.json()).data || []);
+    } catch {
+      // use empty state
+    }
+    setLoading(false);
+  };
+
+  const leaveApprovals = pendingApprovals.filter((a) => a.requestType === "leave");
+  const regularizationApprovals = pendingApprovals.filter((a) => a.requestType === "regularization");
+  const overtimeApprovals = pendingApprovals.filter((a) => a.requestType === "overtime");
+
+  const presentToday = teamMembers.filter(
+    (m) => m.attendanceStatus === "PRESENT" || m.attendanceStatus === "LATE"
+  ).length;
+
+  const handleApprove = (id: string) => {
+    setPendingApprovals((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: "approved" as const } : a))
+    );
+  };
+
+  const handleReject = (id: string) => {
+    setPendingApprovals((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: "rejected" as const } : a))
+    );
+  };
 
   return (
-    <AppShell title="Departmental Manager Command Center">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Manager Command Center</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Departmental Overview · Team Execution & Timesheet Approvals</p>
+    <AppShell title="Manager Dashboard">
+      {/* ═══ Header Banner — Personal Profile ═══ */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">
+              Welcome back, {user?.name || "Manager"}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Team Overview · Project Tasks · Approvals · Timesheets · KPI Analytics
+            </p>
+            <div className="flex items-center gap-3 mt-3 text-xs">
+              <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                <Users className="h-3.5 w-3.5" /> {teamMembers.length} Direct Reports
+              </span>
+              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5" /> {presentToday} Present Today
+              </span>
+              <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                <Clock className="h-3.5 w-3.5" /> {pendingApprovals.length} Pending Approvals
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/hrms/manager/projects">
-            <Button className="bg-primary text-white hover:bg-primary/90 gap-2 font-bold shadow-md">
-              <ClipboardList className="h-4 w-4" /> Team Projects
+      </div>
+
+      {/* ═══ Personal Punch In/Out ═══ */}
+      <div className="mb-6">
+        <AttendancePunchCard />
+      </div>
+
+      {/* ═══ Stats Row ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard
+          icon={<Users className="h-5 w-5 text-emerald-500" />}
+          label="Team Members"
+          value={teamMembers.length}
+          accent="text-emerald-600 dark:text-emerald-400"
+        />
+        <StatCard
+          icon={<CheckCircle2 className="h-5-5 text-blue-500" />}
+          label="Present Today"
+          value={presentToday}
+          accent="text-blue-600 dark:text-blue-400"
+        />
+        <StatCard
+          icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+          label="Leave Requests"
+          value={leaveApprovals.length}
+          accent="text-orange-600 dark:text-orange-400"
+        />
+        <StatCard
+          icon={<Clock className="h-5 w-5 text-yellow-500" />}
+          label="Overtime Requests"
+          value={overtimeApprovals.length}
+          accent="text-yellow-600 dark:text-yellow-400"
+        />
+      </div>
+
+      {/* ═══ Approval Center ═══ */}
+      <DashboardSection
+        title="Approval Center"
+        subtitle="Review and manage team leave, regularization, and overtime requests"
+        icon={<Shield className="h-5 w-5 text-orange-500" />}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          {/* Leave Requests */}
+          <div>
+            <h4 className="text-xs font-bold text-orange-600 dark:text-orange-400 mb-2 flex items-center gap-1">
+              <CalendarDays className="h-3.5 w-3.5" /> Leave Requests ({leaveApprovals.length})
+            </h4>
+            {leaveApprovals.length === 0 ? (
+              <div className="p-4 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-400 text-[11px]">
+                No pending leave requests
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {leaveApprovals.slice(0, 3).map((a) => (
+                  <ApprovalCard
+                    key={a.id}
+                    request={a}
+                    onApprove={() => handleApprove(a.id)}
+                    onReject={() => handleReject(a.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Regularization Requests */}
+          <div>
+            <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-1">
+              <FileText className="h-3.5 w-3.5" /> Regularization ({regularizationApprovals.length})
+            </h4>
+            {regularizationApprovals.length === 0 ? (
+              <div className="p-4 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-400 text-[11px]">
+                No pending regularization requests
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {regularizationApprovals.slice(0, 3).map((a) => (
+                  <ApprovalCard
+                    key={a.id}
+                    request={a}
+                    onApprove={() => handleApprove(a.id)}
+                    onReject={() => handleReject(a.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Overtime Requests */}
+          <div>
+            <h4 className="text-xs font-bold text-yellow-600 dark:text-yellow-400 mb-2 flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" /> Overtime ({overtimeApprovals.length})
+            </h4>
+            {overtimeApprovals.length === 0 ? (
+              <div className="p-4 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-400 text-[11px]">
+                No pending overtime requests
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {overtimeApprovals.slice(0, 3).map((a) => (
+                  <ApprovalCard
+                    key={a.id}
+                    request={a}
+                    onApprove={() => handleApprove(a.id)}
+                    onReject={() => handleReject(a.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {pendingApprovals.length > 3 && (
+          <div className="text-center">
+            <Button variant="outline" className="text-xs font-bold border-primary/30 text-primary hover:bg-primary/10">
+              View All {pendingApprovals.length} Pending Approvals →
             </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Active Projects</span>
-            <ClipboardList className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{activeProjectsCount}</p>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">Under management</span>
-        </div>
+        )}
+      </DashboardSection>
 
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Tasks In Progress</span>
-            <Clock className="h-5 w-5 text-yellow-500" />
+      {/* ═══ Team Daily Roster ═══ */}
+      <DashboardSection
+        title="Team Daily Roster"
+        subtitle="Today&apos;s attendance and punch status for your direct reports"
+        icon={<Users className="h-5 w-5 text-emerald-500" />}
+      >
+        {teamMembers.length === 0 ? (
+          <div className="p-8 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-500 dark:text-slate-400 text-xs">
+            No team members assigned yet.
           </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{inProgressTasksCount}</p>
-          <span className="text-[11px] text-yellow-600 dark:text-yellow-400 mt-1 block">Active development</span>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Timesheets Pending</span>
-            <CalendarDays className="h-5 w-5 text-orange-500" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{pendingTimesheets.length}</p>
-          <span className="text-[11px] text-orange-600 dark:text-orange-400 mt-1 block">Awaiting manager review</span>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Direct Reports</span>
-            <Users className="h-5 w-5 text-emerald-500" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">8</p>
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 block">Team roster</span>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Timesheet Approvals */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">Pending Timesheet Approvals</h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{pendingTimesheets.length} items</span>
-            </div>
-
-            {pendingTimesheets.length === 0 ? (
-              <div className="p-8 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-500 dark:text-slate-400 text-xs">
-                ✓ All team timesheets are reviewed and approved!
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingTimesheets.map((t) => (
-                  <div
-                    key={t._id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-gray-100 dark:border-white/10 bg-slate-50 dark:bg-black/30 p-4 text-xs"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-slate-900 dark:text-white">{t.userName || "Employee"}</span>
-                        <span className="text-slate-400">•</span>
-                        <span className="text-primary font-medium">{t.projectName || "Project"}</span>
-                      </div>
-                      <p className="text-slate-700 dark:text-slate-300 font-medium">{t.taskTitle || "Task Work"}</p>
-                      {t.notes && <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-1 italic">"{t.notes}"</p>}
-                    </div>
-
-                    <div className="flex items-center gap-3 self-end sm:self-center">
-                      <div className="text-right">
-                        <span className="font-mono font-bold text-slate-900 dark:text-white text-sm">{t.hours} hrs</span>
-                        <span className="block text-[10px] text-slate-500 dark:text-slate-400">{t.date}</span>
-                      </div>
-
-                      <form
-                        action={async () => {
-                          "use server";
-                          await approveTimesheetAction(t._id || "", "manager");
-                        }}
-                      >
-                        <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1 text-xs font-bold">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Approve
-                        </Button>
-                      </form>
-
-                      <form
-                        action={async () => {
-                          "use server";
-                          await rejectTimesheetAction(t._id || "", "manager", "Needs detail");
-                        }}
-                      >
-                        <Button type="submit" size="sm" variant="outline" className="border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10 gap-1 text-xs font-bold">
-                          <XCircle className="h-3.5 w-3.5" /> Reject
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-gray-200 dark:border-white/10 text-slate-500 dark:text-slate-400">
+                <tr>
+                  <th className="pb-3 font-semibold">Name</th>
+                  <th className="pb-3 font-semibold">Department</th>
+                  <th className="pb-3 font-semibold">Punch In</th>
+                  <th className="pb-3 font-semibold">Punch Out</th>
+                  <th className="pb-3 font-semibold">Status</th>
+                  <th className="pb-3 font-semibold">Employee Code</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-slate-800 dark:text-slate-200">
+                {teamMembers.map((m) => (
+                  <tr key={m.id}>
+                    <td className="py-3 font-bold text-slate-900 dark:text-white">
+                      {m.name}
+                      <span className="block text-[10px] text-slate-500 font-normal">
+                        {m.email}
+                      </span>
+                    </td>
+                    <td className="py-3 text-slate-600 dark:text-slate-300">
+                      {m.department}
+                    </td>
+                    <td className="py-3 font-mono text-[11px]">
+                      {m.punchInTime
+                        ? new Date(m.punchInTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "—"}
+                    </td>
+                    <td className="py-3 font-mono text-[11px]">
+                      {m.punchOutTime
+                        ? new Date(m.punchOutTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : m.punchInTime ? "Active" : "—"}
+                    </td>
+                    <td className="py-3">
+                      <AttendanceChip status={m.attendanceStatus || "ABSENT"} />
+                    </td>
+                    <td className="py-3 font-mono font-bold text-primary text-[11px]">
+                      {m.employeeCode || "—"}
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            )}
+              </tbody>
+            </table>
           </div>
-        </div>
+        )}
+      </DashboardSection>
 
-        {/* Right Col: Active Projects */}
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">Active Team Projects</h3>
-              <Link href="/hrms/manager/projects" className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold">
-                View all <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-
-            {projects.length === 0 ? (
-              <div className="p-6 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-500 dark:text-slate-400 text-xs">
-                No active projects assigned yet.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {projects.slice(0, 4).map((p) => (
-                  <div key={p._id} className="rounded-xl border border-gray-100 dark:border-white/5 bg-slate-50 dark:bg-black/20 p-3 text-xs">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-slate-900 dark:text-white">{p.name}</span>
-                      <span className="text-[10px] text-primary font-mono font-bold">{p.status}</span>
-                    </div>
-                    {p.clientName && <p className="text-slate-500 dark:text-slate-400 text-[11px]">Client: {p.clientName}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+      {/* ═══ Quick Links ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <QuickLink
+          href="/hrms/manager/projects"
+          icon={<Briefcase className="h-5 w-5 text-primary" />}
+          label="Project Tasks"
+          desc="Delegate & monitor team tasks"
+        />
+        <QuickLink
+          href="/hrms/manager/timesheets"
+          icon={<Clock className="h-5 w-5 text-yellow-500" />}
+          label="Timesheet Review"
+          desc="Review & lock team hours"
+        />
+        <QuickLink
+          href="/hrms/manager/approvals"
+          icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+          label="Approvals"
+          desc="Leave, regularization & overtime"
+        />
+        <QuickLink
+          href="/hrms/manager/analytics"
+          icon={<TrendingUp className="h-5 w-5 text-blue-500" />}
+          label="KPI Analytics"
+          desc="Team performance metrics"
+        />
       </div>
     </AppShell>
+  );
+}
+
+// ── Sub-components ─────────────────────────────────────────
+
+function StatCard({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  accent: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          {label}
+        </span>
+        {icon}
+      </div>
+      <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
+        {value}
+      </p>
+      <span className={`text-[11px] ${accent} flex items-center gap-1 mt-1 font-semibold`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function DashboardSection({
+  title,
+  subtitle,
+  icon,
+  action,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="font-bold text-base flex items-center gap-2 text-slate-900 dark:text-white">
+            {icon} {title}
+          </h3>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            {subtitle}
+          </p>
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ApprovalCard({
+  request,
+  onApprove,
+  onReject,
+}: {
+  request: LeaveRequest;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 text-xs">
+      <div>
+        <span className="font-bold text-slate-900 dark:text-white block">
+          {request.employeeName}
+        </span>
+        <span className="text-slate-500 text-[10px]">
+          {request.type}
+          {request.isHalfDay && ` (Half: ${request.halfDaySlot === "first_half" ? "1st Half" : "2nd Half"})`}
+          {" · "}
+          {request.totalDays}d
+          {" · "}
+          {request.reason}
+        </span>
+      </div>
+      <div className="flex items-center gap-1 shrink-0 ml-2">
+        <Button
+          size="sm"
+          onClick={onApprove}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold h-6 px-2"
+        >
+          <CheckCircle2 className="h-3 w-3" />
+        </Button>
+        <Button
+          size="sm"
+          variant="danger"
+          onClick={onReject}
+          className="text-[10px] font-bold h-6 px-2"
+        >
+          <XCircle className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function AttendanceChip({ status }: { status: string }) {
+  const map: Record<string, { bg: string; text: string; label: string }> = {
+    PRESENT: { bg: "bg-emerald-500/10 border-emerald-500/20", text: "text-emerald-600 dark:text-emerald-400", label: "PRESENT" },
+    LATE: { bg: "bg-yellow-500/10 border-yellow-500/20", text: "text-yellow-600 dark:text-yellow-400", label: "LATE" },
+    ABSENT: { bg: "bg-red-500/10 border-red-500/20", text: "text-red-600 dark:text-red-400", label: "ABSENT" },
+    HALF_DAY: { bg: "bg-orange-500/10 border-orange-500/20", text: "text-orange-600 dark:text-orange-400", label: "HALF DAY" },
+  };
+  const s = map[status] || map.ABSENT;
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border ${s.bg} ${s.text}`}>
+      {s.label}
+    </span>
+  );
+}
+
+function QuickLink({
+  href,
+  icon,
+  label,
+  desc,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  desc: string;
+}) {
+  return (
+    <a
+      href={href}
+      className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white hover:border-primary/50 transition-colors group"
+    >
+      <div className="mb-3">{icon}</div>
+      <h4 className="font-bold text-sm group-hover:text-primary transition-colors">{label}</h4>
+      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{desc}</p>
+    </a>
   );
 }
