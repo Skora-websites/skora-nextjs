@@ -49,7 +49,7 @@ export const ROLE_HIERARCHY: Record<Role, number> = {
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  super_admin: "Super Admin",
+  super_admin: "CEO",
   hr_admin: "HR Admin",
   admin: "HR Admin",
   manager: "Manager",
@@ -400,17 +400,46 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
 // ── Route Access (which roles can access which routes) ──
 
 export const ROUTE_ACCESS: Record<string, Role[]> = {
-  // Everyone
+  // ── Role-Specific Dashboards ───────────────────────
   "/dashboard": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/employee": ["super_admin", "hr_admin", "admin", "manager", "employee"],
-
-  // Manager Dashboard
-  "/manager": ["super_admin", "hr_admin", "admin", "manager"],
-
-  // Superadmin Portal
+  "/manager": ["super_admin", "manager"],
   "/superadmin": ["super_admin"],
+  "/hr-admin": ["hr_admin", "admin", "super_admin"],
 
-  // HR Admin & Super Admin only
+  // ── Super Admin Portal ──────────────────────────────
+  "/superadmin/tenants": ["super_admin"],
+  "/superadmin/modules": ["super_admin"],
+  "/superadmin/audit-logs": ["super_admin"],
+  "/superadmin/settings": ["super_admin"],
+
+  // ── HR Admin Portal ────────────────────────────────
+  "/hr-admin/employees": ["hr_admin", "admin", "super_admin"],
+  "/hr-admin/onboarding": ["hr_admin", "admin", "super_admin"],
+  "/hr-admin/payroll": ["hr_admin", "admin", "super_admin"],
+  "/hr-admin/projects": ["hr_admin", "admin", "super_admin"],
+  "/hr-admin/leave-policies": ["hr_admin", "admin", "super_admin"],
+  "/hr-admin/attendance": ["hr_admin", "admin", "super_admin"],
+  "/hr-admin/settings": ["hr_admin", "admin", "super_admin"],
+
+  // ── Manager Portal ─────────────────────────────────
+  "/manager/projects": ["manager", "super_admin"],
+  "/manager/timesheets": ["manager", "super_admin"],
+  "/manager/approvals": ["manager", "super_admin"],
+  "/manager/analytics": ["manager", "super_admin"],
+  "/manager/settings": ["manager", "super_admin"],
+  "/manager/my-team": ["manager", "super_admin"],
+
+  // ── Employee Portal ────────────────────────────────
+  "/employee/my-tasks": ["employee", "super_admin"],
+  "/employee/leaves": ["employee", "super_admin"],
+  "/employee/payslips": ["employee", "super_admin"],
+  "/employee/performance": ["employee", "super_admin"],
+  "/employee/settings": ["employee", "super_admin"],
+  "/employee/profile": ["employee", "super_admin"],
+  "/employee/timesheet": ["employee", "super_admin"],
+
+  // ── HR Admin & Super Admin only ────────────────────
   "/employees": ["super_admin", "hr_admin", "admin"],
   "/payroll": ["super_admin", "hr_admin", "admin"],
   "/organization": ["super_admin", "hr_admin", "admin"],
@@ -419,26 +448,24 @@ export const ROUTE_ACCESS: Record<string, Role[]> = {
   "/exit": ["super_admin", "hr_admin", "admin"],
   "/probation": ["super_admin", "hr_admin", "admin"],
 
-  // HR Admin, Manager, Super Admin, and self-service employees
+  // ── Shared (multi-role) ────────────────────────────
   "/attendance": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/leaves": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/assets": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/documents": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/engage": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/holidays": ["super_admin", "hr_admin", "admin", "manager", "employee"],
-
-  // Task & Ticket Management & PMS Projects
   "/tasks": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/tickets": ["super_admin", "hr_admin", "admin", "manager", "employee"],
   "/projects": ["super_admin", "hr_admin", "admin", "manager", "employee"],
 
-  // Super Admin & HR Admin
+  // ── Restricted ─────────────────────────────────────
   "/settings": ["super_admin", "hr_admin"],
   "/recruitment": ["super_admin", "hr_admin", "admin"],
   "/performance": ["super_admin", "hr_admin", "admin", "manager"],
   "/departments": ["super_admin", "hr_admin", "admin"],
 
-  // System-level — Super Admin only
+  // ── System-level — Super Admin only ────────────────
   "/role-management": ["super_admin"],
   "/permission-management": ["super_admin"],
 };

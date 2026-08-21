@@ -134,7 +134,7 @@ export default function RegisterPage() {
       localStorage.setItem("my-onboarding-status", JSON.stringify(appState));
 
       setSuccess("Documents submitted! Verification request sent to HR for approval.");
-      setTimeout(() => router.push("/hrms/employee/profile"), 1800);
+      setTimeout(() => router.push("/hrms"), 1800);
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -72,7 +72,7 @@ export default function TasksPage() {
   const [showDetailDialog, setShowDetailDialog] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
-  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+  const isAdmin = user?.role === "super_admin" || user?.role === "admin" || user?.role === "hr_admin" || user?.role === "manager";
 
   // ── Create Task ──────────────────────────────────────
   const handleCreateTask = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {

@@ -21,7 +21,11 @@ import {
   Download,
   Plus,
   Crown,
+  Lock,
+  AlertCircle,
 } from "lucide-react";
+import { auth } from "@/lib/firebase";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 
 interface DocItem {
   id: string;
@@ -80,6 +84,14 @@ export default function EmployeeProfilePage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [isSubmittingToHR, setIsSubmittingToHR] = useState(false);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Load documents from backend server / localStorage
   useEffect(() => {
@@ -163,6 +175,65 @@ export default function EmployeeProfilePage() {
     e.preventDefault();
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("All password fields are required.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters.");
+      return;
+    }
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setPasswordError("New password must contain at least one letter and one number.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setPasswordError("New password must be different from the current password.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      const user_email = user?.email;
+      if (!user_email || !auth?.currentUser) {
+        setPasswordError("You must be logged in to change your password.");
+        return;
+      }
+
+      // Re-authenticate with current password
+      const credential = EmailAuthProvider.credential(user_email, currentPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+
+      // Update to new password
+      await updatePassword(auth.currentUser, newPassword);
+
+      setPasswordSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setPasswordSuccess(false), 4000);
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+        setPasswordError("Current password is incorrect.");
+      } else if (code === "auth/weak-password") {
+        setPasswordError("New password is too weak.");
+      } else {
+        setPasswordError(err?.message || "Failed to update password. Please try again.");
+      }
+    } finally {
+      setPasswordSaving(false);
+    }
   };
 
   // Trigger File Picker Directly
@@ -429,6 +500,83 @@ export default function EmployeeProfilePage() {
             </Button>
           </div>
         </form>
+
+        {/* Section 2.5: Change Password */}
+        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white space-y-4">
+          <div>
+            <h3 className="font-bold text-base flex items-center gap-2 text-slate-900 dark:text-white">
+              <Lock className="h-5 w-5 text-primary" /> Change Password
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Update your login password. Your new password will be used the next time you sign in.
+            </p>
+          </div>
+
+          {passwordSuccess && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>Password updated successfully! Use your new password on next login.</span>
+            </div>
+          )}
+
+          {passwordError && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-bold">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{passwordError}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <Lock className="h-3.5 w-3.5 inline mr-1" /> Current Password
+              </label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <Lock className="h-3.5 w-3.5 inline mr-1" /> New Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Min 8 chars, letters + numbers"
+                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <Lock className="h-3.5 w-3.5 inline mr-1" /> Confirm New Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Button
+              type="button"
+              onClick={handlePasswordChange}
+              disabled={passwordSaving}
+              className="bg-primary text-white hover:bg-primary/90 font-bold gap-1.5 shadow-md"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              {passwordSaving ? "Updating..." : "Save New Password"}
+            </Button>
+          </div>
+        </div>
 
         {/* Section 3: REAL Onboarding Documents Container */}
         <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white space-y-4">

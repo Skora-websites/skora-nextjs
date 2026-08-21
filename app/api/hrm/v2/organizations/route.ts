@@ -15,7 +15,6 @@ import {
   deleteDesignation,
   getOrganizationTree,
 } from "@/services/hrm/organization";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { requireAdmin, isErrorResponse } from "@/lib/api-auth";
 import { withErrorHandler, badRequest, notFound } from "@/lib/api-handler";
 
@@ -23,9 +22,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isErrorResponse(auth)) return auth;
 
-  const origin = request.headers.get("origin");
-  const tenantCtx = await resolveTenantFromOrigin(origin);
-  const tenantId = tenantCtx?.tenantId || "default";
+  const tenantId = "default";
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
@@ -64,9 +61,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isErrorResponse(auth)) return auth;
 
-  const origin = request.headers.get("origin");
-  const tenantCtx = await resolveTenantFromOrigin(origin);
-  const tenantId = tenantCtx?.tenantId || "default";
+  const tenantId = "default";
 
   const body = await request.json();
   const type = body.type;

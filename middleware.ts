@@ -1,8 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+// ── Role → Dashboard mapping ──────────────────────────────
+const ROLE_DASHBOARDS: Record<string, string> = {
+  super_admin: "/hrms/superadmin",
+  hr_admin: "/hrms/hr-admin",
+  admin: "/hrms/hr-admin",
+  manager: "/hrms/manager",
+  employee: "/hrms/employee",
+};
+
+// ── Routes that require authentication ────────────────────
 const protectedHrmsRoutes = [
   "/hrms/dashboard",
   "/hrms/superadmin",
+  "/hrms/hr-admin",
   "/hrms/manager",
   "/hrms/employee",
   "/hrms/leads",
@@ -30,12 +41,24 @@ const protectedHrmsRoutes = [
   "/hrms/analytics",
 ];
 
+// ── Role-gated route prefixes ─────────────────────────────
+// Only the specified roles (and super_admin who can access everything) may visit these.
+const ROLE_GATED_ROUTES: Record<string, string[]> = {
+  "/hrms/superadmin": ["super_admin"],
+  "/hrms/hr-admin": ["hr_admin", "admin"],
+  "/hrms/manager": ["manager"],
+  "/hrms/employee": ["employee"],
+};
+
+// ── Auth routes (redirect logged-in users away) ───────────
 const hrmsAuthRoutes = ["/hrms/login", "/hrms/register", "/hrms/forgot-password"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. ADMIN PORTAL ROUTE INTERCEPTION (Instant HTTP Redirects, No Loading Spinners)
+  // ════════════════════════════════════════════════════════════
+  // 1. ADMIN PORTAL (unchanged)
+  // ════════════════════════════════════════════════════════════
   if (pathname === "/admin" || (pathname.startsWith("/admin/") && pathname !== "/admin/login")) {
     const hasAdminSession = request.cookies.has("admin_session");
     if (!hasAdminSession) {
@@ -50,9 +73,13 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 2. HRMS PORTAL ROUTE PROTECTION
-  const hasHrmsSession = request.cookies.has("session") || request.cookies.has("token");
+  // ════════════════════════════════════════════════════════════
+  // 2. HRMS PORTAL
+  // ════════════════════════════════════════════════════════════
+  const hasHrmsSession = request.cookies.has("session");
+  const userRole = request.cookies.get("user_role")?.value || "";
 
+  // ── 2a. Unauthenticated → redirect to login ─────────────
   if (!hasHrmsSession) {
     const isProtected = protectedHrmsRoutes.some(
       (route) => pathname === route || pathname.startsWith(route + "/")
@@ -64,12 +91,46 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // ── 2b. Authenticated user on auth routes → dashboard ───
   if (hasHrmsSession) {
     const isAuthRoute = hrmsAuthRoutes.some(
       (route) => pathname === route || pathname.startsWith(route + "/")
     );
     if (isAuthRoute) {
-      return NextResponse.redirect(new URL("/hrms/dashboard", request.url));
+      const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
+      return NextResponse.redirect(new URL(dashboard, request.url));
+    }
+  }
+
+  // ── 2c. /hrms root → role-specific dashboard ────────────
+  if (pathname === "/hrms" || pathname === "/hrms/") {
+    if (!hasHrmsSession) {
+      return NextResponse.redirect(new URL("/hrms/login", request.url));
+    }
+    const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
+    return NextResponse.redirect(new URL(dashboard, request.url));
+  }
+
+  // ── 2d. /hrms/dashboard → role-specific dashboard ───────
+  if (pathname === "/hrms/dashboard") {
+    if (!hasHrmsSession) {
+      const loginUrl = new URL("/hrms/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
+    return NextResponse.redirect(new URL(dashboard, request.url));
+  }
+
+  // ── 2e. Role-gated sub-routes ───────────────────────────
+  if (hasHrmsSession && userRole) {
+    for (const [prefix, allowedRoles] of Object.entries(ROLE_GATED_ROUTES)) {
+      if (pathname === prefix || pathname.startsWith(prefix + "/")) {
+        // super_admin can access everything
+        if (userRole !== "super_admin" && !allowedRoles.includes(userRole)) {
+          return NextResponse.redirect(new URL("/hrms/access-denied", request.url));
+        }
+      }
     }
   }
 

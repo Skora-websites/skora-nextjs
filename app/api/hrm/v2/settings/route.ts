@@ -1,83 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getSettings,
-  getSetting,
-  setSetting,
-  getTranslations,
-  setTranslation,
-  getSupportTickets,
-  createSupportTicket,
-  updateSupportTicket,
-} from "@/services/hrm/settings";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
-import { requireAuth, requireAdmin, isErrorResponse } from "@/lib/api-auth";
-
-export async function GET(request: NextRequest) {
-  try {
-    const auth = await requireAdmin();
-    if (isErrorResponse(auth)) return auth;
-
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
-
-    const { searchParams } = new URL(request.url);
-    const key = searchParams.get("key");
-    const category = searchParams.get("category");
-    const type = searchParams.get("type");
-
-    if (type === "translations") {
-      const languageId = searchParams.get("languageId") || undefined;
-      const translations = await getTranslations(tenantId, languageId);
-      return NextResponse.json({ data: translations });
-    }
-
-    if (type === "support") {
-      const status = searchParams.get("status") as any || undefined;
-      const tickets = await getSupportTickets(tenantId, status);
-      return NextResponse.json({ data: tickets });
-    }
-
-    if (key) {
-      const setting = await getSetting(tenantId, key);
-      return NextResponse.json({ data: setting });
-    }
-
-    const settings = await getSettings(tenantId, category as any || undefined);
-    return NextResponse.json({ data: settings });
-  } catch (error: any) {
-    console.error("GET /api/hrm/v2/settings error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
-  }
-}
+import { getAdminDb, isFirebaseConfigured } from "@/lib/firebase-admin";
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = await requireAdmin();
-    if (isErrorResponse(auth)) return auth;
-
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
-
-    const body = await request.json();
-    const action = body.action;
-
-    let result;
-
-    if (action === "set") {
-      result = await setSetting(tenantId, body.key, body.value, body.type, body.category);
-    } else if (action === "translation") {
-      result = await setTranslation(body);
-    } else if (action === "support") {
-      result = await createSupportTicket(tenantId, body);
-    } else {
-      return NextResponse.json({ error: "Invalid action. Use: set, translation, support" }, { status: 400 });
+    if (!isFirebaseConfigured()) {
+      return NextResponse.json({ error: "Firebase is not configured" }, { status: 503 });
     }
 
-    return NextResponse.json({ data: result }, { status: 201 });
-  } catch (error: any) {
-    console.error("POST /api/hrm/v2/settings error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    const body = await request.json();
+    const { role, userId, settings } = body;
+
+    if (!role || !settings) {
+      return NextResponse.json({ error: "Missing role or settings" }, { status: 400 });
+    }
+
+    const db = getAdminDb();
+
+    // Save settings to Firestore, keyed by role and optional userId
+    const docId = userId ? `${role}_${userId}` : role;
+    await db.collection("settings").doc(docId).set(
+      {
+        role,
+        userId: userId || null,
+        settings,
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Settings save error:", error);
+    return NextResponse.json(
+      { error: (error as Error).message || "Save failed" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    if (!isFirebaseConfigured()) {
+      return NextResponse.json({ error: "Firebase is not configured" }, { status: 503 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const role = searchParams.get("role");
+    const userId = searchParams.get("userId");
+
+    if (!role) {
+      return NextResponse.json({ error: "Missing role parameter" }, { status: 400 });
+    }
+
+    const db = getAdminDb();
+    const docId = userId ? `${role}_${userId}` : role;
+    const doc = await db.collection("settings").doc(docId).get();
+
+    if (!doc.exists) {
+      return NextResponse.json({ data: null });
+    }
+
+    return NextResponse.json({ data: doc.data()?.settings || null });
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message || "Fetch failed" },
+      { status: 500 }
+    );
   }
 }

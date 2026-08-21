@@ -40,7 +40,7 @@ export default function AccessDeniedPage() {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link href="/hrms/dashboard">
+          <Link href="/hrms">
             <Button variant="primary" className="w-full sm:w-auto">
               <Home className="h-4 w-4 mr-2" />
               Go to Dashboard

@@ -34,6 +34,29 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getInitials } from "@/lib/utils";
 
+
+// ── Role-based path maps ────────────────────────────────
+const ROLE_PROFILE: Record<string, string> = {
+  super_admin: "/hrms/superadmin/profile",
+  hr_admin: "/hrms/hr-admin/profile",
+  admin: "/hrms/hr-admin/profile",
+  manager: "/hrms/manager/profile",
+  employee: "/hrms/employee/profile",
+};
+const ROLE_SETTINGS: Record<string, string> = {
+  super_admin: "/hrms/superadmin/settings",
+  hr_admin: "/hrms/hr-admin/settings",
+  admin: "/hrms/hr-admin/settings",
+  manager: "/hrms/manager/settings",
+  employee: "/hrms/employee/settings",
+};
+const ROLE_TASKS: Record<string, string> = {
+  super_admin: "/hrms/superadmin",
+  hr_admin: "/hrms/hr-admin/projects",
+  manager: "/hrms/manager/projects",
+  employee: "/hrms/employee/my-tasks",
+};
+
 interface NavbarProps {
   onMenuClick: () => void;
   title?: string;
@@ -262,9 +285,9 @@ export function Navbar({ onMenuClick, title }: NavbarProps) {
                     onClick={() => {
                       if (!notif.isRead) handleMarkAsRead(notif.id);
                       if (notif.referenceType === "task" && notif.referenceId) {
-                        router.push(`/tasks?id=${notif.referenceId}`);
+                        router.push(`/hrms/tasks?id=${notif.referenceId}`);
                       } else if (notif.referenceType === "ticket" && notif.referenceId) {
-                        router.push(`/tickets?id=${notif.referenceId}`);
+                        router.push(`/hrms/tickets?id=${notif.referenceId}`);
                       }
                     }}
                     className={cn(
@@ -344,15 +367,15 @@ export function Navbar({ onMenuClick, title }: NavbarProps) {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push("/hrms/employee/profile")}>
+          <DropdownMenuItem onClick={() => router.push(ROLE_PROFILE[user?.role || "employee"] || "/hrms/employee")}>
             <User className="mr-2 h-4 w-4" />
             My Profile
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/hrms/settings")}>
+          <DropdownMenuItem onClick={() => router.push(ROLE_SETTINGS[user?.role || "employee"] || "/hrms/employee/settings")}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/hrms/employee/my-tasks")}>
+          <DropdownMenuItem onClick={() => router.push(ROLE_TASKS[user?.role || "employee"] || "/hrms/employee/my-tasks")}>
             <ClipboardList className="mr-2 h-4 w-4" />
             My Tasks
           </DropdownMenuItem>

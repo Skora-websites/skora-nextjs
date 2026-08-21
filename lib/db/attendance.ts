@@ -73,6 +73,7 @@ export async function recordPunchIn(data: {
   userEmail: string;
   employeeCode?: string;
   location?: string;
+  status?: string;
   tenantId?: string;
   managerId?: string;
 }): Promise<AttendanceRecord | null> {
@@ -81,7 +82,7 @@ export async function recordPunchIn(data: {
 
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
-  const status = calculateAttendanceStatus(now);
+  const status = data.status || calculateAttendanceStatus(now);
 
   const doc = {
     tenantId: data.tenantId || "default",

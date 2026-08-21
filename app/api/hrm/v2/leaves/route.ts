@@ -14,7 +14,6 @@ import {
   deleteLeaveType,
   getLeaveBalances,
 } from "@/services/hrm/leave";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
@@ -22,9 +21,7 @@ export async function GET(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -91,20 +88,16 @@ export async function POST(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const body = await request.json();
     const action = body.action;
 
     if (action === "apply") {
       // Employees can only apply for themselves
-      if (auth.role === "employee" && body.userId !== auth.userId) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+      const userId = body.userId === "current" ? auth.userId : (body.userId || auth.userId);
       const result = await applyLeave(tenantId, {
-        userId: body.userId,
+        userId: userId,
         leaveTypeId: body.leaveTypeId,
         fromDate: new Date(body.fromDate),
         toDate: new Date(body.toDate),

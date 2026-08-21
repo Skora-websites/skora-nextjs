@@ -11,7 +11,6 @@ import {
   deleteTaskComment,
   getTaskAuditLogs,
 } from "@/services/hrm/tasks";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { requireAuth, requireAdmin, isErrorResponse } from "@/lib/api-auth";
 import { withErrorHandler, badRequest, notFound, forbidden } from "@/lib/api-handler";
 
@@ -21,9 +20,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const auth = await requireAuth();
   if (isErrorResponse(auth)) return auth;
 
-  const origin = request.headers.get("origin");
-  const tenantCtx = await resolveTenantFromOrigin(origin);
-  const tenantId = tenantCtx?.tenantId || "default";
+  const tenantId = "default";
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
@@ -94,9 +91,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const body = await request.json();
     if (!body.taskId || !body.content) {
@@ -115,9 +110,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const auth = await requireAdmin();
   if (isErrorResponse(auth)) return auth;
 
-  const origin = request.headers.get("origin");
-  const tenantCtx = await resolveTenantFromOrigin(origin);
-  const tenantId = tenantCtx?.tenantId || "default";
+  const tenantId = "default";
 
   const body = await request.json();
   if (!body.title) {

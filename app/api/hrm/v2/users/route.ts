@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth } from "@/lib/firebase-admin";
 import { hrmUsersService } from "@/lib/hrm/firestore";
-import { resolveTenantFromOrigin } from "@/services/hrm/tenant";
 import { normalizeRole } from "@/lib/rbac";
 import { requireAuth, requireAdmin, requireSuperAdmin, isErrorResponse } from "@/lib/api-auth";
 import { recordAuditLog, getAuditLogs } from "@/services/hrm/audit";
@@ -21,9 +20,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const role = searchParams.get("role");
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     switch (action) {
       case "list": {
@@ -43,11 +40,15 @@ export async function GET(request: NextRequest) {
           orderByDirection: "desc",
         });
 
-        // Filter by search term if provided (client-side for flexibility)
-        let filtered = users;
+        // Always exclude super_admin from general list
+        let filtered = users.filter((u: any) => {
+          const r = (u.role || "").toLowerCase();
+          if (r === "super_admin" || r === "superadmin" || r === "ceo") return false;
+          return true;
+        });
         if (search) {
           const term = search.toLowerCase();
-          filtered = users.filter(
+          filtered = filtered.filter(
             (u: any) =>
               (u.displayName || "").toLowerCase().includes(term) ||
               (u.firstName || "").toLowerCase().includes(term) ||
@@ -122,9 +123,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireSuperAdmin();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const body = await request.json();
     const { email, password, displayName, firstName, lastName, role: rawRole } = body;
@@ -213,9 +212,7 @@ export async function PATCH(request: NextRequest) {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const body = await request.json();
     const { userId, action: updateAction, role, status, displayName, firstName, lastName, email, phone } = body;
@@ -303,6 +300,7 @@ export async function PATCH(request: NextRequest) {
         if (lastName !== undefined) updateData.lastName = lastName;
         if (email !== undefined) updateData.email = email;
         if (phone !== undefined) updateData.phone = phone;
+        if (body.image !== undefined) updateData.image = body.image;
         await hrmUsersService.update(userId, updateData as any);
         auditAction = "update_user";
         auditDetails = `Updated profile fields: ${Object.keys(updateData).join(", ")}`;
@@ -381,9 +379,7 @@ export async function DELETE(request: NextRequest) {
     const auth = await requireSuperAdmin();
     if (isErrorResponse(auth)) return auth;
 
-    const origin = request.headers.get("origin");
-    const tenantCtx = await resolveTenantFromOrigin(origin);
-    const tenantId = tenantCtx?.tenantId || "default";
+    const tenantId = "default";
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");

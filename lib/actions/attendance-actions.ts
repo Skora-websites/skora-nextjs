@@ -10,11 +10,16 @@ export async function punchInAction(data: {
   userEmail: string;
   employeeCode?: string;
   location?: string;
+  status?: string;
   tenantId?: string;
   managerId?: string;
 }) {
   try {
     const record = await recordPunchIn(data);
+
+    if (!record) {
+      return { success: false, error: "Failed to save attendance record. The database may be unavailable. Please try again." };
+    }
 
     if (record) {
       // Dispatch notification to Manager & HR Admin
