@@ -53,14 +53,9 @@ export function RouteGuard({
     }
   }, [user, loading, pathname, canAccess, router, redirectIfAuthenticated]);
 
-  // Show loading while checking auth
-  if (loading) {
-    return <LoadingFallback label="Verifying access..." />;
-  }
-
-  // If not logged in, render nothing — middleware will redirect
-  if (!user) {
-    return null;
+  // Show loading while checking auth or redirecting
+  if (loading || !user) {
+    return <LoadingFallback label={loading ? "Verifying access..." : "Redirecting to login..."} />;
   }
 
   // Check access for non-redirect scenarios

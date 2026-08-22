@@ -9,10 +9,9 @@ import type {
   DocumentCategory,
   DocumentTemplate,
 } from "@/types";
-import { getAdminStorage } from "@/lib/firebase-admin";
 
 // ══════════════════════════════════════════════════════════════════
-// Documents Service
+// Documents Service (MongoDB backed)
 // ══════════════════════════════════════════════════════════════════
 
 // ── Categories ─────────────────────────────────────────
@@ -77,16 +76,8 @@ export async function uploadDocument(
     expiryDate?: Date;
   }
 ): Promise<Document> {
-  const bucket = getAdminStorage().bucket();
-  const filePath = `tenants/${tenantId}/documents/${data.userId}/${Date.now()}_${data.fileName}`;
-  const file = bucket.file(filePath);
-
-  await file.save(data.file, {
-    metadata: { contentType: data.mimeType },
-  });
-
-  await file.makePublic();
-  const fileURL = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+  const base64 = data.file.toString("base64");
+  const fileURL = `data:${data.mimeType};base64,${base64}`;
 
   return documentsService.create({
     categoryId: data.categoryId,
@@ -108,22 +99,6 @@ export async function updateDocument(id: string, data: Partial<Document>): Promi
 }
 
 export async function deleteDocument(id: string): Promise<boolean> {
-  const doc = await documentsService.findById(id);
-  if (!doc) return false;
-
-  // Delete from storage
-  try {
-    const bucket = getAdminStorage().bucket();
-    const url = new URL(doc.fileURL);
-    const filePath = decodeURIComponent(url.pathname.substring(1)).replace(
-      `${bucket.name}/`,
-      ""
-    );
-    await bucket.file(filePath).delete();
-  } catch (error) {
-    console.error("Failed to delete file from storage:", error);
-  }
-
   return documentsService.delete(id);
 }
 

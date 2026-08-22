@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminAuth } from "@/lib/firebase-admin";
+import bcrypt from "bcryptjs";
 import { hrmUsersService } from "@/lib/hrm/firestore";
 import { resolveTenantFromOrigin, createTenant } from "@/services/hrm/tenant";
 import { ROLE_DEFINITIONS } from "@/services/hrm/auth";
@@ -17,33 +17,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const auth = await requireAuth();
       if (isErrorResponse(auth)) return auth;
       if (auth.role !== "super_admin") {
-        return forbidden("Only Super Admin can set custom claims");
+        return forbidden("Only Super Admin can set user role");
       }
-      const { userId, claims } = body;
-      await getAdminAuth().setCustomUserClaims(userId, claims);
+      const { userId, role } = body;
+      if (userId && role) {
+        await hrmUsersService.update(userId, { role: normalizeRole(role) } as any);
+      }
       return NextResponse.json({ success: true });
-    }
-
-    case "get-session": {
-      const { idToken } = body;
-      const decoded = await getAdminAuth().verifyIdToken(idToken);
-
-      const user = await hrmUsersService.findById(decoded.uid);
-      if (!user) {
-        return notFound("User not found");
-      }
-
-      return NextResponse.json({
-        data: {
-          uid: decoded.uid,
-          email: decoded.email,
-          emailVerified: decoded.email_verified,
-          role: decoded.role || user.role,
-          tenantId: decoded.tenantId || user.tenantId,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-        },
-      });
     }
 
     case "register": {
@@ -51,17 +31,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const tenant = tenantId || "default";
       const existingUsers = await hrmUsersService.countInTenant(tenant);
       const role = isSuperAdminEmail(email) || existingUsers === 0 ? "super_admin" : "employee";
+      const passwordHash = await bcrypt.hash(password || "Employee@123", 10);
 
-      const authUser = await getAdminAuth().createUser({
-        email,
-        password,
-        displayName,
-      });
-
-      await hrmUsersService.createWithId(authUser.uid, {
+      const user = await hrmUsersService.create({
         email,
         emailVerified: false,
-        displayName,
+        displayName: displayName || firstName,
         firstName: firstName || displayName,
         lastName: lastName || "",
         role,
@@ -69,53 +44,27 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         loginStatus: "enabled",
         allowMobileLogin: false,
         tenantId: tenant,
+        passwordHash,
       } as any);
 
-      await getAdminAuth().setCustomUserClaims(authUser.uid, {
-        role,
-        tenantId: tenant,
-      });
-
-      // Sign in to get an ID token, then create a session cookie for auto-login
-      let sessionCookie: string | null = null;
-      try {
-        const { signInWithFirebase } = await import("@/lib/auth");
-        const idToken = await signInWithFirebase(email, password);
-        sessionCookie = await createSession(idToken);
-      } catch {
-        // Session creation is best-effort; user can still log in manually
-      }
+      const sessionCookie = await createSession(user.id);
 
       const response = NextResponse.json({
         data: {
-          uid: authUser.uid,
-          email: authUser.email,
-          displayName: authUser.displayName,
+          uid: user.id,
+          email: user.email,
+          displayName: user.displayName,
           role,
-          sessionCreated: !!sessionCookie,
+          sessionCreated: true,
         },
       }, { status: 201 });
 
-      if (sessionCookie) {
-        response.cookies.set("session", sessionCookie, {
-          ...SESSION_COOKIE_OPTIONS,
-          maxAge: SESSION_EXPIRES_IN_MS / 1000,
-        });
-      }
+      response.cookies.set("session", sessionCookie, {
+        ...SESSION_COOKIE_OPTIONS,
+        maxAge: SESSION_EXPIRES_IN_MS / 1000,
+      });
 
       return response;
-    }
-
-    case "reset-password": {
-      const { email } = body;
-      const resetLink = await getAdminAuth().generatePasswordResetLink(email);
-      return NextResponse.json({ data: { resetLink } });
-    }
-
-    case "verify-token": {
-      const { token } = body;
-      const decoded = await getAdminAuth().verifyIdToken(token);
-      return NextResponse.json({ data: { uid: decoded.uid, email: decoded.email } });
     }
 
     case "create-user": {
@@ -126,19 +75,21 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       }
       const { email, password, displayName, role: rawRole, tenantId } = body;
       const role = normalizeRole(rawRole);
+      const passwordHash = await bcrypt.hash(password || "Employee@123", 10);
 
-      const authUser = await getAdminAuth().createUser({
+      const user = await hrmUsersService.create({
         email,
-        password,
         displayName,
-      });
-
-      await getAdminAuth().setCustomUserClaims(authUser.uid, {
+        firstName: displayName?.split(" ")[0] || "",
+        lastName: displayName?.split(" ").slice(1).join(" ") || "",
         role,
         tenantId: tenantId || "default",
-      });
+        status: "active",
+        loginStatus: "enabled",
+        passwordHash,
+      } as any);
 
-      return NextResponse.json({ data: { uid: authUser.uid, email: authUser.email } }, { status: 201 });
+      return NextResponse.json({ data: { uid: user.id, email: user.email } }, { status: 201 });
     }
 
     case "tenant-setup": {
@@ -177,8 +128,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         return notFound("User not found");
       }
 
-      const authUser = await getAdminAuth().getUser(userId);
-      return NextResponse.json({ data: { ...user, customClaims: authUser.customClaims } });
+      return NextResponse.json({ data: user });
     }
 
     case "users": {
@@ -210,7 +160,6 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
       return forbidden("Only Super Admin can change roles");
     }
     const normalizedRole = normalizeRole(role);
-    await getAdminAuth().setCustomUserClaims(userId, { role: normalizedRole });
     await hrmUsersService.update(userId, { role: normalizedRole } as any);
     return NextResponse.json({ success: true });
   }
@@ -218,9 +167,6 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
   if (loginStatus && userId) {
     if (auth.role === "employee") {
       return forbidden("Insufficient permissions");
-    }
-    if (loginStatus === "disabled") {
-      await getAdminAuth().revokeRefreshTokens(userId);
     }
     await hrmUsersService.update(userId, { loginStatus } as any);
     return NextResponse.json({ success: true });
@@ -240,7 +186,6 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return badRequest("userId required");
   }
 
-  await getAdminAuth().deleteUser(userId);
   await hrmUsersService.delete(userId);
 
   return NextResponse.json({ success: true });

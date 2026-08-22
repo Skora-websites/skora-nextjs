@@ -1,8 +1,9 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getAdminAuth } from "@/lib/firebase-admin";
+import { getDb } from "@/lib/db/mongo-helper";
 import { normalizeRole, hasPermission, type PermissionKey } from "@/lib/rbac";
+import { ObjectId } from "mongodb";
 
 // ── Types ───────────────────────────────────────────────
 
@@ -21,7 +22,7 @@ export interface ApiAuthResult {
 // ── Session Verification ────────────────────────────────
 
 /**
- * Verify the session cookie and extract user info.
+ * Verify the session cookie by looking up the token in MongoDB.
  * Returns null if not authenticated.
  */
 async function verifySession(): Promise<{
@@ -29,15 +30,28 @@ async function verifySession(): Promise<{
   role: string;
 } | null> {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("session")?.value;
-  if (!sessionCookie) return null;
+  const sessionToken = cookieStore.get("session")?.value;
+  if (!sessionToken) return null;
 
   try {
-    const decoded = await getAdminAuth().verifySessionCookie(sessionCookie, false);
-    const role = normalizeRole(
-      (decoded as Record<string, unknown>).role as string | undefined
-    );
-    return { userId: decoded.uid, role };
+    const db = await getDb();
+    if (!db) return null;
+
+    // Find session in MongoDB
+    const session = await db.collection("sessions").findOne({
+      token: sessionToken,
+      expiresAt: { $gt: new Date() },
+    });
+    if (!session) return null;
+
+    // Look up user
+    const user = await db.collection("users").findOne({
+      _id: new ObjectId(session.userId),
+    });
+    if (!user) return null;
+
+    const role = normalizeRole(user.role);
+    return { userId: user._id.toString(), role };
   } catch {
     return null;
   }
@@ -63,7 +77,6 @@ export async function requireAuth(): Promise<ApiAuthResult | NextResponse> {
 
 /**
  * Require authentication AND a specific permission.
- * Returns 401 if not authenticated, 403 if insufficient permissions.
  */
 export async function requirePermission(
   permission: PermissionKey | string
@@ -88,8 +101,7 @@ export async function requirePermission(
 }
 
 /**
- * Require authentication AND admin-level role (admin or super_admin).
- * Returns 401 if not authenticated, 403 if employee.
+ * Require authentication AND admin-level role.
  */
 export async function requireAdmin(): Promise<ApiAuthResult | NextResponse> {
   const auth = await requireAuth();
@@ -105,7 +117,6 @@ export async function requireAdmin(): Promise<ApiAuthResult | NextResponse> {
 
 /**
  * Require authentication AND super_admin role.
- * Returns 401 if not authenticated, 403 if not super_admin.
  */
 export async function requireSuperAdmin(): Promise<ApiAuthResult | NextResponse> {
   const auth = await requireAuth();
@@ -120,7 +131,7 @@ export async function requireSuperAdmin(): Promise<ApiAuthResult | NextResponse>
 }
 
 /**
- * Check if a result from requireAuth/requirePermission/requireAdmin is an error response.
+ * Check if a result from requireAuth is an error response.
  */
 export function isErrorResponse(
   result: ApiAuthResult | NextResponse

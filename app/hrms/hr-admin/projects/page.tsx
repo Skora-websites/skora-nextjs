@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase, Search, Loader2, X, CheckCircle2 } from "lucide-react";
 
-interface Project { _id?: string; id?: string; name: string; description?: string; status?: string; budget?: number; }
+interface Project { _id?: string; id?: string; name: string; description?: string; status?: string; budget?: number; priority?: string; }
 
 export default function HrAdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -18,6 +18,12 @@ export default function HrAdminProjectsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  // Edit state
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editBudget, setEditBudget] = useState("");
+  const [editStatus, setEditStatus] = useState("planning");
 
   useEffect(() => { loadProjects(); }, []);
 
@@ -51,6 +57,43 @@ export default function HrAdminProjectsPage() {
     setTimeout(() => setMsg(null), 3000);
   };
 
+  const startEdit = (p: Project) => {
+    setEditingProject(p);
+    setEditName(p.name || "");
+    setEditDesc(p.description || "");
+    setEditBudget(p.budget ? String(p.budget) : "");
+    setEditStatus(p.status || "planning");
+  };
+
+  const handleUpdate = async () => {
+    if (!editingProject || !editName.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/hrm/v2/projects?id=" + (editingProject._id || editingProject.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName.trim(),
+          description: editDesc.trim(),
+          budget: editBudget ? Number(editBudget) : 0,
+          status: editStatus,
+        }),
+      });
+      if (res.ok) {
+        setMsg("Project updated");
+        setEditingProject(null);
+        loadProjects();
+      } else {
+        const err = await res.json();
+        setMsg(err.error || "Update failed");
+      }
+    } catch {
+      setMsg("Network error");
+    }
+    setSaving(false);
+    setTimeout(() => setMsg(null), 3000);
+  };
+
   const filtered = projects.filter(p => !search || (p.name || "").toLowerCase().includes(search.toLowerCase()));
   const activeCount = projects.filter(p => p.status === "active" || p.status === "in_progress").length;
 
@@ -78,7 +121,7 @@ export default function HrAdminProjectsPage() {
             <input type="text" placeholder="Project name" value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
             <textarea placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} rows={3} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
             <div className="grid grid-cols-2 gap-3">
-              <input type="number" placeholder="Budget" value={budget} onChange={e => setBudget(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
+              <input type="number" placeholder="Budget (₹)" value={budget} onChange={e => setBudget(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
               <select value={status} onChange={e => setStatus(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary">
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -89,6 +132,28 @@ export default function HrAdminProjectsPage() {
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowCreate(false)} className="text-xs">Cancel</Button>
               <Button onClick={handleCreate} disabled={saving || !name.trim()} className="bg-primary text-white font-bold text-xs">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {editingProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-[#0B0F19] rounded-2xl border border-gray-200 dark:border-white/10 p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between"><h3 className="font-bold text-sm text-slate-900 dark:text-white">Edit Project</h3><button onClick={() => setEditingProject(null)} className="text-slate-400 hover:text-slate-600"><X className="h-4 w-4" /></button></div>
+            <input type="text" placeholder="Project name" value={editName} onChange={e => setEditName(e.target.value)} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
+            <textarea placeholder="Description" value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={3} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
+            <div className="grid grid-cols-2 gap-3">
+              <input type="number" placeholder="Budget (₹)" value={editBudget} onChange={e => setEditBudget(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
+              <select value={editStatus} onChange={e => setEditStatus(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary">
+                <option value="planning">Planning</option>
+                <option value="active">Active</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingProject(null)} className="text-xs">Cancel</Button>
+              <Button onClick={handleUpdate} disabled={saving || !editName.trim()} className="bg-primary text-white font-bold text-xs">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}</Button>
             </div>
           </div>
         </div>
@@ -108,8 +173,11 @@ export default function HrAdminProjectsPage() {
                 </div>
                 {p.description && <p className="text-[11px] text-slate-500 line-clamp-2">{p.description}</p>}
                 <div className="flex items-center justify-between text-[10px] text-slate-400">
-                  {p.budget ? <span className="font-bold">Budget: {p.budget.toLocaleString()}</span> : <span>No budget set</span>}
-                  <button onClick={() => handleDelete(p._id || p.id || "")} className="text-red-400 hover:text-red-600 font-bold">Delete</button>
+                  {p.budget ? <span className="font-bold">Budget: ₹{p.budget.toLocaleString()}</span> : <span className="text-slate-300 dark:text-slate-600">No budget set</span>}
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => startEdit(p)} className="text-primary hover:text-primary/80 font-bold">Edit</button>
+                    <button onClick={() => handleDelete(p._id || p.id || "")} className="text-red-400 hover:text-red-600 font-bold">Delete</button>
+                  </div>
                 </div>
               </div>
             ))}

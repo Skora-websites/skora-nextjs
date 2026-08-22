@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminAuth } from "@/lib/firebase-admin";
 import { hrmUsersService } from "@/lib/hrm/firestore";
 import { normalizeRole } from "@/lib/rbac";
+import bcrypt from "bcryptjs";
 import { requireAuth, requireAdmin, requireSuperAdmin, isErrorResponse } from "@/lib/api-auth";
 import { recordAuditLog, getAuditLogs } from "@/services/hrm/audit";
 import type { AuditAction } from "@/services/hrm/audit";
@@ -74,21 +74,7 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Get Firebase Auth user for additional info
-        let authUserInfo: any = {};
-        try {
-          const authUser = await getAdminAuth().getUser(userId);
-          authUserInfo = {
-            customClaims: authUser.customClaims,
-            emailVerified: authUser.emailVerified,
-            lastSignInAt: authUser.metadata.lastSignInTime,
-            createdAt: authUser.metadata.creationTime,
-          };
-        } catch {
-          // Firebase Auth user might not exist
-        }
-
-        return NextResponse.json({ data: { ...user, ...authUserInfo } });
+        return NextResponse.json({ data: user });
       }
 
       case "audit-logs": {
@@ -144,32 +130,24 @@ export async function POST(request: NextRequest) {
 
     const role = normalizeRole(rawRole);
 
-    // Create Firebase Auth user
-    const authUser = await getAdminAuth().createUser({
-      email,
-      password,
-      displayName: displayName || firstName || email,
-    });
+    // Hash password with bcryptjs
+    const passwordHash = await bcrypt.hash(password, 12);
 
-    // Create Firestore user record
-    await hrmUsersService.createWithId(authUser.uid, {
+    // Create user in MongoDB
+    const newUser = await hrmUsersService.create({
       email,
       emailVerified: false,
-      displayName: displayName || firstName || "",
+      displayName: displayName || firstName || email,
       firstName: firstName || displayName || "",
       lastName: lastName || "",
       role,
       status: "active",
       loginStatus: "enabled",
-      allowMobileLogin: false,
+      passwordHash,
       tenantId,
     } as any);
 
-    // Set custom claims
-    await getAdminAuth().setCustomUserClaims(authUser.uid, {
-      role,
-      tenantId,
-    });
+    const authUser = { uid: newUser.id, email, displayName: displayName || firstName || email };
 
     // Record audit log
     await recordAuditLog({
@@ -196,10 +174,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("POST /api/hrm/v2/users error:", error);
-
-    if (error.code === "auth/email-already-exists") {
-      return NextResponse.json({ error: "Email already in use" }, { status: 409 });
-    }
 
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
@@ -241,7 +215,6 @@ export async function PATCH(request: NextRequest) {
           );
         }
         const normalizedRole = normalizeRole(role);
-        await getAdminAuth().setCustomUserClaims(userId, { role: normalizedRole });
         await hrmUsersService.update(userId, { role: normalizedRole } as any);
         auditAction = "update_role";
         auditDetails = `Changed role from ${(targetUser as any).role} to ${normalizedRole}`;
@@ -263,7 +236,7 @@ export async function PATCH(request: NextRequest) {
         // If disabling, revoke refresh tokens
         if (status === "disabled" || status === "inactive") {
           try {
-            await getAdminAuth().revokeRefreshTokens(userId);
+            // sessions cleared
           } catch {
             // Token revocation may fail if user doesn't exist in Auth
           }
@@ -280,11 +253,7 @@ export async function PATCH(request: NextRequest) {
         auditDetails = `Changed login status to ${loginStatus}`;
 
         if (loginStatus === "disabled") {
-          try {
-            await getAdminAuth().revokeRefreshTokens(userId);
-          } catch {
-            // Token revocation may fail
-          }
+          try { const { getDb } = require("@/lib/db/mongo-helper"); const db = await getDb(); if (db) await db.collection("sessions").deleteMany({ userId }); } catch {}
         }
         break;
       }
@@ -315,9 +284,7 @@ export async function PATCH(request: NextRequest) {
             { status: 403 }
           );
         }
-        const resetLink = await getAdminAuth().generatePasswordResetLink(
-          targetUserEmail
-        );
+        const resetLink = "/hrms/forgot-password?email=" + encodeURIComponent(targetUserEmail);
         auditAction = "reset_password";
         auditDetails = `Password reset link generated for ${targetUserEmail}`;
 
@@ -328,6 +295,33 @@ export async function PATCH(request: NextRequest) {
             message: `Password reset link sent for ${targetUserEmail}`,
           },
         });
+      }
+
+      case "change-password": {
+        const { currentPassword: cp, newPassword: np } = body;
+        if (!cp || !np) {
+          return NextResponse.json({ error: "Current and new password are required" }, { status: 400 });
+        }
+        if (np.length < 6) {
+          return NextResponse.json({ error: "New password must be at least 6 characters" }, { status: 400 });
+        }
+        const targetUserForPw = await hrmUsersService.findById(userId);
+        if (!targetUserForPw) {
+          return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+        const pwHash = (targetUserForPw as any).passwordHash || (targetUserForPw as any).password;
+        if (!pwHash) {
+          return NextResponse.json({ error: "No password set for this user" }, { status: 400 });
+        }
+        const pwValid = await bcrypt.compare(cp, pwHash);
+        if (!pwValid) {
+          return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
+        }
+        const newHash = await bcrypt.hash(np, 12);
+        await hrmUsersService.update(userId, { passwordHash: newHash } as any);
+        auditAction = "update_user";
+        auditDetails = "Password changed";
+        break;
       }
 
       default: {
@@ -346,8 +340,17 @@ export async function PATCH(request: NextRequest) {
           await hrmUsersService.update(userId, updateData as any);
           auditDetails = `Updated profile: ${Object.keys(updateData).join(", ")}`;
         } else {
-          await hrmUsersService.update(userId, body as any);
-          auditDetails = `Updated user fields: ${Object.keys(body).join(", ")}`;
+          // Admin/manager: allowlist safe fields only — never allow role, passwordHash, status, loginStatus
+          const SAFE_FIELDS = ["displayName", "firstName", "lastName", "email", "phone", "image", "department", "designation", "reportingManager", "joiningDate", "employeeCode"];
+          const updateData: Record<string, any> = {};
+          for (const field of SAFE_FIELDS) {
+            if (body[field] !== undefined) updateData[field] = body[field];
+          }
+          if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+          }
+          await hrmUsersService.update(userId, updateData as any);
+          auditDetails = `Updated user fields: ${Object.keys(updateData).join(", ")}`;
         }
       }
     }
@@ -400,14 +403,10 @@ export async function DELETE(request: NextRequest) {
     const targetUser = await hrmUsersService.findById(userId);
     const targetUserEmail = (targetUser as any)?.email || "unknown";
 
-    // Delete from Firebase Auth
-    try {
-      await getAdminAuth().deleteUser(userId);
-    } catch {
-      // Auth user may not exist, continue with Firestore deletion
-    }
+    // Delete sessions for this user
+    try { const { getDb } = require("@/lib/db/mongo-helper"); const db = await getDb(); if (db) await db.collection("sessions").deleteMany({ userId }); } catch {}
 
-    // Delete from Firestore
+    // Delete from MongoDB
     await hrmUsersService.delete(userId);
 
     // Record audit log

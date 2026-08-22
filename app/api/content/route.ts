@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const content = await getSiteContent();
     // Omit sensitive password hash in public responses
-    const { adminPasswordHash, ...publicContent } = content;
+    const { adminPasswordHash, adminUsername, ...publicContent } = content;
     return NextResponse.json({ success: true, content: publicContent });
   } catch (error) {
     return NextResponse.json({ error: "Failed to load content" }, { status: 500 });

@@ -57,6 +57,7 @@ export async function createProject(
     status: Project["status"];
     priority: Project["priority"];
     ownerId: string;
+    budget?: number;
     startDate?: Date;
     endDate?: Date;
   }
@@ -68,6 +69,7 @@ export async function createProject(
     status: data.status || "planning",
     priority: data.priority || "medium",
     ownerId: data.ownerId,
+    budget: data.budget || 0,
     startDate: data.startDate || new Date(),
     endDate: data.endDate || null,
   } as any);

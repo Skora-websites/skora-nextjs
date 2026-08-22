@@ -74,6 +74,7 @@ export async function getAttendanceRecords(
   tenantId: string,
   options: {
     userId?: string;
+    date?: string;
     fromDate?: Date;
     toDate?: Date;
     status?: string;
@@ -82,13 +83,14 @@ export async function getAttendanceRecords(
 ): Promise<EmployeeAttendance[]> {
   const where: { field: string; op: "==" | ">=" | "<="; value: unknown }[] = [];
   if (options.userId) where.push({ field: "userId", op: "==", value: options.userId });
+  if (options.date) where.push({ field: "date", op: "==", value: options.date });
   if (options.status) where.push({ field: "status", op: "==", value: options.status });
 
   return attendanceService.findManyInTenant(tenantId, {
     where,
     orderByField: "date",
     orderByDirection: "desc",
-    limitCount: options.limitCount || 100,
+    limitCount: options.limitCount || 500,
   });
 }
 
@@ -108,11 +110,34 @@ export async function markAttendance(
     source?: EmployeeAttendance["source"];
   }
 ): Promise<EmployeeAttendance> {
-  const existing = await attendanceService.findOneInTenant(
-    tenantId,
-    "userId",
-    data.userId
-  );
+  // Use local date for consistency with what the UI shows
+  const dateStr = data.date.getFullYear() + "-" +
+    String(data.date.getMonth() + 1).padStart(2, "0") + "-" +
+    String(data.date.getDate()).padStart(2, "0");
+
+  // Check if user already has an attendance record for today
+  const existing = await attendanceService.findManyInTenant(tenantId, {
+    where: [
+      { field: "userId", op: "==", value: data.userId },
+      { field: "date", op: "==", value: dateStr },
+    ],
+    limitCount: 1,
+  });
+
+  if (existing.length > 0) {
+    // Update existing record rather than creating a duplicate
+    const record = existing[0];
+    const updateData: Partial<EmployeeAttendance> = {};
+    if (data.checkIn) updateData.checkIn = data.checkIn;
+    if (data.checkOut) updateData.checkOut = data.checkOut;
+    if (data.shiftId) updateData.shiftId = data.shiftId;
+    if (data.workdayType) updateData.workdayType = data.workdayType;
+    if (data.source) updateData.source = data.source;
+    if (Object.keys(updateData).length > 0) {
+      await attendanceService.update(record.id, updateData as any);
+    }
+    return { ...record, ...updateData } as EmployeeAttendance;
+  }
 
   // Determine status
   let status: EmployeeAttendance["status"] = "present";
@@ -121,6 +146,7 @@ export async function markAttendance(
 
   return attendanceService.create({
     ...data,
+    date: dateStr as any,
     status,
     isLate: false,
     isEarlyDeparture: false,
@@ -281,8 +307,12 @@ export async function getAttendanceDashboard(
   total: number;
   percentage: number;
 }> {
+  // Convert Date to local date string for matching
+  const dateStr = date.getFullYear() + "-" +
+    String(date.getMonth() + 1).padStart(2, "0") + "-" +
+    String(date.getDate()).padStart(2, "0");
   const records = await attendanceService.findManyInTenant(tenantId, {
-    where: [{ field: "date", op: "==", value: date }],
+    where: [{ field: "date", op: "==", value: dateStr }],
   });
 
   const total = records.length;

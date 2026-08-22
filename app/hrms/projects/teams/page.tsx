@@ -351,7 +351,7 @@ export default function TeamsPage() {
                 required
               />
               <p className="text-xs text-muted -mt-2">
-                Enter the Firebase UID of the user to add. You can find this in the Employees section.
+                Enter the User ID or select the employee from the directory.
               </p>
               <FormSelect
                 label="Role"

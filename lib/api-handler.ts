@@ -91,17 +91,11 @@ export function withErrorHandler(
         );
       }
 
-      // Handle Firebase Auth errors
-      if (error instanceof Error && "code" in error) {
-        const firebaseError = error as { code: string };
-        if (firebaseError.code === "auth/email-already-exists") {
-          return conflict("Email already in use");
-        }
-        if (firebaseError.code === "auth/invalid-password") {
-          return badRequest("Password must be at least 6 characters");
-        }
-        if (firebaseError.code === "auth/user-not-found") {
-          return notFound("User not found");
+      // Handle MongoDB Duplicate Key (E11000) errors
+      if (error && typeof error === "object" && "code" in error) {
+        const dbError = error as { code: number | string };
+        if (dbError.code === 11000) {
+          return conflict("A record with this identifier or email already exists");
         }
       }
 

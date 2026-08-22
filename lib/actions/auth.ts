@@ -3,17 +3,16 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { z, type ZodError } from "zod";
-import { getAdminAuth } from "@/lib/firebase-admin";
-import { usersService } from "@/lib/firestore";
+import bcrypt from "bcryptjs";
+import { hrmUsersService } from "@/lib/hrm/firestore";
 import {
-  signInWithFirebase,
-  signUpWithFirebase,
+  signInWithMongo,
   createSession,
   destroySession,
   SESSION_COOKIE_OPTIONS,
   SESSION_EXPIRES_IN_MS,
 } from "@/lib/auth";
-import { normalizeRole, isSuperAdminEmail } from "@/lib/rbac";
+import { normalizeRole } from "@/lib/rbac";
 
 function formatZodErrors<T>(error: ZodError<T>): Record<string, string[]> {
   const fieldErrors: Record<string, string[]> = {};
@@ -55,28 +54,40 @@ export async function signup(prevState: AuthState | undefined, formData: FormDat
   if (!validated.success) return { errors: formatZodErrors(validated.error), message: "Please fix the errors above." };
   const { name, email, password } = validated.data;
   try {
-    const idToken = await signUpWithFirebase(email, password);
-    const decoded = await getAdminAuth().verifyIdToken(idToken);
-    await getAdminAuth().updateUser(decoded.uid, { displayName: name });
-    const existingUserCount = await usersService.count();
-    const role = isSuperAdminEmail(email) || existingUserCount === 0 ? "super_admin" : "employee";
-    await usersService.createWithId(decoded.uid, { name, email, role, status: "active" as const });
-    await getAdminAuth().setCustomUserClaims(decoded.uid, { role });
-    const sessionCookieValue = await createSession(idToken);
+    // Check if user already exists
+    const existing = await hrmUsersService.findOne("email", email.toLowerCase());
+    if (existing) {
+      return { errors: { email: ["An account with this email already exists"] }, message: "Registration failed." };
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // First user is super_admin, rest are employees
+    const existingCount = await hrmUsersService.count();
+    const role = existingCount === 0 ? "super_admin" : "employee";
+
+    // Create user in MongoDB
+    const newUser = await hrmUsersService.create({
+      email,
+      displayName: name,
+      firstName: name,
+      role,
+      status: "active",
+      passwordHash,
+      tenantId: "default",
+    } as any);
+
+    // Create session
+    const sessionToken = await createSession(newUser.id);
     const cookieStore = await cookies();
-    cookieStore.set("session", sessionCookieValue, { ...SESSION_COOKIE_OPTIONS, maxAge: SESSION_EXPIRES_IN_MS / 1000 });
+    cookieStore.set("session", sessionToken, { ...SESSION_COOKIE_OPTIONS, maxAge: SESSION_EXPIRES_IN_MS / 1000 });
     cookieStore.set("user_role", role, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_EXPIRES_IN_MS / 1000 });
     redirect(ROLE_DASHBOARDS[role] || "/hrms/employee");
   } catch (error) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") throw error;
     console.error("Signup error:", error);
-    if (error instanceof Error) {
-      const msg = error.message;
-      if (msg.includes("already exists")) return { errors: { email: ["An account with this email already exists"] }, message: "Registration failed." };
-      if (msg.includes("WEAK_PASSWORD")) return { errors: { password: ["Password should be at least 6 characters"] }, message: "Registration failed." };
-      return { errors: { _form: [msg] }, message: "Registration failed." };
-    }
-    return { errors: { _form: [String(error)] }, message: "Registration failed." };
+    return { errors: { _form: [error instanceof Error ? error.message : "Registration failed."] }, message: "Registration failed." };
   }
 }
 
@@ -85,20 +96,12 @@ export async function login(prevState: AuthState | undefined, formData: FormData
   if (!validated.success) return { errors: formatZodErrors(validated.error), message: "Please fix the errors above." };
   const { email, password } = validated.data;
   try {
-    const idToken = await signInWithFirebase(email, password);
-    const decoded = await getAdminAuth().verifyIdToken(idToken);
-    const userDoc = await usersService.findById(decoded.uid);
-    if (userDoc) {
-      const role = isSuperAdminEmail(userDoc.email || "") ? "super_admin" : normalizeRole(userDoc.role);
-      await getAdminAuth().setCustomUserClaims(decoded.uid, { role });
-      if (role !== userDoc.role) await usersService.update(decoded.uid, { role } as any);
-    }
-    const sessionCookieValue = await createSession(idToken);
+    const user = await signInWithMongo(email, password);
+    const sessionToken = await createSession(user.id);
     const cookieStore = await cookies();
-    cookieStore.set("session", sessionCookieValue, { ...SESSION_COOKIE_OPTIONS, maxAge: SESSION_EXPIRES_IN_MS / 1000 });
-    const loginRole = userDoc ? (isSuperAdminEmail(userDoc.email || "") ? "super_admin" : normalizeRole(userDoc.role)) : "employee";
-    cookieStore.set("user_role", loginRole, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_EXPIRES_IN_MS / 1000 });
-    redirect(ROLE_DASHBOARDS[loginRole] || "/hrms/employee");
+    cookieStore.set("session", sessionToken, { ...SESSION_COOKIE_OPTIONS, maxAge: SESSION_EXPIRES_IN_MS / 1000 });
+    cookieStore.set("user_role", user.role, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_EXPIRES_IN_MS / 1000 });
+    redirect(ROLE_DASHBOARDS[user.role] || "/hrms/employee");
   } catch (error) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") throw error;
     console.error("Login error:", error);
@@ -117,27 +120,6 @@ export async function signInWithProvider(_provider: "google" | "github") {
   throw new Error("Use client-side OAuth flow instead.");
 }
 
-export async function createSessionFromIdToken(idToken: string): Promise<void> {
-  try {
-    const decoded = await getAdminAuth().verifyIdToken(idToken);
-    const existing = await usersService.findById(decoded.uid);
-    const userEmail = existing?.email || decoded.email || "";
-    const isSuperAdmin = isSuperAdminEmail(userEmail);
-    if (!existing) {
-      await usersService.createWithId(decoded.uid, { name: decoded.name || decoded.email || "User", email: decoded.email || undefined, image: decoded.picture || undefined, role: isSuperAdmin ? ("super_admin" as const) : ("employee" as const), status: "active" as const });
-    } else {
-      const currentRole = normalizeRole(existing.role);
-      if (isSuperAdmin && currentRole !== "super_admin") await usersService.update(decoded.uid, { role: "super_admin" as const });
-      if (decoded.name || decoded.picture) await usersService.update(decoded.uid, { name: decoded.name || existing.name, image: decoded.picture || existing.image });
-    }
-    const roleToSet = isSuperAdmin ? "super_admin" : normalizeRole(existing?.role || "employee");
-    await getAdminAuth().setCustomUserClaims(decoded.uid, { role: roleToSet });
-    const sessionCookieValue = await createSession(idToken);
-    const cookieStore = await cookies();
-    cookieStore.set("session", sessionCookieValue, { ...SESSION_COOKIE_OPTIONS, maxAge: SESSION_EXPIRES_IN_MS / 1000 });
-    cookieStore.set("user_role", roleToSet, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_EXPIRES_IN_MS / 1000 });
-  } catch (error) {
-    console.error("Session from ID token error:", error);
-    throw error;
-  }
+export async function createSessionFromIdToken(_idToken: string): Promise<void> {
+  // No longer needed — sessions are created via MongoDB
 }

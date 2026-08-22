@@ -103,7 +103,24 @@ export default function RegisterPage() {
     }
 
     try {
-      // 1. Submit Registration Request
+      // 1. Upload document first
+      let documentName = "";
+      let documentUrl = "";
+      if (selectedFile) {
+        const formDataUpload = new FormData();
+        formDataUpload.append("file", selectedFile);
+        const uploadRes = await fetch("/api/hrm/v2/onboarding/upload", {
+          method: "POST",
+          body: formDataUpload,
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          documentName = uploadData.data?.fileName || selectedFile.name;
+          documentUrl = uploadData.data?.fileUrl || "";
+        }
+      }
+
+      // 2. Submit Registration Request with document info
       const res = await fetch("/api/hrm/v2/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,6 +131,9 @@ export default function RegisterPage() {
           displayName: formData.name,
           firstName: formData.name.split(" ")[0] || formData.name,
           lastName: formData.name.split(" ").slice(1).join(" ") || "",
+          department: formData.department,
+          documentName,
+          documentUrl,
         }),
       });
 
@@ -121,17 +141,6 @@ export default function RegisterPage() {
         const data = await res.json();
         throw new Error(data.error || "Registration failed");
       }
-
-      // Save Onboarding Status to Local Storage
-      const appState = {
-        name: formData.name,
-        email: formData.email,
-        department: formData.department,
-        documentName: selectedFile.name,
-        status: "DOCUMENT_VERIFICATION_PENDING",
-        submittedAt: new Date().toISOString(),
-      };
-      localStorage.setItem("my-onboarding-status", JSON.stringify(appState));
 
       setSuccess("Documents submitted! Verification request sent to HR for approval.");
       setTimeout(() => router.push("/hrms"), 1800);

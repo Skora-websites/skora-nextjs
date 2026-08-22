@@ -40,20 +40,26 @@ interface Employee {
 
 interface PendingCandidate {
   id: string;
-  name: string;
+  _id?: string;
+  userId?: string;
+  employeeName?: string;
+  name?: string;
   email: string;
-  role: string;
-  department: string;
-  documentName: string;
-  status: "pending" | "approved" | "rejected_48h";
+  role?: string;
+  department?: string;
+  documentName?: string;
+  documentUrl?: string;
+  status: string;
   employeeCode?: string;
-  submittedAt: string;
+  submittedAt?: string;
+  createdAt?: string;
   deadlineHoursRemaining?: number;
 }
 
 interface LeaveRequest {
   id: string;
   employeeName: string;
+  userId?: string;
   type: string;
   fromDate: string;
   toDate: string;
@@ -61,6 +67,7 @@ interface LeaveRequest {
   reason: string;
   status: "pending" | "approved" | "rejected";
   requestedBy: "employee" | "manager";
+  leaveTypeId?: string;
 }
 
 // ── Main Component ─────────────────────────────────────────
@@ -92,7 +99,7 @@ export default function HrAdminDashboardPage() {
     try {
       const [empRes, candRes, leaveRes] = await Promise.all([
         fetch("/api/hrm/v2/employees"),
-        fetch("/api/hrm/v2/onboarding/pending"),
+        fetch("/api/hrm/v2/onboarding?pending=true"),
         fetch("/api/hrm/v2/leaves?status=pending"),
       ]);
       if (empRes.ok) setEmployees((await empRes.json()).data || []);
@@ -104,23 +111,75 @@ export default function HrAdminDashboardPage() {
     setLoading(false);
   };
 
-  const handleApproveCandidate = (id: string) => {
+  const handleApproveCandidate = async (candidate: PendingCandidate) => {
+    const id = candidate.id || candidate._id || "";
     const code = `EMP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    setPendingCandidates((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, status: "approved" as const, employeeCode: code } : c
-      )
-    );
+    try {
+      // 1. Mark onboarding task as completed
+      const res = await fetch("/api/hrm/v2/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_task", taskId: id, status: "completed" }),
+      });
+      // 2. Update user status to active and assign employee code
+      if (candidate.userId || candidate.email) {
+        await fetch("/api/hrm/v2/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: candidate.userId || candidate.email,
+            action: "status",
+            status: "active",
+          }),
+        });
+        // 3. Assign employee code to user record
+        await fetch("/api/hrm/v2/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: candidate.userId || candidate.email,
+            employeeCode: code,
+          }),
+        });
+        // 4. Update the onboarding task with the employee code
+        await fetch("/api/hrm/v2/onboarding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "update_task", taskId: id, status: "completed", employeeCode: code }),
+        });
+      }
+      if (res.ok) {
+        setPendingCandidates((prev) =>
+          prev.map((c) =>
+            (c.id || c._id) === id ? { ...c, status: "completed", employeeCode: code } : c
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Failed to approve candidate:", err);
+    }
   };
 
-  const handleRejectCandidate = (id: string) => {
-    setPendingCandidates((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? { ...c, status: "rejected_48h" as const, deadlineHoursRemaining: 48 }
-          : c
-      )
-    );
+  const handleRejectCandidate = async (candidate: PendingCandidate) => {
+    const id = candidate.id || candidate._id || "";
+    try {
+      const res = await fetch("/api/hrm/v2/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_task", taskId: id, status: "rejected" }),
+      });
+      if (res.ok) {
+        setPendingCandidates((prev) =>
+          prev.map((c) =>
+            (c.id || c._id) === id
+              ? { ...c, status: "rejected", deadlineHoursRemaining: 48 }
+              : c
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Failed to reject candidate:", err);
+    }
   };
 
   const handleAddEmployee = async (e: React.FormEvent) => {
@@ -145,6 +204,36 @@ export default function HrAdminDashboardPage() {
       }
     } catch {
       // ignore
+    }
+  };
+
+  const handleApproveLeave = async (request: LeaveRequest) => {
+    try {
+      const res = await fetch("/api/hrm/v2/leaves", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve", id: request.id, approvedById: user?.id }),
+      });
+      if (res.ok) {
+        setLeaveRequests((prev) => prev.map((l) => l.id === request.id ? { ...l, status: "approved" as const } : l));
+      }
+    } catch (err) {
+      console.error("Failed to approve leave:", err);
+    }
+  };
+
+  const handleRejectLeave = async (request: LeaveRequest) => {
+    try {
+      const res = await fetch("/api/hrm/v2/leaves", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject", id: request.id, approvedById: user?.id, reason: "Rejected by HR Admin" }),
+      });
+      if (res.ok) {
+        setLeaveRequests((prev) => prev.map((l) => l.id === request.id ? { ...l, status: "rejected" as const } : l));
+      }
+    } catch (err) {
+      console.error("Failed to reject leave:", err);
     }
   };
 
@@ -227,17 +316,17 @@ export default function HrAdminDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                   {pendingCandidates.map((c) => (
-                    <tr key={c.id}>
+                    <tr key={c.id || c._id}>
                       <td className="py-2 font-bold">
-                        {c.name}
+                        {c.employeeName || c.name || c.email}
                         <span className="block text-[10px] text-slate-500 font-normal">{c.email}</span>
                       </td>
                       <td className="py-2">
-                        <span className="font-semibold">{c.role}</span>
-                        <span className="block text-[10px] text-slate-500">{c.department}</span>
+                        <span className="font-semibold">{c.role || "Employee"}</span>
+                        <span className="block text-[10px] text-slate-500">{c.department || "—"}</span>
                       </td>
                       <td className="py-2 text-primary font-mono text-[11px] underline cursor-pointer">
-                        <FileText className="h-3 w-3 inline mr-1" />{c.documentName}
+                        <FileText className="h-3 w-3 inline mr-1" />{c.documentName || "No document"}
                       </td>
                       <td className="py-2">
                         {c.status === "approved" ? (
@@ -254,10 +343,10 @@ export default function HrAdminDashboardPage() {
                       <td className="py-2 text-right">
                         {c.status === "pending" && (
                           <div className="flex justify-end gap-1">
-                            <Button size="sm" onClick={() => handleApproveCandidate(c.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold h-7 px-2">
+                            <Button size="sm" onClick={() => handleApproveCandidate(c)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold h-7 px-2">
                               <Shield className="h-3 w-3 mr-0.5" /> Approve
                             </Button>
-                            <Button size="sm" variant="danger" onClick={() => handleRejectCandidate(c.id)} className="text-[10px] font-bold h-7 px-2">
+                            <Button size="sm" variant="danger" onClick={() => handleRejectCandidate(c)} className="text-[10px] font-bold h-7 px-2">
                               <XCircle className="h-3 w-3 mr-0.5" /> Reject
                             </Button>
                           </div>
@@ -312,7 +401,7 @@ export default function HrAdminDashboardPage() {
             ) : (
               <div className="space-y-2">
                 {managerLeaves.map((l) => (
-                  <LeaveRequestCard key={l.id} request={l} />
+                  <LeaveRequestCard key={l.id} request={l} onApprove={handleApproveLeave} onReject={handleRejectLeave} />
                 ))}
               </div>
             )}
@@ -330,7 +419,7 @@ export default function HrAdminDashboardPage() {
             ) : (
               <div className="space-y-2">
                 {employeeLeaves.map((l) => (
-                  <LeaveRequestCard key={l.id} request={l} />
+                  <LeaveRequestCard key={l.id} request={l} onApprove={handleApproveLeave} onReject={handleRejectLeave} />
                 ))}
               </div>
             )}
@@ -478,7 +567,7 @@ function StatusChip({ children, color }: { children: React.ReactNode; color: str
   );
 }
 
-function LeaveRequestCard({ request }: { request: LeaveRequest }) {
+function LeaveRequestCard({ request, onApprove, onReject }: { request: LeaveRequest; onApprove: (req: LeaveRequest) => void; onReject: (req: LeaveRequest) => void }) {
   return (
     <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 text-xs">
       <div>
@@ -486,10 +575,10 @@ function LeaveRequestCard({ request }: { request: LeaveRequest }) {
         <span className="text-slate-500">{request.type} · {request.totalDays}d · {request.reason}</span>
       </div>
       <div className="flex items-center gap-1">
-        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold h-7 px-2">
+        <Button size="sm" onClick={() => onApprove(request)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold h-7 px-2">
           <CheckCircle2 className="h-3 w-3" />
         </Button>
-        <Button size="sm" variant="danger" className="text-[10px] font-bold h-7 px-2">
+        <Button size="sm" variant="danger" onClick={() => onReject(request)} className="text-[10px] font-bold h-7 px-2">
           <XCircle className="h-3 w-3" />
         </Button>
       </div>

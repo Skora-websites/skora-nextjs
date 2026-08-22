@@ -1,46 +1,31 @@
 import "server-only";
-import {
-  hrmUsersService,
-} from "@/lib/hrm/firestore";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { createMongoService } from "@/lib/hrm/mongo";
 import type { Job, Candidate, Application, Interview, Offer } from "@/types";
 
 // ══════════════════════════════════════════════════════════════════
-// Recruitment Module Service
+// Recruitment Module Service — MongoDB backed
 // ══════════════════════════════════════════════════════════════════
 
-const JOBS_COLLECTION = "jobs";
-const CANDIDATES_COLLECTION = "candidates";
-const APPLICATIONS_COLLECTION = "applications";
-const INTERVIEWS_COLLECTION = "interviews";
-const OFFERS_COLLECTION = "offers";
-
-function db() {
-  return getAdminDb();
-}
+const jobsService = createMongoService<Job>("jobs");
+const candidatesService = createMongoService<Candidate>("candidates");
+const applicationsService = createMongoService<Application>("applications");
 
 // ── Jobs ───────────────────────────────────────────────
 
 export async function getJobs(tenantId: string): Promise<Job[]> {
-  const snap = await db()
-    .collection(JOBS_COLLECTION)
-    .where("tenantId", "==", tenantId)
-    .orderBy("createdAt", "desc")
-    .get();
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Job));
+  return jobsService.findManyInTenant(tenantId, {
+    orderByField: "createdAt",
+    orderByDirection: "desc",
+  });
 }
 
 export async function getJobById(id: string): Promise<Job | null> {
-  const snap = await db().collection(JOBS_COLLECTION).doc(id).get();
-  if (!snap.exists) return null;
-  return { id: snap.id, ...snap.data() } as Job;
+  return jobsService.findById(id);
 }
 
 export async function createJob(tenantId: string, data: Partial<Job>): Promise<Job> {
-  const docRef = db().collection(JOBS_COLLECTION).doc();
-  const now = new Date();
-  const job: Job = {
-    id: docRef.id,
+  return jobsService.create({
+    ...data,
     tenantId,
     title: data.title || "",
     department: data.department || "",
@@ -52,30 +37,15 @@ export async function createJob(tenantId: string, data: Partial<Job>): Promise<J
     applicants: 0,
     interviews: 0,
     offers: 0,
-    createdById: data.createdById,
-    createdAt: now,
-    updatedAt: now,
-  };
-  await docRef.set(job);
-  return job;
+  } as any);
 }
 
 export async function updateJob(id: string, data: Partial<Job>): Promise<Job | null> {
-  const docRef = db().collection(JOBS_COLLECTION).doc(id);
-  const snap = await docRef.get();
-  if (!snap.exists) return null;
-  const updateData = { ...data, updatedAt: new Date() };
-  await docRef.update(updateData);
-  const updated = await docRef.get();
-  return { id: updated.id, ...updated.data() } as Job;
+  return jobsService.update(id, data as any);
 }
 
 export async function deleteJob(id: string): Promise<boolean> {
-  const docRef = db().collection(JOBS_COLLECTION).doc(id);
-  const snap = await docRef.get();
-  if (!snap.exists) return false;
-  await docRef.delete();
-  return true;
+  return jobsService.delete(id);
 }
 
 export async function getJobsDashboard(tenantId: string): Promise<{
@@ -86,16 +56,12 @@ export async function getJobsDashboard(tenantId: string): Promise<{
   offersExtended: number;
 }> {
   const jobs = await getJobs(tenantId);
-  const candidatesSnap = await db()
-    .collection(CANDIDATES_COLLECTION)
-    .where("tenantId", "==", tenantId)
-    .get();
-  const totalCandidates = candidatesSnap.size;
+  const candidates = await candidatesService.findManyInTenant(tenantId);
 
   return {
     totalJobs: jobs.length,
     openPositions: jobs.filter((j) => j.status === "open").length,
-    totalCandidates,
+    totalCandidates: candidates.length,
     interviewsScheduled: jobs.reduce((sum, j) => sum + (j.interviews || 0), 0),
     offersExtended: jobs.reduce((sum, j) => sum + (j.offers || 0), 0),
   };
@@ -104,19 +70,15 @@ export async function getJobsDashboard(tenantId: string): Promise<{
 // ── Candidates ─────────────────────────────────────────
 
 export async function getCandidates(tenantId: string): Promise<Candidate[]> {
-  const snap = await db()
-    .collection(CANDIDATES_COLLECTION)
-    .where("tenantId", "==", tenantId)
-    .orderBy("createdAt", "desc")
-    .get();
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Candidate));
+  return candidatesService.findManyInTenant(tenantId, {
+    orderByField: "createdAt",
+    orderByDirection: "desc",
+  });
 }
 
 export async function createCandidate(tenantId: string, data: Partial<Candidate>): Promise<Candidate> {
-  const docRef = db().collection(CANDIDATES_COLLECTION).doc();
-  const now = new Date();
-  const candidate: Candidate = {
-    id: docRef.id,
+  const candidate = await candidatesService.create({
+    ...data,
     tenantId,
     name: data.name || "",
     email: data.email || "",
@@ -125,19 +87,15 @@ export async function createCandidate(tenantId: string, data: Partial<Candidate>
     jobId: data.jobId || "",
     location: data.location || "",
     status: "new",
-    appliedDate: now,
-    createdAt: now,
-    updatedAt: now,
-  };
-  await docRef.set(candidate);
+  } as any);
 
   // Update job applicant count
   if (data.jobId) {
-    const jobRef = db().collection(JOBS_COLLECTION).doc(data.jobId);
-    const jobSnap = await jobRef.get();
-    if (jobSnap.exists) {
-      const current = (jobSnap.data()?.applicants || 0) + 1;
-      await jobRef.update({ applicants: current, updatedAt: now });
+    const job = await jobsService.findById(data.jobId);
+    if (job) {
+      await jobsService.update(data.jobId, {
+        applicants: (job.applicants || 0) + 1,
+      } as any);
     }
   }
 
@@ -147,10 +105,8 @@ export async function createCandidate(tenantId: string, data: Partial<Candidate>
 // ── Applications ───────────────────────────────────────
 
 export async function getApplications(tenantId: string): Promise<Application[]> {
-  const snap = await db()
-    .collection(APPLICATIONS_COLLECTION)
-    .where("tenantId", "==", tenantId)
-    .orderBy("createdAt", "desc")
-    .get();
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Application));
+  return applicationsService.findManyInTenant(tenantId, {
+    orderByField: "createdAt",
+    orderByDirection: "desc",
+  });
 }

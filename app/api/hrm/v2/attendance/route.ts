@@ -10,6 +10,7 @@ import {
   calculateAttendanceStats,
 } from "@/services/hrm/attendance";
 import { requireAuth, requireAdmin, isErrorResponse } from "@/lib/api-auth";
+import { getDb } from "@/lib/db/mongo-helper";
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,17 +59,12 @@ export async function GET(request: NextRequest) {
 
     const records = await getAttendanceRecords(tenantId, {
       userId: userId || undefined,
+      date: date || undefined,
       status: status || undefined,
     });
 
-    // Employees can only view their own records
-    if (auth.role === "employee") {
-      const filtered = records.filter((r) => r.userId === auth.userId);
-      return NextResponse.json({ data: filtered });
-    }
-
-        // Enrich records: parse distance from location, flatten for dashboard
-    const enriched = records.map((rec: any) => {
+    // Enrich records: parse distance from location, flatten for dashboard
+    let enriched = records.map((rec: any) => {
       let distanceMeters: number | undefined;
       if (rec.location) {
         const pi = rec.location.indexOf("(");
@@ -78,13 +74,14 @@ export async function GET(request: NextRequest) {
           if (nums.length > 0) distanceMeters = parseInt(nums[0]);
         }
       }
+      const recordDate = rec.date || (rec.punchInTime ? new Date(rec.punchInTime).toISOString().split("T")[0] : "");
       return {
         _id: rec._id || rec.id,
         userId: rec.userId,
         userName: rec.userName || rec.userDisplayName || "",
         userEmail: rec.userEmail || "",
         employeeCode: rec.employeeCode,
-        date: rec.date || (rec.punchInTime ? new Date(rec.punchInTime).toISOString().split("T")[0] : ""),
+        date: recordDate,
         punchInTime: rec.punchInTime || rec.checkIn,
         punchOutTime: rec.punchOutTime || rec.checkOut,
         location: rec.location,
@@ -96,6 +93,17 @@ export async function GET(request: NextRequest) {
         managerId: rec.managerId,
       };
     });
+
+    // If date is requested, ensure strict date matching
+    if (date) {
+      enriched = enriched.filter((r) => r.date === date);
+    }
+
+    // Employees can only view their own records
+    if (auth.role === "employee") {
+      enriched = enriched.filter((r) => r.userId === auth.userId);
+    }
+
     return NextResponse.json({ data: enriched });
   } catch (error: any) {
     console.error("GET /api/hrm/v2/attendance error:", error);
@@ -117,13 +125,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Check if today is a work day
+    let workdayType = body.workdayType || "regular";
+    try {
+      const db = await getDb();
+      if (db) {
+        const settingsDoc = await db.collection("settings").findOne({ key: "super_admin_system" });
+        const workDays = settingsDoc?.settings?.officeRules?.workDays;
+        if (workDays) {
+          const dayOfWeek = new Date(body.date).getDay();
+          if (!workDays.includes(dayOfWeek)) {
+            workdayType = "weekly_off";
+          }
+        }
+      }
+    } catch { /* use default */ }
+
     const record = await markAttendance(tenantId, {
       userId: body.userId,
       date: new Date(body.date),
       checkIn: body.checkIn ? new Date(body.checkIn) : undefined,
       checkOut: body.checkOut ? new Date(body.checkOut) : undefined,
       shiftId: body.shiftId,
-      workdayType: body.workdayType || "regular",
+      workdayType,
       source: body.source || "manual",
     });
 

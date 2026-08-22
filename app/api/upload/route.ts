@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db/mongo-helper";
+import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 
 /**
  * GET /api/upload?userId=xxx — Load profile image for a user
@@ -7,10 +8,18 @@ import { getDb } from "@/lib/db/mongo-helper";
  */
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (isErrorResponse(auth)) return auth;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     if (!userId) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
+    }
+
+    // Employees can only view their own profile image
+    if (auth.role === "employee" && userId !== auth.userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const db = await getDb();
@@ -32,6 +41,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (isErrorResponse(auth)) return auth;
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     if (!file) {
@@ -52,9 +64,8 @@ export async function POST(request: NextRequest) {
     const base64 = Buffer.from(arrayBuffer).toString("base64");
     const dataUrl = "data:" + file.type + ";base64," + base64;
 
-    // Get userId from query param or form field
-    const url = new URL(request.url);
-    let userId = url.searchParams.get("userId") || formData.get("userId") as string || "anonymous";
+    // Always use authenticated userId - never trust client input
+    const userId = auth.userId;
 
     // Save to MongoDB profile-images collection
     const db = await getDb();

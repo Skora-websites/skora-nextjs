@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
+import bcrypt from "bcryptjs";
 import { tenantsService, hrmUsersService } from "@/lib/hrm/firestore";
-import { getAdminAuth } from "@/lib/firebase-admin";
 import { requireSuperAdmin, isErrorResponse } from "@/lib/api-auth";
 import { withErrorHandler, badRequest, created, ok, noContent } from "@/lib/api-handler";
 import { normalizeRole } from "@/lib/rbac";
@@ -28,7 +28,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return badRequest("Company name is required");
   }
 
-  // 1. Create the tenant in Firestore
+  // 1. Create the tenant in MongoDB
   const tenant = await tenantsService.create({
     name: name.trim(),
     domain: domain || "",
@@ -43,27 +43,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     assignedHrAdmin: assignedHrAdmin || "",
   } as any);
 
-  // 2. If an HR Admin email was provided, create their account and generate invite link
-  let hrAdminInvite: { email: string; resetLink: string } | null = null;
+  // 2. If an HR Admin email was provided, create their account in MongoDB
+  let hrAdminInvite: { email: string; tempPassword?: string } | null = null;
 
   if (assignedHrAdmin && typeof assignedHrAdmin === "string" && assignedHrAdmin.includes("@")) {
     const hrEmail = assignedHrAdmin.trim().toLowerCase();
     try {
-      // Check if user already exists in Firebase Auth
-      let hrUser;
-      try {
-        hrUser = await getAdminAuth().getUserByEmail(hrEmail);
-      } catch {
-        // User doesn't exist — create them with a temporary password
+      const existingUser = await hrmUsersService.findOne("email", hrEmail);
+      if (!existingUser) {
         const tempPassword = generateTempPassword();
-        hrUser = await getAdminAuth().createUser({
-          email: hrEmail,
-          password: tempPassword,
-          displayName: hrEmail.split("@")[0],
-        });
-
-        // Create Firestore profile
-        await hrmUsersService.createWithId(hrUser.uid, {
+        const passwordHash = await bcrypt.hash(tempPassword, 10);
+        await hrmUsersService.create({
           email: hrEmail,
           displayName: hrEmail.split("@")[0],
           firstName: hrEmail.split("@")[0],
@@ -72,47 +62,23 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           status: "active",
           loginStatus: "enabled",
           tenantId: tenant.id,
+          passwordHash,
         } as any);
-      }
-
-      // Set custom claims
-      await getAdminAuth().setCustomUserClaims(hrUser.uid, {
-        role: "hr_admin",
-        tenantId: tenant.id,
-      });
-
-      // Update Firestore role if needed
-      const existingProfile = await hrmUsersService.findById(hrUser.uid);
-      if (existingProfile) {
-        if (normalizeRole(existingProfile.role) !== "hr_admin") {
-          await hrmUsersService.update(hrUser.uid, { role: "hr_admin" } as any);
-        }
+        hrAdminInvite = { email: hrEmail, tempPassword };
       } else {
-        await hrmUsersService.createWithId(hrUser.uid, {
-          email: hrEmail,
-          displayName: hrEmail.split("@")[0],
-          firstName: hrEmail.split("@")[0],
-          lastName: "",
+        await hrmUsersService.update(existingUser.id, {
           role: "hr_admin",
-          status: "active",
-          loginStatus: "enabled",
           tenantId: tenant.id,
         } as any);
+        hrAdminInvite = { email: hrEmail };
       }
-
-      // Generate password reset link so the HR Admin can set their own password
-      const resetLink = await getAdminAuth().generatePasswordResetLink(hrEmail);
-      hrAdminInvite = { email: hrEmail, resetLink };
     } catch (err) {
-      console.error("Failed to create HR Admin account:", err);
-      // Tenant was created but HR Admin setup failed — still return success with warning
+      console.error("Failed to create HR Admin account in MongoDB:", err);
     }
   }
 
   return created({ ...tenant, hrAdminInvite });
 }, { label: "Tenants POST" });
-
-
 
 export const PATCH = withErrorHandler(async (request: NextRequest) => {
   const auth = await requireSuperAdmin();
@@ -147,20 +113,19 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await tenantsService.delete(id);
   return noContent();
 }, { label: "Tenants DELETE" });
+
 /** Generate a random temporary password (12 chars, mixed) */
 function generateTempPassword(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
   const special = "!@#$%&*";
   let password = "";
-  // Ensure at least one uppercase, one lowercase, one digit, one special
-  password += "A"; // uppercase
-  password += "a"; // lowercase
-  password += "3"; // digit
-  password += "!"; // special
+  password += "A";
+  password += "a";
+  password += "3";
+  password += "!";
   for (let i = 4; i < 12; i++) {
     const allChars = chars + special;
     password += allChars.charAt(Math.floor(Math.random() * allChars.length));
   }
-  // Shuffle
   return password.split("").sort(() => Math.random() - 0.5).join("");
 }

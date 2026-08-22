@@ -1,73 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminStorage, getAdminDb, isFirebaseConfigured } from "@/lib/firebase-admin";
+import { getDb } from "@/lib/db/mongo-helper";
+import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
   try {
-    if (!isFirebaseConfigured()) {
-      return NextResponse.json({ error: "Firebase is not configured" }, { status: 503 });
-    }
+    const auth = await requireAuth();
+    if (isErrorResponse(auth)) return auth;
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const userId = formData.get("userId") as string || "unknown";
+    // Always use the authenticated user's ID, never trust client-provided userId
+    const userId = auth.userId;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Validate file type
-    const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    const allowedTypes = [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type. Allowed: PDF, PNG, JPG, DOC, DOCX" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid file type. Allowed: PDF, PNG, JPG, DOC, DOCX" },
+        { status: 400 }
+      );
     }
 
     // Max 10MB
     if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "File too large. Maximum size: 10MB" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File too large. Maximum size: 10MB" },
+        { status: 400 }
+      );
     }
 
-    const storage = getAdminStorage();
-    const bucket = storage.bucket();
     const timestamp = Date.now();
     const fileName = `onboarding/${userId}/${timestamp}_${file.name}`;
-    const fileRef = bucket.file(fileName);
 
-    // Convert File to Buffer
+    // Convert File to Base64
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString("base64");
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // Upload to Firebase Storage
-    await fileRef.save(buffer, {
-      contentType: file.type,
-      metadata: {
-        firebaseStorageDownloadTokens: `${userId}_${timestamp}`,
-      },
-    });
-
-    // Get download URL
-    const [url] = await fileRef.getSignedUrl({
-      action: "read",
-      expires: "2030-01-01",
-    });
-
-    // Save metadata to Firestore
-    const db = getAdminDb();
-    await db.collection("onboardingDocuments").add({
-      userId,
-      fileName: file.name,
-      fileUrl: url,
-      storagePath: fileName,
-      fileSize: file.size,
-      mimeType: file.type,
-      status: "pending",
-      uploadedAt: new Date(),
-    });
+    // Save metadata and document to MongoDB
+    const db = await getDb();
+    if (db) {
+      await db.collection("onboardingDocuments").insertOne({
+        userId,
+        fileName: file.name,
+        fileUrl: dataUrl,
+        storagePath: fileName,
+        fileSize: file.size,
+        mimeType: file.type,
+        status: "pending",
+        uploadedAt: new Date(),
+      });
+    }
 
     return NextResponse.json({
       success: true,
       data: {
         fileName: file.name,
-        fileUrl: url,
+        fileUrl: dataUrl,
         storagePath: fileName,
       },
     });

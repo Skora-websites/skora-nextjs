@@ -5,8 +5,6 @@ import { User, Mail, Phone, Shield, Save, CheckCircle2, Camera, Lock, AlertCircl
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 
 interface UserProfile { id: string; name: string; email: string; phone?: string; role: string; department?: string; designation?: string; employeeCode?: string; image?: string; }
 interface ProfilePageProps { roleLabel: string; backHref: string; }
@@ -159,30 +157,32 @@ export default function ProfilePage({ roleLabel, backHref }: ProfilePageProps) {
 
     setPasswordSaving(true);
     try {
-      const user_email = profile?.email || user?.email;
-      if (!user_email || !auth?.currentUser) {
+      if (!user?.id) {
         setPasswordError("You must be logged in to change your password.");
         return;
       }
-
-      const credential = EmailAuthProvider.credential(user_email, currentPassword);
-      await reauthenticateWithCredential(auth.currentUser, credential);
-      await updatePassword(auth.currentUser, newPassword);
-
-      setPasswordSuccess(true);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeout(() => setPasswordSuccess(false), 4000);
-    } catch (err: any) {
-      const code = err?.code;
-      if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-        setPasswordError("Current password is incorrect.");
-      } else if (code === "auth/weak-password") {
-        setPasswordError("New password is too weak.");
+      const res = await fetch("/api/hrm/v2/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          action: "change-password",
+          currentPassword,
+          newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPasswordSuccess(true);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setTimeout(() => setPasswordSuccess(false), 4000);
       } else {
-        setPasswordError(err?.message || "Failed to update password.");
+        setPasswordError(data.error || "Failed to update password.");
       }
+    } catch (err: any) {
+      setPasswordError(err?.message || "Failed to update password.");
     } finally {
       setPasswordSaving(false);
     }
