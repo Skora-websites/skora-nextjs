@@ -90,31 +90,42 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   if (isErrorResponse(auth)) return auth;
 
   const tenantId = "default";
-
   const body = await request.json();
 
-  if (!body.email || !body.password || !body.displayName || !body.firstName || !body.lastName) {
-    return badRequest("Missing required fields: email, password, displayName, firstName, lastName");
+  if (!body.email) {
+    return badRequest("Missing required field: email");
   }
+
+  const rawName = body.displayName || body.name || `${body.firstName || ""} ${body.lastName || ""}`.trim() || body.email;
+  const nameParts = rawName.trim().split(" ");
+  const firstName = body.firstName || nameParts[0] || "";
+  const lastName = body.lastName || nameParts.slice(1).join(" ") || "";
+  const displayName = rawName;
+  const password = body.password || "Employee@123";
 
   const employee = await createEmployee(tenantId, {
     email: body.email,
-    password: body.password,
-    displayName: body.displayName,
-    firstName: body.firstName,
-    lastName: body.lastName,
+    password,
+    displayName,
+    name: displayName,
+    firstName,
+    lastName,
     phone: body.phone || "",
     role: body.role || "employee",
     status: body.status || "active",
+    department: body.department || body.departmentName || "Engineering",
     departmentId: body.departmentId || "",
-    departmentName: body.departmentName || "",
+    departmentName: body.department || body.departmentName || "Engineering",
+    designation: body.designation || body.designationName || "Staff",
     designationId: body.designationId || "",
-    designationName: body.designationName || "",
-    joiningDate: body.joiningDate ? new Date(body.joiningDate) : undefined,
+    designationName: body.designation || body.designationName || "Staff",
+    joiningDate: body.joiningDate ? new Date(body.joiningDate) : new Date(),
     employeeCode: body.employeeCode || "",
     address: body.address || "",
     emergencyContact: body.emergencyContact || "",
     emergencyPhone: body.emergencyPhone || "",
+    reportingManager: body.reportingManager || "",
+    employmentType: body.employmentType || "permanent",
   });
 
   return NextResponse.json({ data: employee }, { status: 201 });
@@ -125,12 +136,13 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
   if (isErrorResponse(auth)) return auth;
 
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+  const body = await request.json();
+  const id = searchParams.get("id") || body.id || body.userId || body._id;
+
   if (!id) {
     return badRequest("id parameter required");
   }
 
-  const body = await request.json();
   const employee = await updateEmployee(id, body);
   if (!employee) {
     return notFound("Employee not found");
@@ -144,7 +156,14 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   if (isErrorResponse(auth)) return auth;
 
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+  let id = searchParams.get("id");
+  if (!id) {
+    try {
+      const body = await request.json();
+      id = body?.id || body?.userId || body?._id;
+    } catch {}
+  }
+
   if (!id) {
     return badRequest("id parameter required");
   }

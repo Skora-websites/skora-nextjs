@@ -1,8 +1,24 @@
 "use server";
 
-import { recordPunchIn, recordPunchOut, getAttendanceRecords } from "@/lib/db/attendance";
+import { recordPunchIn, recordPunchOut, recordAUXChange, getAttendanceRecords, type AUXState } from "@/lib/db/attendance";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db/mongo-helper";
+
+
+async function isTodayWorkDay(): Promise<boolean> {
+  try {
+    const db = await getDb();
+    if (!db) return true; // Default to allow if DB unavailable
+    const settingsDoc = await db.collection("settings").findOne({ key: "super_admin_system" });
+    const workDays = settingsDoc?.settings?.officeRules?.workDays;
+    if (!workDays) return true; // Default Mon-Fri
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
+    return workDays.includes(dayOfWeek);
+  } catch {
+    return true; // Default to allow
+  }
+}
 
 export async function punchInAction(data: {
   userId: string;
@@ -16,13 +32,10 @@ export async function punchInAction(data: {
 }) {
   try {
     const record = await recordPunchIn(data);
-
     if (!record) {
       return { success: false, error: "Failed to save attendance record. The database may be unavailable. Please try again." };
     }
-
     if (record) {
-      // Dispatch notification to Manager & HR Admin
       try {
         const db = await getDb();
         if (db) {
@@ -38,13 +51,11 @@ export async function punchInAction(data: {
       } catch (err) {
         console.warn("Notification dispatch notice:", err);
       }
-
       revalidatePath("/hrms/attendance");
       revalidatePath("/hrms/employee");
       revalidatePath("/hrms/manager");
       revalidatePath("/hrms/manager/my-team");
     }
-
     return { success: true, record };
   } catch (error) {
     return { success: false, error: (error as Error).message };
@@ -61,6 +72,24 @@ export async function punchOutAction(userId: string, dateStr: string) {
       revalidatePath("/hrms/manager/my-team");
     }
     return { success };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Update AUX state for today's attendance.
+ * newState: "active" | "on_break" | "meeting"
+ */
+export async function updateAUXStateAction(userId: string, dateStr: string, newState: AUXState) {
+  try {
+    const record = await recordAUXChange(userId, dateStr, newState);
+    if (!record) {
+      return { success: false, error: "No attendance record found for today. Please punch in first." };
+    }
+    revalidatePath("/hrms/attendance");
+    revalidatePath("/hrms/employee");
+    return { success: true, record };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }

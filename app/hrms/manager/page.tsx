@@ -85,16 +85,38 @@ export default function ManagerDashboardPage() {
     (m) => m.attendanceStatus === "PRESENT" || m.attendanceStatus === "LATE"
   ).length;
 
-  const handleApprove = (id: string) => {
-    setPendingApprovals((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "approved" as const } : a))
-    );
+  const handleApprove = async (id: string) => {
+    try {
+      const res = await fetch("/api/hrm/v2/leaves", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve", id, approvedById: user?.id }),
+      });
+      if (res.ok) {
+        setPendingApprovals((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, status: "approved" as const } : a))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to approve request:", err);
+    }
   };
 
-  const handleReject = (id: string) => {
-    setPendingApprovals((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "rejected" as const } : a))
-    );
+  const handleReject = async (id: string) => {
+    try {
+      const res = await fetch("/api/hrm/v2/leaves", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject", id, approvedById: user?.id }),
+      });
+      if (res.ok) {
+        setPendingApprovals((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, status: "rejected" as const } : a))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to reject request:", err);
+    }
   };
 
   return (

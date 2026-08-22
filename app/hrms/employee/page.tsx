@@ -24,14 +24,19 @@ import { OnboardingCountdown } from "@/components/hr/onboarding-countdown";
 
 // ── Types ──────────────────────────────────────────────────
 
-interface OnboardingStatus {
-  status: "pending" | "rejected" | "verified";
-  documentsUploaded: number;
-  documentsRequired: number;
+interface OnboardingTask {
+  id: string;
+  userId: string;
+  title?: string;
+  status: string;
+  submittedAt?: string;
+  employeeName?: string;
+  department?: string;
+  documentName?: string;
+  documentUrl?: string;
   lastRejectionDate?: string;
   deadlineHoursRemaining?: number;
   employeeCode?: string;
-  department?: string;
   reportingManager?: string;
 }
 
@@ -62,7 +67,7 @@ interface LeaveBalance {
 
 export default function EmployeeDashboardPage() {
   const { user } = useAuth();
-  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
+  const [onboardingTasks, setOnboardingTasks] = useState<OnboardingTask[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [payslips, setPayslips] = useState<Payslip[]>([]);
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
@@ -80,12 +85,15 @@ export default function EmployeeDashboardPage() {
     setLoading(true);
     try {
       const [onbRes, taskRes, payRes, leaveRes] = await Promise.all([
-        fetch("/api/hrm/v2/onboarding/status"),
-        fetch("/api/hrm/v2/tasks?assignedTo=me"),
+        fetch(`/api/hrm/v2/onboarding?employeeTasks=true&userId=${user?.id || "me"}`),
+        fetch(`/api/hrm/v2/tasks?assigneeId=${user?.id || ""}`),
         fetch("/api/hrm/v2/payroll/mypayslips"),
-        fetch("/api/hrm/v2/leaves/balance"),
+        fetch(`/api/hrm/v2/leaves?type=balances&userId=${user?.id || "me"}`),
       ]);
-      if (onbRes.ok) setOnboarding((await onbRes.json()).data || null);
+      if (onbRes.ok) {
+        const onbData = (await onbRes.json()).data;
+        setOnboardingTasks(Array.isArray(onbData) ? onbData : []);
+      }
       if (taskRes.ok) setTasks((await taskRes.json()).data || []);
       if (payRes.ok) setPayslips((await payRes.json()).data || []);
       if (leaveRes.ok) setLeaveBalances((await leaveRes.json()).data || []);
@@ -106,14 +114,15 @@ export default function EmployeeDashboardPage() {
     setUploadFile(null);
   };
 
-  const isVerified = onboarding?.status === "verified";
-  const isPending = onboarding?.status === "pending";
-  const isRejected = onboarding?.status === "rejected";
+  const latestTask = onboardingTasks.length > 0 ? onboardingTasks[0] : null;
+  const isVerified = latestTask?.status === "completed";
+  const isPending = latestTask?.status === "pending" || (!latestTask && onboardingTasks.length === 0);
+  const isRejected = latestTask?.status === "rejected";
 
   return (
     <AppShell title="Employee Hub">
       {/* ═══ Top Banner — Dynamic Onboarding Status ═══ */}
-      {isRejected && onboarding?.deadlineHoursRemaining !== undefined && (
+      {isRejected && latestTask && (
         <div className="rounded-2xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/5 p-5 mb-6 text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -125,10 +134,10 @@ export default function EmployeeDashboardPage() {
                 <p className="text-red-600 dark:text-red-300 mt-1">
                   Your documents were rejected. Please re-upload within the deadline.
                 </p>
-                {onboarding.lastRejectionDate && (
+                {latestTask?.lastRejectionDate && (
                   <div className="mt-2">
                     <OnboardingCountdown
-                      rejectionDate={onboarding.lastRejectionDate}
+                      rejectionDate={latestTask.lastRejectionDate}
                       deadlineHours={48}
                       onExpired={() => {
                         // Escalate to super admin
@@ -169,21 +178,21 @@ export default function EmployeeDashboardPage() {
               <div>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">EMPLOYEE CODE</span>
                 <span className="font-mono font-extrabold text-emerald-700 dark:text-emerald-300 text-sm">
-                  {onboarding?.employeeCode || "EMP-2026-XXXX"}
+                  {latestTask?.employeeCode || "EMP-2026-XXXX"}
                 </span>
               </div>
               <div className="w-px h-8 bg-emerald-200 dark:bg-emerald-500/20" />
               <div>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">DEPARTMENT</span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {onboarding?.department || "Not Assigned"}
+                  {latestTask?.department || "Not Assigned"}
                 </span>
               </div>
               <div className="w-px h-8 bg-emerald-200 dark:bg-emerald-500/20" />
               <div>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">REPORTING MANAGER</span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {onboarding?.reportingManager || "Not Assigned"}
+                  {latestTask?.reportingManager || "Not Assigned"}
                 </span>
               </div>
             </div>

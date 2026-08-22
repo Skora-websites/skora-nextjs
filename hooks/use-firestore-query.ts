@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { DocumentData } from "firebase/firestore";
+
+export type DocumentData = Record<string, any>;
 
 interface FetchState<T> {
   data: T | null;

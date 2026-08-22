@@ -1,5 +1,5 @@
-// Firestore.ts — now backed by MongoDB (drop-in replacement)
-// Firebase Admin is used ONLY for Auth, not for data storage.
+// Firestore.ts — backed 100% by MongoDB (drop-in replacement)
+// No Firebase is used; all storage, queries, and auth are in MongoDB.
 import "server-only";
 import { createMongoService, WhereClause, QueryOptions, FirestoreWhereOp, FirestoreOrderDirection } from "@/lib/hrm/mongo";
 

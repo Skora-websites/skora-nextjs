@@ -1091,6 +1091,7 @@ export interface Project extends BaseEntity {
   status: "planning" | "in_progress" | "completed" | "on_hold" | "cancelled";
   priority: "low" | "medium" | "high" | "critical";
   ownerId: string;
+  budget?: number;
   progress?: number; // 0-100, calculated from completed tasks / total tasks
 }
 

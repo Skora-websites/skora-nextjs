@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/mongodb";
+import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (isErrorResponse(auth)) return auth;
+
+    // Only admins can list all onboarding documents
+    if (auth.role === "employee") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const client = await getMongoClient();
     if (!client) {
       return NextResponse.json({ success: true, documents: [] });

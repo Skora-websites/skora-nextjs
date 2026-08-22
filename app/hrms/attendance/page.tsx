@@ -12,20 +12,38 @@ export default function AttendancePage() {
   const [activeTab, setActiveTab] = useState<"table" | "calendar">("table");
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const loadAttendance = async () => {
-    setLoading(true);
-    const res = await fetchAttendanceRecordsAction();
+  const todayStr = new Date().toISOString().split("T")[0];
+  const isToday = selectedDate === todayStr;
+
+  const loadAttendance = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    const res = await fetchAttendanceRecordsAction({ date: selectedDate });
     if (res.success && res.records) {
       setRecords(res.records);
     }
-    setLoading(false);
+    if (!isSilent) setLoading(false);
   };
 
   useEffect(() => {
     loadAttendance();
-  }, []);
+
+    const interval = setInterval(() => {
+      loadAttendance(true);
+    }, 10000);
+
+    const handlePunchUpdate = () => {
+      loadAttendance(true);
+    };
+    window.addEventListener("attendance-updated", handlePunchUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("attendance-updated", handlePunchUpdate);
+    };
+  }, [selectedDate]);
 
   const handleExportCSV = () => {
     if (records.length === 0) return;
@@ -92,29 +110,67 @@ export default function AttendancePage() {
 
       {/* Main Content Card with Tabs */}
       <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-        {/* Tab Switcher & Search */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
-          <div className="flex items-center gap-2 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-200 dark:border-white/10">
-            <button
-              onClick={() => setActiveTab("table")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "table"
-                  ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <TableIcon className="h-4 w-4" /> Table View
-            </button>
-            <button
-              onClick={() => setActiveTab("calendar")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "calendar"
-                  ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <CalendarDays className="h-4 w-4" /> Calendar View
-            </button>
+        {/* Tab Switcher & Date Bar */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+              <button
+                onClick={() => setActiveTab("table")}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  activeTab === "table"
+                    ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <TableIcon className="h-4 w-4" /> Table View
+              </button>
+              <button
+                onClick={() => setActiveTab("calendar")}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  activeTab === "calendar"
+                    ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <CalendarDays className="h-4 w-4" /> Calendar View
+              </button>
+            </div>
+
+            {/* Quick Date Presets */}
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+              <button
+                onClick={() => setSelectedDate(todayStr)}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  isToday
+                    ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => {
+                  const y = new Date();
+                  y.setDate(y.getDate() - 1);
+                  setSelectedDate(y.toISOString().split("T")[0]);
+                }}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  selectedDate === (() => { const y = new Date(); y.setDate(y.getDate() - 1); return y.toISOString().split("T")[0]; })()
+                    ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Yesterday
+              </button>
+            </div>
+
+            {/* Custom Date Input */}
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-primary cursor-pointer"
+            />
           </div>
 
           {/* Search bar */}

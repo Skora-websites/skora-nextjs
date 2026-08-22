@@ -77,7 +77,7 @@ const priorityColors: Record<string, string> = {
 
 const EMPTY_PROJECT_FORM = {
   name: "", description: "", status: "planning" as Project["status"],
-  priority: "medium" as Project["priority"], startDate: "", endDate: "",
+  priority: "medium" as Project["priority"], budget: "", startDate: "", endDate: "",
 };
 
 // ── Component ───────────────────────────────────────────
@@ -108,6 +108,7 @@ export default function AllProjectsPage() {
     setProjectForm({
       name: project.name, description: project.description || "",
       status: project.status, priority: project.priority,
+      budget: project.budget ? String(project.budget) : "",
       startDate: project.startDate ? new Date(project.startDate).toISOString().split("T")[0] : "",
       endDate: project.endDate ? new Date(project.endDate).toISOString().split("T")[0] : "",
     });
@@ -126,9 +127,13 @@ export default function AllProjectsPage() {
     try {
       const url = isEditing ? `/api/hrm/v2/projects?id=${editingProject!.id}` : "/api/hrm/v2/projects";
       const method = isEditing ? "PATCH" : "POST";
+      const payload = {
+        ...projectForm,
+        budget: projectForm.budget ? Number(projectForm.budget) : 0,
+      };
       const res = await fetch(url, {
         method, headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(projectForm),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) { const data = await res.json(); throw new Error(data.error || "Failed to save project"); }
       toast.success(isEditing ? "Project Updated" : "Project Created",
@@ -187,6 +192,16 @@ export default function AllProjectsPage() {
       cell: (project: ProjectData) => (
         <span className={`text-xs font-medium ${priorityColors[project.priority] || "text-muted"}`}>
           {project.priority}
+        </span>
+      ),
+    },
+    {
+      key: "budget",
+      header: "Budget",
+      sortable: true,
+      cell: (project: ProjectData) => (
+        <span className="text-sm text-muted font-medium">
+          {(project as any).budget ? `₹${(project as any).budget.toLocaleString()}` : "—"}
         </span>
       ),
     },
@@ -298,6 +313,7 @@ export default function AllProjectsPage() {
                 <FormInput label="Project Name" icon={<FolderKanban className="h-4 w-4" />} value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} placeholder="e.g. Website Redesign" required />
                 <FormSelect label="Priority" icon={<AlertCircle className="h-4 w-4" />} value={projectForm.priority} onChange={(e) => setProjectForm({ ...projectForm, priority: e.target.value as Project["priority"] })} options={PRIORITY_OPTIONS} />
                 <FormSelect label="Status" icon={<Clock className="h-4 w-4" />} value={projectForm.status} onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value as Project["status"] })} options={STATUS_OPTIONS} />
+                <FormInput label="Budget (₹)" icon={<span className="text-xs font-bold">₹</span>} type="number" value={projectForm.budget} onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })} placeholder="e.g. 500000" />
                 <FormInput label="Start Date" icon={<CalendarDays className="h-4 w-4" />} type="date" value={projectForm.startDate} onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })} />
                 <FormInput label="End Date" icon={<CalendarDays className="h-4 w-4" />} type="date" value={projectForm.endDate} onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })} />
               </FormSection>

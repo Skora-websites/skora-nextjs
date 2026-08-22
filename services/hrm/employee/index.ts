@@ -1,5 +1,5 @@
 import "server-only";
-import { getAdminAuth } from "@/lib/firebase-admin";
+import bcrypt from "bcryptjs";
 import {
   hrmUsersService,
   employeeJobsService,
@@ -32,10 +32,23 @@ import type {
 // ── Users ──────────────────────────────────────────────
 
 export async function getEmployees(tenantId: string): Promise<HRMUser[]> {
-  return hrmUsersService.findManyInTenant(tenantId, {
+  const users = await hrmUsersService.findManyInTenant(tenantId, {
     orderByField: "displayName",
     orderByDirection: "asc",
   });
+  return users
+    .filter((u: any) => {
+      const r = (u.role || "").toLowerCase();
+      return r !== "super_admin" && r !== "superadmin" && r !== "ceo";
+    })
+    .map((u: any) => ({
+      ...u,
+      id: u.id || u._id || "",
+      name: u.displayName || u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
+      displayName: u.displayName || u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
+      department: u.department || u.departmentName || "General",
+      designation: u.designation || u.designationName || "Staff",
+    }));
 }
 
 export interface PaginatedResult<T> {
@@ -80,8 +93,12 @@ export async function getEmployeesPaginated(
     sortDir = "asc",
   } = options;
 
-  // Fetch all employees for the tenant
-  const all = await hrmUsersService.findManyInTenant(tenantId);
+  // Fetch all employees for the tenant, excluding Super Admin / CEO
+  const allUsers = await hrmUsersService.findManyInTenant(tenantId);
+  const all = allUsers.filter((u: any) => {
+    const r = (u.role || "").toLowerCase();
+    return r !== "super_admin" && r !== "superadmin" && r !== "ceo";
+  });
 
   // ── Search filter (case-insensitive substring match) ──
   let filtered = all;
@@ -125,111 +142,134 @@ export async function getEmployeesPaginated(
 }
 
 export async function getEmployeeById(id: string): Promise<HRMUser | null> {
-  return hrmUsersService.findById(id);
+  const user = await hrmUsersService.findById(id);
+  if (!user) return null;
+  const u = user as any;
+  return {
+    ...u,
+    id: u.id || u._id || id,
+    name: u.displayName || u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
+    displayName: u.displayName || u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
+    department: u.department || u.departmentName || "General",
+    designation: u.designation || u.designationName || "Staff",
+  };
 }
 
 export async function createEmployee(
   tenantId: string,
   data: {
     email: string;
-    password: string;
-    displayName: string;
-    firstName: string;
-    lastName: string;
+    password?: string;
+    displayName?: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
     phone?: string;
     role?: HRMUser["role"];
     status?: HRMUser["status"];
     departmentId?: string;
+    department?: string;
     departmentName?: string;
     designationId?: string;
+    designation?: string;
     designationName?: string;
     joiningDate?: Date;
     employeeCode?: string;
     address?: string;
     emergencyContact?: string;
     emergencyPhone?: string;
+    reportingManager?: string;
+    employmentType?: string;
   }
 ): Promise<HRMUser> {
-  // 1. Create Firebase Auth user
-  const authUser = await getAdminAuth().createUser({
-    email: data.email,
-    password: data.password,
-    displayName: data.displayName,
-  });
+  const rawName = data.displayName || data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim() || data.email;
+  const nameParts = rawName.trim().split(" ");
+  const firstName = data.firstName || nameParts[0] || "";
+  const lastName = data.lastName || nameParts.slice(1).join(" ") || "";
+  const displayName = rawName;
+  const employeeCode = data.employeeCode || `EMP-${String(Date.now()).slice(-4)}`;
+  const password = data.password || "Employee@123";
+  const passwordHash = await bcrypt.hash(password, 10);
+  const department = data.department || data.departmentName || "Engineering";
+  const designation = data.designation || data.designationName || "Staff";
 
-  // 2. Set custom claims
-  await getAdminAuth().setCustomUserClaims(authUser.uid, {
-    role: data.role || "employee",
-    tenantId,
-  });
-
-  // 3. Generate employee code if not provided
-  const employeeCode = data.employeeCode || `EMP${String(Date.now()).slice(-6)}`;
-
-  // 4. Create Firestore user profile
-  return hrmUsersService.createWithId(authUser.uid, {
+  const userDoc = {
     tenantId,
     email: data.email,
     emailVerified: false,
-    displayName: data.displayName,
-    firstName: data.firstName,
-    lastName: data.lastName,
+    displayName,
+    name: displayName,
+    firstName,
+    lastName,
     phone: data.phone || "",
     role: data.role || "employee",
     status: data.status || "active",
     loginStatus: "enabled",
     allowMobileLogin: false,
+    department,
     departmentId: data.departmentId || "",
-    departmentName: data.departmentName || "",
+    departmentName: department,
+    designation,
     designationId: data.designationId || "",
-    designationName: data.designationName || "",
-    joiningDate: data.joiningDate || null,
+    designationName: designation,
+    joiningDate: data.joiningDate || new Date(),
     employeeCode,
     address: data.address || "",
     emergencyContact: data.emergencyContact || "",
     emergencyPhone: data.emergencyPhone || "",
-  } as any);
+    reportingManager: data.reportingManager || "",
+    employmentType: data.employmentType || "permanent",
+    passwordHash,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  return hrmUsersService.create(userDoc as any);
 }
 
 export async function updateEmployee(
   id: string,
-  data: Partial<HRMUser>
+  data: Partial<HRMUser> & {
+    name?: string;
+    department?: string;
+    designation?: string;
+    reportingManager?: string;
+    status?: string;
+  }
 ): Promise<HRMUser | null> {
-  // Update Firebase Auth displayName if provided
-  if (data.displayName) {
-    try {
-      await getAdminAuth().updateUser(id, { displayName: data.displayName });
-    } catch (error) {
-      console.error("Failed to update Firebase Auth user:", error);
-    }
-  }
-
-  // Update Firebase Auth email if provided
-  if (data.email) {
-    try {
-      await getAdminAuth().updateUser(id, { email: data.email });
-    } catch (error) {
-      console.error("Failed to update Firebase Auth email:", error);
-    }
-  }
-
-  return hrmUsersService.update(id, {
+  const updateData: any = {
     ...data,
     updatedAt: new Date(),
-  } as any);
+  };
+
+  if (data.name && !data.displayName) {
+    updateData.displayName = data.name;
+    const parts = data.name.trim().split(" ");
+    updateData.firstName = parts[0] || "";
+    updateData.lastName = parts.slice(1).join(" ") || "";
+  }
+  if (data.displayName) {
+    const parts = data.displayName.trim().split(" ");
+    updateData.firstName = parts[0] || "";
+    updateData.lastName = parts.slice(1).join(" ") || "";
+  }
+  if (data.department) {
+    updateData.departmentName = data.department;
+    updateData.department = data.department;
+  }
+  if (data.designation) {
+    updateData.designationName = data.designation;
+    updateData.designation = data.designation;
+  }
+
+  return hrmUsersService.update(id, updateData);
 }
 
 export async function deleteEmployee(id: string): Promise<boolean> {
-  try {
-    await getAdminAuth().deleteUser(id);
-  } catch (error) {
-    console.error("Failed to delete Firebase Auth user:", error);
-  }
   return hrmUsersService.delete(id);
 }
 
 export async function disableEmployeeLogin(userId: string): Promise<HRMUser | null> {
-  await getAdminAuth().revokeRefreshTokens(userId);
   return hrmUsersService.update(userId, { loginStatus: "login_disabled" } as any);
 }
 

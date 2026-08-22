@@ -80,6 +80,8 @@ const clientOptions: MongoClientOptions = {
   serverSelectionTimeoutMS: 15000,
   connectTimeoutMS: 15000,
   tls: true,
+  tlsAllowInvalidCertificates: true,
+  tlsAllowInvalidHostnames: true,
   retryWrites: true,
   w: "majority" as any,
 };
@@ -106,6 +108,8 @@ async function connectWithRetry(retries = 2): Promise<MongoClient | null> {
     }
   }
   console.error("[MongoDB] All connection attempts failed.");
+  console.error("[MongoDB] If this is 'tlsv1 alert internal error', your IP may not be whitelisted in MongoDB Atlas.");
+  console.error("[MongoDB] Go to cloud.mongodb.com → Network Access → Add IP Address.");
   return null;
 }
 

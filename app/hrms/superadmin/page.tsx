@@ -50,7 +50,7 @@ interface Employee {
 
 interface AttendanceRecord {
   _id: string;
-  userId: string;           // Firebase UID
+  userId: string;           // MongoDB User ID
   userName: string;
   userEmail: string;
   employeeCode?: string;
@@ -128,16 +128,36 @@ export default function SuperadminOverviewPage() {
   const [confirmDelete, setConfirmDelete] = useState<UserRecord | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  const [selectedAttendanceDate, setSelectedAttendanceDate] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  });
+
   useEffect(() => {
     loadData();
+
+    // Auto-polling every 10 seconds for live updates
+    const interval = setInterval(() => {
+      loadData(true);
+    }, 10000);
+
+    const handlePunchUpdate = () => {
+      loadData(true);
+    };
+    window.addEventListener("attendance-updated", handlePunchUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("attendance-updated", handlePunchUpdate);
+    };
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const [empRes, attRes, escRes, leaveRes, projRes, hrRes, mgrRes] =
         await Promise.allSettled([
-          fetch("/api/hrm/v2/users?action=list&status=active").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/users?action=list").then((r) => (r.ok ? r.json() : null)),
           fetch("/api/hrm/v2/attendance").then((r) => (r.ok ? r.json() : null)),
           fetch("/api/hrm/v2/escalations").then((r) => (r.ok ? r.json() : null)),
           fetch("/api/hrm/v2/leaves?status=pending").then((r) => (r.ok ? r.json() : null)),
@@ -180,21 +200,24 @@ export default function SuperadminOverviewPage() {
     } catch {
       // use empty state
     }
-    setLoading(false);
+    if (!isSilent) setLoading(false);
   };
 
   // ── Computed KPIs ──
 
   const totalEmployees = employees.length;
-  const todayStr = new Date().toISOString().split("T")[0];
+  const toLocalDateStr = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const todayStr = toLocalDateStr(new Date());
+  const isSelectedToday = selectedAttendanceDate === todayStr;
+
   const todayAttendance = attendance.filter((a) => {
-    const punchDate = a.punchInTime ? new Date(a.punchInTime).toISOString().split("T")[0] : (a.date || "");
-    return punchDate === todayStr;
+    const punchDate = a.date || (a.punchInTime ? new Date(a.punchInTime).toISOString().split("T")[0] : "");
+    return punchDate === selectedAttendanceDate;
   });
   const presentCount = todayAttendance.filter(
     (a) => a.status === "PRESENT" || a.status === "LATE" || a.status === "HALF_DAY" || a.status === "present" || a.status === "half_day"
   ).length;
-  const absentCount = totalEmployees - presentCount;
+  const absentCount = Math.max(0, totalEmployees - presentCount);
   const pendingLeaves = leaveRequests.filter((l) => l.status === "pending");
   const activeProjects = projects.filter(
     (p) => p.status === "active" || p.status === "in_progress"
@@ -461,12 +484,53 @@ export default function SuperadminOverviewPage() {
         )}
       </SectionCard>
 
-      {/* ═══ TODAY'S ATTENDANCE ═══ */}
+      {/* ═══ ATTENDANCE OVERVIEW ═══ */}
       <SectionCard
-        title="Today's Attendance Overview"
-        subtitle="Punch-in/out records, geofence distances, and regularization requests"
+        title={isSelectedToday ? "Today's Attendance Overview" : `Attendance Overview (${selectedAttendanceDate})`}
+        subtitle={`${presentCount} Present · ${absentCount} Absent · ${totalEmployees} Total Employees`}
         icon={<MapPin className="h-5 w-5 text-indigo-500" />}
         count={todayAttendance.length}
+        action={
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+              <button
+                onClick={() => setSelectedAttendanceDate(todayStr)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  isSelectedToday
+                    ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => {
+                  const y = new Date();
+                  y.setDate(y.getDate() - 1);                   setSelectedAttendanceDate(toLocalDateStr(y));
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  selectedAttendanceDate === (() => { const y = new Date(); y.setDate(y.getDate() - 1); return toLocalDateStr(y); })()
+                    ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Yesterday
+              </button>
+            </div>
+            <input
+              type="date"
+              value={selectedAttendanceDate}
+              onChange={(e) => setSelectedAttendanceDate(e.target.value)}
+              className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-2.5 py-1 text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-primary cursor-pointer font-bold"
+            />
+            <Link
+              href="/hrms/hr-admin/attendance"
+              className="text-xs text-primary hover:underline font-semibold ml-1"
+            >
+              Master →
+            </Link>
+          </div>
+        }
       >
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -488,15 +552,15 @@ export default function SuperadminOverviewPage() {
                       message={
                         loading
                           ? "Loading attendance data..."
-                          : "No attendance records for today yet."
+                          : `No punch records found for ${selectedAttendanceDate}. Total ${absentCount} employees absent.`
                       }
                     />
                   </td>
                 </tr>
               ) : (
-                todayAttendance.map((rec) => (
+                todayAttendance.map((rec, idx) => (
                   <tr
-                    key={rec._id}
+                    key={rec._id || `${rec.userId}-${rec.date}-${idx}`}
                     className="hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                   >
                     <td className="py-3 pr-4">
@@ -706,9 +770,9 @@ export default function SuperadminOverviewPage() {
           <EmptyState message="No projects created yet. HR Admin can create projects from the HR Admin dashboard." />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.slice(0, 6).map((p) => (
+            {projects.slice(0, 6).map((p, idx) => (
               <div
-                key={p._id}
+                key={p._id || p.name || idx}
                 className="p-4 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 space-y-3"
               >
                 <div className="flex items-center justify-between">
@@ -865,7 +929,7 @@ export default function SuperadminOverviewPage() {
               <strong>
                 {confirmDelete.displayName || confirmDelete.email}
               </strong>
-              ? This removes their Firebase Auth account and cannot be undone.
+              ? This permanently deletes their account and record from the database.
             </p>
             <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-white/10">
               <button
@@ -966,6 +1030,7 @@ function SectionCard({
   icon,
   count,
   variant,
+  action,
   children,
 }: {
   title: string;
@@ -973,6 +1038,7 @@ function SectionCard({
   icon: React.ReactNode;
   count: number;
   variant?: "danger";
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -983,7 +1049,7 @@ function SectionCard({
           : "border-gray-200 dark:border-white/10"
       }`}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div
             className={`p-2.5 rounded-xl border ${
@@ -1003,9 +1069,12 @@ function SectionCard({
             </p>
           </div>
         </div>
-        <span className="text-xs font-mono text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full font-bold">
-          {count}
-        </span>
+        <div className="flex items-center gap-2">
+          {action}
+          <span className="text-xs font-mono text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full font-bold">
+            {count}
+          </span>
+        </div>
       </div>
       {children}
     </div>

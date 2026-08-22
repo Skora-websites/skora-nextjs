@@ -1,10 +1,11 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getAdminAuth } from "./firebase-admin";
-import { usersService } from "./firestore";
+import { getDb } from "./db/mongo-helper";
 import { normalizeRole } from "./rbac";
-import { logger } from "./logger";
+import { ObjectId } from "mongodb";
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
 
 // ── Types ───────────────────────────────────────────────
 
@@ -18,46 +19,59 @@ export interface Session {
   } | null;
 }
 
+// ── Password Helpers ────────────────────────────────────
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12);
+}
+
+export async function verifyPassword(
+  password: string,
+  hash: string
+): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+
 // ── Session Helpers ─────────────────────────────────────
 
 /**
- * Get the current session by verifying the session cookie.
- * Compatible with the NextAuth session interface used across the app.
+ * Get the current session by reading the session cookie
+ * and looking up the session in MongoDB.
  */
 export async function auth(): Promise<Session> {
   const cookieStore = await cookies();
-  const cookie = cookieStore.get("session")?.value;
-
-  if (!cookie) return { user: null };
+  const sessionToken = cookieStore.get("session")?.value;
+  if (!sessionToken) return { user: null };
 
   try {
-    // checkRevoked: false — avoids intermittent 401s from Firebase's
-    // revocation API propagation delays. When a user logs out,
-    // destroySession() independently revokes tokens & clears the cookie.
-    // For role/permission changes, custom claims are verified inline,
-    // so stale sessions are not a security concern.
-    const decoded = await getAdminAuth().verifySessionCookie(cookie, false);
+    const db = await getDb();
+    if (!db) return { user: null };
 
-    // Get role: first check custom claims, fall back to Firestore, then normalize
-    let role = (decoded as Record<string, unknown>).role as string | undefined;
-    if (!role) {
-      const userDoc = await usersService.findById(decoded.uid);
-      role = normalizeRole(userDoc?.role);
-    } else {
-      role = normalizeRole(role);
-    }
+    const session = await db.collection("sessions").findOne({
+      token: sessionToken,
+      expiresAt: { $gt: new Date() },
+    });
 
+    if (!session) return { user: null };
+
+    // Look up the user
+    const user = await db.collection("users").findOne({
+      _id: new ObjectId(session.userId),
+    });
+
+    if (!user) return { user: null };
+
+    const role = normalizeRole(user.role);
     return {
       user: {
-        id: decoded.uid,
-        name: decoded.name || null,
-        email: decoded.email || null,
-        image: decoded.picture || null,
+        id: user._id.toString(),
+        name: user.displayName || user.firstName || null,
+        email: user.email || null,
+        image: user.image || null,
         role,
       },
     };
-  } catch (error) {
-    logger.error("Session verification failed", error);
+  } catch {
     return { user: null };
   }
 }
@@ -74,134 +88,79 @@ export const SESSION_COOKIE_OPTIONS = {
 };
 
 /**
- * Create a session cookie from a Firebase Auth ID token.
- * Returns the cookie value. The caller is responsible for setting it
- * on the response via `response.cookies.set()` for reliable persistence.
+ * Create a MongoDB session and return the session token.
  */
-export async function createSession(idToken: string): Promise<string> {
-  const expiresIn = SESSION_EXPIRES_IN_MS;
+export async function createSession(userId: string): Promise<string> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
 
-  const sessionCookie = await getAdminAuth().createSessionCookie(idToken, {
-    expiresIn,
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + SESSION_EXPIRES_IN_MS);
+
+  await db.collection("sessions").insertOne({
+    token,
+    userId,
+    expiresAt,
+    createdAt: new Date(),
   });
 
-  return sessionCookie;
+  return token;
 }
 
 /**
- * Set the session cookie on a NextResponse object.
- * Use this in API route handlers for reliable cookie persistence.
- */
-export function setSessionCookieOnResponse(
-  response: NextResponse,
-  sessionCookie: string
-): NextResponse {
-  response.cookies.set("session", sessionCookie, {
-    ...SESSION_COOKIE_OPTIONS,
-    maxAge: SESSION_EXPIRES_IN_MS / 1000,
-  });
-  return response;
-}
-
-/**
- * Full destroy: revoke Firebase refresh tokens and clear the session cookie.
+ * Destroy the current session and clear the cookie.
  */
 export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
-  const cookie = cookieStore.get("session")?.value;
+  const sessionToken = cookieStore.get("session")?.value;
 
-  if (cookie) {
+  if (sessionToken) {
     try {
-      const decoded = await getAdminAuth().verifySessionCookie(cookie);
-      await getAdminAuth().revokeRefreshTokens(decoded.uid);
-    } catch {
-      // Token is already invalid; nothing to revoke
-    }
+      const db = await getDb();
+      if (db) {
+        await db.collection("sessions").deleteOne({ token: sessionToken });
+      }
+    } catch { /* ignore */ }
   }
 
   cookieStore.delete("session");
 }
 
-// ── Firebase Auth REST Helpers ──────────────────────────
-
-const FIREBASE_AUTH_BASE = "https://identitytoolkit.googleapis.com/v1";
+// ── MongoDB Auth Helpers (replacing Firebase) ─────────
 
 /**
- * Sign in with email/password via the Firebase Auth REST API.
- * Returns an ID token that can be exchanged for a session cookie.
+ * Sign in with email/password using MongoDB.
+ * Returns the user document on success, throws on failure.
  */
-export async function signInWithFirebase(
+export async function signInWithMongo(
   email: string,
   password: string
-): Promise<string> {
-  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-  if (!apiKey) {
-    throw new Error("NEXT_PUBLIC_FIREBASE_API_KEY is not set");
+): Promise<{ id: string; email: string; role: string; displayName: string }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const user = await db.collection("users").findOne({ email: email.toLowerCase() });
+  if (!user) throw new Error("Invalid email or password");
+
+  const passwordHash = user.passwordHash || user.password;
+  if (!passwordHash) throw new Error("Invalid email or password");
+
+  const valid = await verifyPassword(password, passwordHash);
+  if (!valid) throw new Error("Invalid email or password");
+
+  if (user.status === "disabled" || user.status === "inactive") {
+    throw new Error("This account has been disabled");
   }
 
-  const res = await fetch(
-    `${FIREBASE_AUTH_BASE}/accounts:signInWithPassword?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, returnSecureToken: true }),
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.json();
-    const message = err.error?.message;
-    if (
-      message === "EMAIL_NOT_FOUND" ||
-      message === "INVALID_PASSWORD" ||
-      message === "INVALID_LOGIN_CREDENTIALS"
-    ) {
-      throw new Error("Invalid email or password");
-    }
-    if (message === "USER_DISABLED") {
-      throw new Error("This account has been disabled");
-    }
-    throw new Error(message || "Authentication failed");
-  }
-
-  const data = await res.json();
-  return data.idToken as string;
+  return {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role || "employee",
+    displayName: user.displayName || user.firstName || email,
+  };
 }
 
-/**
- * Sign up with email/password via the Firebase Auth REST API.
- * Creates a new Firebase Auth user and returns an ID token.
- */
-export async function signUpWithFirebase(
-  email: string,
-  password: string
-): Promise<string> {
-  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-  if (!apiKey) {
-    throw new Error("NEXT_PUBLIC_FIREBASE_API_KEY is not set");
-  }
-
-  const res = await fetch(
-    `${FIREBASE_AUTH_BASE}/accounts:signUp?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, returnSecureToken: true }),
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.json();
-    const message = err.error?.message;
-    if (message === "EMAIL_EXISTS") {
-      throw new Error("An account with this email already exists");
-    }
-    throw new Error(message || "Registration failed");
-  }
-
-  const data = await res.json();
-  return data.idToken as string;
-}
+// ── Admin Session (unchanged) ─────────────────────────
 
 export async function setAdminSessionCookie(token: string = "authenticated"): Promise<void> {
   const cookieStore = await cookies();
@@ -222,5 +181,3 @@ export async function isSubmittedAdminAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
   return Boolean(cookieStore.get("admin_session")?.value);
 }
-
-

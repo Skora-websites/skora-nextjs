@@ -8,9 +8,7 @@ import {
   ROUTE_PERMISSIONS,
   PERMISSIONS,
   normalizeRole,
-  type Role,
 } from "@/lib/rbac";
-import { getAdminAuth } from "@/lib/firebase-admin";
 import { hrmUsersService } from "@/lib/hrm/firestore";
 import {
   getAllRoles,
@@ -192,10 +190,7 @@ export const POST = withErrorHandler(async (request: Request) => {
 
     const normalizedRole = normalizeRole(role);
 
-    // Update custom claims in Firebase Auth
-    await getAdminAuth().setCustomUserClaims(userId, { role: normalizedRole });
-
-    // Update role in Firestore with audit logging
+    // Update role in MongoDB with audit logging
     await assignUserRole(
       auth.tenantId,
       userId,
@@ -235,10 +230,7 @@ export const PUT = withErrorHandler(async (request: Request) => {
 
   const normalizedRole = normalizeRole(role);
 
-  // Update custom claims in Firebase Auth
-  await getAdminAuth().setCustomUserClaims(userId, { role: normalizedRole });
-
-  // Update role in Firestore with audit logging
+  // Update role in MongoDB with audit logging
   await assignUserRole(
     auth.tenantId,
     userId,

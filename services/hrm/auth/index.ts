@@ -1,5 +1,5 @@
 import "server-only";
-import { getAdminAuth } from "@/lib/firebase-admin";
+import { getDb } from "@/lib/db/mongo-helper";
 import { hrmUsersService, rolesService, permissionsService, approvalChainsService } from "@/lib/hrm/firestore";
 import type { HRMUser, Role, Permission, ApprovalChain } from "@/types";
 
@@ -264,7 +264,10 @@ export async function isUserLoginEnabled(userId: string): Promise<boolean> {
  */
 export async function revokeUserTokens(userId: string): Promise<void> {
   try {
-    await getAdminAuth().revokeRefreshTokens(userId);
+    const db = await getDb();
+    if (db) {
+      await db.collection("sessions").deleteMany({ userId });
+    }
   } catch (error) {
     console.error("Token revocation error:", error);
   }
@@ -310,7 +313,7 @@ export async function seedDefaultRoles(tenantId: string): Promise<void> {
     await rolesService.create({
       ...definition,
       tenantId,
-      guardName: "firebase",
+      guardName: "mongodb",
       permissions: ROLE_PERMISSIONS[roleName] || [],
     } as any);
   }

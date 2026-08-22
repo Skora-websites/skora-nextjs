@@ -375,7 +375,7 @@ export async function updateRolePermissions(
       tenantId,
       name: roleName,
       displayName: ROLE_LABELS[roleName as Role] || roleName,
-      guardName: "firebase",
+      guardName: "mongodb",
       isSystem: true,
       permissions,
     } as any);
@@ -419,7 +419,7 @@ export async function createCustomRole(
     tenantId,
     name: input.name,
     displayName: input.displayName,
-    guardName: "firebase",
+    guardName: "mongodb",
     description: input.description || "",
     isSystem: false,
     permissions: input.permissions,

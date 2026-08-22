@@ -49,7 +49,7 @@ export function AppShell({ children, title }: AppShellProps) {
           <footer className="border-t border-border py-4 px-6">
             <div className="flex items-center justify-between text-xs text-muted">
               <p>&copy; {new Date().getFullYear()} HRMS.pro. All rights reserved.</p>
-              <p>Built with Next.js + Firebase</p>
+              <p>Built with Next.js + MongoDB</p>
             </div>
           </footer>
         </div>

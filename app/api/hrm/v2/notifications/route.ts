@@ -67,6 +67,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: notification }, { status: 201 });
     }
 
+    if (action === "send_to_role") {
+      // Send notifications to all users with a specific role
+      const { role, title, body: notifBody, type, referenceType, referenceId } = body;
+      if (!role || !title || !notifBody) {
+        return NextResponse.json({ error: "role, title, and body are required" }, { status: 400 });
+      }
+      const { getDb } = require("@/lib/db/mongo-helper");
+      const db = await getDb();
+      if (!db) return NextResponse.json({ error: "Database not available" }, { status: 500 });
+
+      const recipients = await db.collection("users").find({
+        role: role,
+        tenantId: "default",
+      }).toArray();
+
+      const notifications = [];
+      for (const recipient of recipients) {
+        const notif = await sendNotification({
+          tenantId: "default",
+          userId: recipient._id.toString(),
+          title,
+          body: notifBody,
+          type: type || "general",
+          referenceType,
+          referenceId,
+        });
+        notifications.push(notif);
+      }
+      return NextResponse.json({ data: notifications }, { status: 201 });
+    }
+
     if (action === "template") {
       // Only admins can manage notification templates
       if (auth.role === "employee") {

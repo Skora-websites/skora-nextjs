@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Clock,
   MapPin,
@@ -9,7 +9,8 @@ import {
   Navigation,
   AlertCircle,
   AlertTriangle,
-  Lock,
+  Send,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -23,102 +24,128 @@ interface OfficeLocation {
   radius: number; // meters
 }
 
+interface OfficeRules {
+  officeStart: number; // hour (e.g. 10 = 10:00 AM)
+  officeEnd: number;   // hour (e.g. 19 = 7:00 PM)
+  lateAfter: number;   // hour (e.g. 10.5 = 10:30 AM)
+  workDays: number[];  // 0=Sun, 1=Mon, ... 6=Sat
+  halfDayAfter: number; // hour after which it's half-day
+}
+
 const DEFAULT_OFFICE: OfficeLocation = {
-  latitude: 28.6007594, // Office location
+  latitude: 28.6007594,
   longitude: 77.4319307,
   radius: 100,
 };
 
-// ── Office hours constants ─────────────────────────────────
-const OFFICE_START = 10; // 10:00 AM
-const OFFICE_END = 19; // 7:00 PM
-const LUNCH_START = 14; // 2:00 PM
-const LUNCH_END = 14.5; // 2:30 PM
-const LATE_CUTOFF = 10.5; // 10:30 AM
+const DEFAULT_RULES: OfficeRules = {
+  officeStart: 10,
+  officeEnd: 19,
+  lateAfter: 10.5,
+  workDays: [1, 2, 3, 4, 5], // Mon-Fri
+  halfDayAfter: 14.5,
+};
+
+// ── Per-user localStorage keys ─────────────────────────────
+function punchStateKey(userId: string) {
+  return `employee-punch-state-${userId}`;
+}
 
 export function AttendancePunchCard() {
   const { user } = useAuth();
+  const userId = user?.id || "";
+
   const [punchedIn, setPunchedIn] = useState(false);
   const [punchTime, setPunchTime] = useState<string | null>(null);
+  const [punchOutTime, setPunchOutTime] = useState<string | null>(null);
   const [locationName, setLocationName] = useState<string | null>(null);
   const [statusLabel, setStatusLabel] = useState<string>("PRESENT");
   const [workSeconds, setWorkSeconds] = useState(0);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
-  const [overtimePending, setOvertimePending] = useState(false);
+  const [officeRules, setOfficeRules] = useState<OfficeRules>(DEFAULT_RULES);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  // Early punch-out approval state
+  const [showEarlyLeaveModal, setShowEarlyLeaveModal] = useState(false);
+  const [earlyLeaveReason, setEarlyLeaveReason] = useState("");
+  const [submittingApproval, setSubmittingApproval] = useState(false);
 
-  // ── Restore state from localStorage ───────────────────────
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const todayDay = new Date().getDay();
+
+  // ── Fetch office rules from DB ────────────────────────────
   useEffect(() => {
-    const storedState = localStorage.getItem("employee-punch-state");
+    const fetchRules = async () => {
+      try {
+        const res = await fetch("/api/hrm/v2/tenants/current");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.officeRules) {
+            setOfficeRules({
+              officeStart: data.officeRules.officeStart ?? DEFAULT_RULES.officeStart,
+              officeEnd: data.officeRules.officeEnd ?? DEFAULT_RULES.officeEnd,
+              lateAfter: data.officeRules.lateAfter ?? DEFAULT_RULES.lateAfter,
+              workDays: data.officeRules.workDays ?? DEFAULT_RULES.workDays,
+              halfDayAfter: data.officeRules.halfDayAfter ?? DEFAULT_RULES.halfDayAfter,
+            });
+          }
+        }
+      } catch { /* use defaults */ }
+    };
+    fetchRules();
+  }, []);
+
+  // ── Check if today is a work day ──────────────────────────
+  const isWorkDay = officeRules.workDays.includes(todayDay);
+
+  // ── Restore state from per-user localStorage ──────────────
+  useEffect(() => {
+    if (!userId) return;
+    const storedState = localStorage.getItem(punchStateKey(userId));
     if (storedState) {
       try {
         const parsed = JSON.parse(storedState);
         if (parsed.punchedIn && parsed.date === todayStr) {
           setPunchedIn(true);
           setPunchTime(parsed.punchTime);
+          setPunchOutTime(parsed.punchOutTime || null);
           setLocationName(parsed.locationName || "GPS Verified");
           setStatusLabel(parsed.statusLabel || "PRESENT");
           setDistanceMeters(parsed.distanceMeters || null);
-          const elapsed = Math.floor(
-            (Date.now() - new Date(parsed.punchTime).getTime()) / 1000
-          );
-          setWorkSeconds(elapsed > 0 ? elapsed : 0);
+          if (!parsed.punchOutTime) {
+            const elapsed = Math.floor(
+              (Date.now() - new Date(parsed.punchTime).getTime()) / 1000
+            );
+            setWorkSeconds(elapsed > 0 ? elapsed : 0);
+          }
         }
       } catch { /* ignore */ }
     }
-  }, [todayStr]);
-
-  // ── Sync pending offline records when DB comes back ─────────
-  useEffect(() => {
-    const syncPending = async () => {
-      const pending = JSON.parse(localStorage.getItem("pending-attendance") || "[]");
-      if (pending.length === 0) return;
-      const synced: typeof pending = [];
-      for (const rec of pending) {
-        try {
-          const res = await punchInAction({
-            userId: rec.userId,
-            userName: rec.userName,
-            userEmail: rec.userEmail,
-            employeeCode: rec.employeeCode,
-            location: rec.location,
-            status: rec.status,
-          });
-          if (res.success && res.record) synced.push(rec);
-        } catch { break; } // DB still down, stop trying
-      }
-      if (synced.length > 0) {
-        const remaining = pending.filter((r: any) => !synced.includes(r));
-        localStorage.setItem("pending-attendance", JSON.stringify(remaining));
-        // Update punch state to show synced
-        const stored = localStorage.getItem("employee-punch-state");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.synced = true;
-          parsed.locationName = (parsed.locationName || "").replace(" (Offline - pending sync)", "");
-          localStorage.setItem("employee-punch-state", JSON.stringify(parsed));
-          setLocationName(parsed.locationName);
-        }
-      }
-    };
-    syncPending();
-  }, []);
+  }, [userId, todayStr]);
 
   // ── Timer ─────────────────────────────────────────────────
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (punchedIn) {
+    if (punchedIn && !punchOutTime) {
       interval = setInterval(() => {
         setWorkSeconds((prev) => prev + 1);
       }, 1000);
     }
     return () => { if (interval) clearInterval(interval); };
-  }, [punchedIn]);
+  }, [punchedIn, punchOutTime]);
 
-  // ── Fetch office location from tenant ────────────────────
+  // ── Clear messages after 4 seconds ────────────────────────
+  useEffect(() => {
+    if (successMsg) {
+      const t = setTimeout(() => setSuccessMsg(null), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [successMsg]);
+
+  // ── Fetch office location ─────────────────────────────────
   const getOfficeLocation = async (): Promise<OfficeLocation> => {
     try {
       const res = await fetch("/api/hrm/v2/tenants/current");
@@ -138,24 +165,16 @@ export function AttendancePunchCard() {
 
   // ── Determine attendance status based on time ────────────
   const getAttendanceStatus = (punchHour: number): string => {
-    const day = new Date().getDay();
-    if (day === 0 || day === 6) return "WEEK_OFF";
-    if (punchHour > LATE_CUTOFF) return "LATE";
+    if (!isWorkDay) return "WEEK_OFF";
+    if (punchHour > officeRules.lateAfter) return "LATE";
     return "PRESENT";
   };
 
-  // ── Check if currently in lunch break ────────────────────
-  const isLunchBreak = (): boolean => {
+  // ── Check if punch-out is early (before office end) ──────
+  const isEarlyPunchOut = (): boolean => {
     const now = new Date();
-    const hours = now.getHours() + now.getMinutes() / 60;
-    return hours >= LUNCH_START && hours < LUNCH_END;
-  };
-
-  // ── Check overtime (after 7 PM) ──────────────────────────
-  const checkOvertime = (punchHour: number) => {
-    if (punchHour >= OFFICE_END) {
-      setOvertimePending(true);
-    }
+    const currentHour = now.getHours() + now.getMinutes() / 60;
+    return currentHour < officeRules.officeEnd;
   };
 
   // ── Handle Punch In ──────────────────────────────────────
@@ -164,7 +183,6 @@ export function AttendancePunchCard() {
     setLoadingLocation(true);
 
     if (!navigator.geolocation) {
-      // No geolocation available — deny punch in for security
       setLoadingLocation(false);
       setErrorMsg("Geolocation is required for punch in. Please enable location access in your browser.");
       return;
@@ -174,17 +192,10 @@ export function AttendancePunchCard() {
       async (position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
-
-        // Fetch office coordinates
         const office = await getOfficeLocation();
 
-        // Validate geofence using Haversine
         const { within, distance } = isWithinGeofence(
-          userLat,
-          userLng,
-          office.latitude,
-          office.longitude,
-          office.radius
+          userLat, userLng, office.latitude, office.longitude, office.radius
         );
 
         setDistanceMeters(distance);
@@ -197,32 +208,24 @@ export function AttendancePunchCard() {
           return;
         }
 
-        // Within geofence — proceed with punch in
         const now = new Date();
         const currentHour = now.getHours() + now.getMinutes() / 60;
 
-        // Check if before office hours
-        if (currentHour < OFFICE_START) {
+        if (currentHour < officeRules.officeStart) {
           setLoadingLocation(false);
-          setErrorMsg("Office hours start at 10:00 AM. You cannot punch in before then.");
+          setErrorMsg(`Office hours start at ${formatHour(officeRules.officeStart)}. You cannot punch in before then.`);
           return;
         }
 
-        // Check if after office hours
-        if (currentHour >= OFFICE_END + 1) {
+        if (currentHour >= officeRules.officeEnd + 1) {
           setLoadingLocation(false);
-          setErrorMsg("Office hours end at 7:00 PM. Late punch-ins are not accepted.");
+          setErrorMsg(`Office hours end at ${formatHour(officeRules.officeEnd)}. Late punch-ins are not accepted.`);
           return;
         }
 
         const locationStr = `Lat: ${userLat.toFixed(4)}, Lng: ${userLng.toFixed(4)} (${distance}m from office)`;
         const status = getAttendanceStatus(currentHour);
-
-        // Check overtime
-        checkOvertime(currentHour);
-
-        // Determine if it's a half-day (punched in after 2:30 PM)
-        const isHalfDay = currentHour >= LUNCH_END;
+        const isHalfDay = currentHour >= officeRules.halfDayAfter;
 
         await executePunchIn(locationStr, status, isHalfDay);
       },
@@ -235,24 +238,16 @@ export function AttendancePunchCard() {
   };
 
   const executePunchIn = async (locStr: string, status: string, isHalfDay: boolean) => {
-    const userId = user?.id || user?.email || "emp_user";
     const userName = user?.name || user?.email || "Employee";
     const userEmail = user?.email || "employee@company.com";
     const empCode = user?.id ? `EMP-2026-${user.id.substring(0, 4).toUpperCase()}` : "EMP-2026-XXXX";
-
     const finalStatus = isHalfDay ? "HALF_DAY" : status;
-    const now = new Date();
 
-    // Try saving to database first
     let serverSaved = false;
     try {
       const res = await punchInAction({
-        userId,
-        userName,
-        userEmail,
-        employeeCode: empCode,
-        location: locStr,
-        status: finalStatus,
+        userId, userName, userEmail, employeeCode: empCode,
+        location: locStr, status: finalStatus,
       });
       if (res.success && res.record) {
         serverSaved = true;
@@ -261,56 +256,44 @@ export function AttendancePunchCard() {
         setLocationName(res.record.location || locStr);
         setStatusLabel(res.record.status || finalStatus);
         setWorkSeconds(0);
+        setPunchOutTime(null);
         localStorage.setItem(
-          "employee-punch-state",
+          punchStateKey(userId),
           JSON.stringify({
-            punchedIn: true,
-            date: todayStr,
-            punchTime: res.record.punchInTime,
-            locationName: res.record.location || locStr,
-            statusLabel: res.record.status || finalStatus,
-            distanceMeters: distanceMeters,
-            synced: true,
+            punchedIn: true, date: todayStr, punchTime: res.record.punchInTime,
+            locationName: res.record.location || locStr, statusLabel: res.record.status || finalStatus,
+            distanceMeters, synced: true,
           })
         );
+        window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in", record: res.record } }));
       }
     } catch { /* server unavailable */ }
 
-    // Fallback: save locally if server is unavailable
     if (!serverSaved) {
+      const now = new Date();
       const localRecord = {
-        userId,
-        userName,
-        userEmail,
-        employeeCode: empCode,
-        date: todayStr,
-        punchInTime: now.toISOString(),
-        location: locStr,
-        status: finalStatus,
+        userId, userName, userEmail, employeeCode: empCode,
+        date: todayStr, punchInTime: now.toISOString(), location: locStr, status: finalStatus,
       };
-      // Save to pending sync queue
       const pending = JSON.parse(localStorage.getItem("pending-attendance") || "[]");
       pending.push(localRecord);
       localStorage.setItem("pending-attendance", JSON.stringify(pending));
 
-      // Also save to punch state for immediate UI update
       setPunchedIn(true);
       setPunchTime(now.toISOString());
       setLocationName(locStr + " (Offline - pending sync)");
       setStatusLabel(finalStatus);
       setWorkSeconds(0);
+      setPunchOutTime(null);
       localStorage.setItem(
-        "employee-punch-state",
+        punchStateKey(userId),
         JSON.stringify({
-          punchedIn: true,
-          date: todayStr,
-          punchTime: now.toISOString(),
-          locationName: locStr + " (Offline - pending sync)",
-          statusLabel: finalStatus,
-          distanceMeters: distanceMeters,
-          synced: false,
+          punchedIn: true, date: todayStr, punchTime: now.toISOString(),
+          locationName: locStr + " (Offline - pending sync)", statusLabel: finalStatus,
+          distanceMeters, synced: false,
         })
       );
+      window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in-local", record: localRecord } }));
       setErrorMsg("Database unavailable. Attendance saved locally and will sync when the server is back online.");
     }
 
@@ -319,38 +302,91 @@ export function AttendancePunchCard() {
 
   // ── Handle Punch Out ─────────────────────────────────────
   const handlePunchOut = async () => {
-    // Check if during lunch break
-    if (isLunchBreak()) {
-      setErrorMsg("You cannot punch out during lunch break (2:00 PM - 2:30 PM).");
+    // Always allow punch-out, but check if it's early
+    if (isEarlyPunchOut() && isWorkDay) {
+      setShowEarlyLeaveModal(true);
       return;
     }
 
-    const userId = user?.id || user?.email || "emp_user";
-    await punchOutAction(userId, todayStr);
-
-    // Check if overtime should be triggered (after 7 PM)
-    const now = new Date();
-    const currentHour = now.getHours() + now.getMinutes() / 60;
-    if (currentHour >= OFFICE_END) {
-      setOvertimePending(true);
-    }
-
-    setPunchedIn(false);
-    setPunchTime(null);
-    setLocationName(null);
-    setWorkSeconds(0);
-    setDistanceMeters(null);
-    setOvertimePending(false);
-
-    localStorage.removeItem("employee-punch-state");
+    await executePunchOut();
   };
 
-  // ── Format time ──────────────────────────────────────────
+  const executePunchOut = async () => {
+    await punchOutAction(userId, todayStr);
+
+    setPunchedIn(false);
+    setPunchOutTime(new Date().toISOString());
+    setWorkSeconds(0);
+    setDistanceMeters(null);
+    localStorage.removeItem(punchStateKey(userId));
+
+    window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-out", userId } }));
+  };
+
+  // ── Submit early leave request ────────────────────────────
+  const submitEarlyLeaveRequest = async () => {
+    if (!earlyLeaveReason.trim()) return;
+    setSubmittingApproval(true);
+
+    try {
+      // Create an early departure notification to HR (not a full leave request since there's no leave type)
+      // This sends an approval request that HR and CEO need to review
+      await fetch("/api/hrm/v2/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send_to_role",
+          role: "hr_admin",
+          title: "Early Departure Approval Required",
+          body: `${user?.name || user?.email} requests early punch-out at ${new Date().toLocaleTimeString()}. Reason: ${earlyLeaveReason}. Requires CEO approval.`,
+          type: "approval",
+          referenceType: "early_departure",
+          referenceId: userId,
+        }),
+      });
+
+      // Also send notification to HR
+      await fetch("/api/hrm/v2/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send",
+          userId: userId,
+          title: "Early Departure Request",
+          body: `${user?.name || user?.email} requested early punch-out. Reason: ${earlyLeaveReason}`,
+          type: "approval",
+        }),
+      });
+
+      // Still allow the punch-out
+      await executePunchOut();
+      setShowEarlyLeaveModal(false);
+      setEarlyLeaveReason("");
+      setSuccessMsg("Early departure request sent to HR for approval.");
+    } catch {
+      // Still punch out even if notification fails
+      await executePunchOut();
+      setShowEarlyLeaveModal(false);
+      setEarlyLeaveReason("");
+    }
+
+    setSubmittingApproval(false);
+  };
+
+  // ── Helpers ──────────────────────────────────────────────
   const formatTime = (totalSecs: number) => {
     const hrs = Math.floor(totalSecs / 3600);
     const mins = Math.floor((totalSecs % 3600) / 60);
     const secs = totalSecs % 60;
     return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const formatHour = (h: number) => {
+    const hrs = Math.floor(h);
+    const mins = Math.round((h - hrs) * 60);
+    const ampm = hrs >= 12 ? "PM" : "AM";
+    const displayHr = hrs > 12 ? hrs - 12 : hrs === 0 ? 12 : hrs;
+    return `${displayHr}:${mins.toString().padStart(2, "0")} ${ampm}`;
   };
 
   return (
@@ -362,7 +398,10 @@ export function AttendancePunchCard() {
             <Clock className="h-5 w-5 text-primary animate-pulse" /> Daily Attendance &amp; Shift Punch
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Office: <strong>10:00 AM – 7:00 PM</strong> · Lunch: <strong>2:00 – 2:30 PM</strong> · Late after 10:30 AM
+            Office: <strong>{formatHour(officeRules.officeStart)} – {formatHour(officeRules.officeEnd)}</strong> · Late after <strong>{formatHour(officeRules.lateAfter)}</strong>
+          </p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+            Work days: {officeRules.workDays.map(d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d]).join(", ")}
           </p>
         </div>
         {distanceMeters !== null && punchedIn && (
@@ -380,11 +419,11 @@ export function AttendancePunchCard() {
         </div>
       )}
 
-      {/* Overtime pending notice */}
-      {overtimePending && punchedIn && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 p-3 text-xs text-yellow-600 dark:text-yellow-400">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>Overtime detected (past 7:00 PM). This will require Manager approval for payment.</span>
+      {/* Success message */}
+      {successMsg && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3 text-xs text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>{successMsg}</span>
         </div>
       )}
 
@@ -392,18 +431,24 @@ export function AttendancePunchCard() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-5 rounded-xl bg-slate-50 dark:bg-black/40 border border-gray-200 dark:border-white/5">
         <div>
           <span className="text-xs text-slate-500 dark:text-slate-400 block mb-1">
-            {punchedIn ? "Punched In at:" : "Status:"}
+            {punchedIn && !punchOutTime ? "Punched In at:" : punchOutTime ? "Punched Out at:" : "Status:"}
           </span>
           <p className="text-base font-bold text-slate-900 dark:text-white">
             {punchedIn && punchTime
               ? new Date(punchTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
               : "Not Punched In Today"}
           </p>
+          {punchOutTime && (
+            <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+              Out: {new Date(punchOutTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </p>
+          )}
           {punchedIn && (
             <div className="mt-2 space-y-1">
               <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${
                 statusLabel === "LATE" ? "text-yellow-600 dark:text-yellow-400" :
                 statusLabel === "HALF_DAY" ? "text-orange-600 dark:text-orange-400" :
+                statusLabel === "WEEK_OFF" ? "text-blue-600 dark:text-blue-400" :
                 "text-emerald-600 dark:text-emerald-400"
               }`}>
                 <CheckCircle2 className="h-4 w-4" /> Status: {statusLabel}
@@ -440,11 +485,13 @@ export function AttendancePunchCard() {
                   <Navigation className="h-4 w-4 animate-spin" /> Validating Geofence...
                 </span>
               ) : (
-                <span className="flex items-center gap-2">
-                  📍 Punch In
-                </span>
+                <span className="flex items-center gap-2">📍 Punch In</span>
               )}
             </Button>
+          ) : punchOutTime ? (
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10">
+              ✓ Shift Complete
+            </span>
           ) : (
             <Button onClick={handlePunchOut} variant="danger" className="font-bold gap-2 px-6 h-11 text-sm">
               <LogOut className="h-4 w-4" /> Punch Out
@@ -456,8 +503,44 @@ export function AttendancePunchCard() {
       {/* Geofence notice */}
       {!punchedIn && !errorMsg && (
         <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center flex items-center justify-center gap-1">
-          <MapPin className="h-3 w-3" /> Punch in requires GPS location within 100m of the office (Haversine geofence)
+          <MapPin className="h-3 w-3" /> Punch in requires GPS location within {DEFAULT_OFFICE.radius}m of the office
         </p>
+      )}
+
+      {/* ═══ Early Leave Approval Modal ═══ */}
+      {showEarlyLeaveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#0B0F19] rounded-2xl border border-gray-200 dark:border-white/10 p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" /> Early Departure Request
+              </h3>
+              <button onClick={() => setShowEarlyLeaveModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              You are punching out before the office end time ({formatHour(officeRules.officeEnd)}). This will be sent to HR for approval and requires CEO sign-off.
+            </p>
+            <textarea
+              placeholder="Reason for early departure..."
+              value={earlyLeaveReason}
+              onChange={(e) => setEarlyLeaveReason(e.target.value)}
+              rows={3}
+              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEarlyLeaveModal(false)} className="text-xs">Cancel</Button>
+              <Button
+                onClick={submitEarlyLeaveRequest}
+                disabled={submittingApproval || !earlyLeaveReason.trim()}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-1"
+              >
+                {submittingApproval ? "Submitting..." : <><Send className="h-3 w-3" /> Submit & Punch Out</>}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

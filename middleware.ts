@@ -39,6 +39,8 @@ const protectedHrmsRoutes = [
   "/hrms/exit",
   "/hrms/engage",
   "/hrms/analytics",
+  "/hrms/reports",
+  "/hrms/access-denied",
 ];
 
 // ── Role-gated route prefixes ─────────────────────────────
@@ -76,8 +78,9 @@ export function middleware(request: NextRequest) {
   // ════════════════════════════════════════════════════════════
   // 2. HRMS PORTAL
   // ════════════════════════════════════════════════════════════
-  const hasHrmsSession = request.cookies.has("session");
+  const sessionCookie = request.cookies.get("session")?.value;
   const userRole = request.cookies.get("user_role")?.value || "";
+  const hasHrmsSession = Boolean(sessionCookie && userRole);
 
   // ── 2a. Unauthenticated → redirect to login ─────────────
   if (!hasHrmsSession) {
@@ -87,12 +90,17 @@ export function middleware(request: NextRequest) {
     if (isProtected) {
       const loginUrl = new URL("/hrms/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+      const res = NextResponse.redirect(loginUrl);
+      if (sessionCookie && !userRole) {
+        res.cookies.delete("session");
+        res.cookies.delete("user_role");
+      }
+      return res;
     }
   }
 
   // ── 2b. Authenticated user on auth routes → dashboard ───
-  if (hasHrmsSession) {
+  if (hasHrmsSession && userRole) {
     const isAuthRoute = hrmsAuthRoutes.some(
       (route) => pathname === route || pathname.startsWith(route + "/")
     );
@@ -102,21 +110,31 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ── 2c. /hrms root → role-specific dashboard ────────────
+  // ── 2c. /hrms root → role-specific dashboard or login ────
   if (pathname === "/hrms" || pathname === "/hrms/") {
     if (!hasHrmsSession) {
-      return NextResponse.redirect(new URL("/hrms/login", request.url));
+      const res = NextResponse.redirect(new URL("/hrms/login", request.url));
+      if (sessionCookie && !userRole) {
+        res.cookies.delete("session");
+        res.cookies.delete("user_role");
+      }
+      return res;
     }
     const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
     return NextResponse.redirect(new URL(dashboard, request.url));
   }
 
-  // ── 2d. /hrms/dashboard → role-specific dashboard ───────
+  // ── 2d. /hrms/dashboard → role-specific dashboard or login ──
   if (pathname === "/hrms/dashboard") {
     if (!hasHrmsSession) {
       const loginUrl = new URL("/hrms/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+      const res = NextResponse.redirect(loginUrl);
+      if (sessionCookie && !userRole) {
+        res.cookies.delete("session");
+        res.cookies.delete("user_role");
+      }
+      return res;
     }
     const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
     return NextResponse.redirect(new URL(dashboard, request.url));

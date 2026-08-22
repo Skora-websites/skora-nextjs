@@ -24,8 +24,8 @@ import {
   Lock,
   AlertCircle,
 } from "lucide-react";
-import { auth } from "@/lib/firebase";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+
+
 
 interface DocItem {
   id: string;
@@ -204,36 +204,17 @@ export default function EmployeeProfilePage() {
 
     setPasswordSaving(true);
     try {
-      const user_email = user?.email;
-      if (!user_email || !auth?.currentUser) {
-        setPasswordError("You must be logged in to change your password.");
-        return;
-      }
-
-      // Re-authenticate with current password
-      const credential = EmailAuthProvider.credential(user_email, currentPassword);
-      await reauthenticateWithCredential(auth.currentUser, credential);
-
-      // Update to new password
-      await updatePassword(auth.currentUser, newPassword);
-
-      setPasswordSuccess(true);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeout(() => setPasswordSuccess(false), 4000);
-    } catch (err: any) {
-      const code = err?.code;
-      if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-        setPasswordError("Current password is incorrect.");
-      } else if (code === "auth/weak-password") {
-        setPasswordError("New password is too weak.");
-      } else {
-        setPasswordError(err?.message || "Failed to update password. Please try again.");
-      }
-    } finally {
-      setPasswordSaving(false);
-    }
+      if (!user?.id) { setPasswordError("Not logged in"); return; }
+      const res = await fetch("/api/hrm/v2/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, action: "change-password", currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (res.ok) { setPasswordSuccess(true); setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); setTimeout(() => setPasswordSuccess(false), 4000); }
+      else { setPasswordError(data.error || "Failed"); }
+    } catch (err: any) { setPasswordError(err?.message || "Failed"); }
+    setPasswordSaving(false);
   };
 
   // Trigger File Picker Directly
