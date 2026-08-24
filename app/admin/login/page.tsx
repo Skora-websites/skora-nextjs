@@ -8,7 +8,7 @@ import { loginAdminAction } from "@/lib/actions/admin-auth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await loginAdminAction(username, password);
+      const res = await loginAdminAction(email, password);
       if (!res.success) {
         setError(res.error || "Authentication failed.");
         setLoading(false);
@@ -80,16 +80,16 @@ export default function AdminLoginPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-600 block">
-                Username
+                Email
               </label>
               <div className="relative">
                 <User size={18} className="absolute left-3.5 top-3.5 text-slate-400" />
                 <input
                   type="text"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
                   className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl pl-10 pr-4 py-3 text-sm text-[#0B1310] focus:outline-none focus:border-[#2563EB] transition-colors font-mono"
                 />
               </div>

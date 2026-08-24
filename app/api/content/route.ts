@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSiteContent, updateSiteContent, updateAdminPassword } from "@/lib/db";
+import { getSiteContent, updateSiteContent } from "@/lib/db";
 import { isSubmittedAdminAuthenticated } from "@/lib/auth";
 
 export async function GET() {
   try {
     const content = await getSiteContent();
     // Omit sensitive password hash in public responses
-    const { adminPasswordHash, adminUsername, ...publicContent } = content;
+    const { ...publicContent } = content;
     return NextResponse.json({ success: true, content: publicContent });
   } catch (error) {
     return NextResponse.json({ error: "Failed to load content" }, { status: 500 });
@@ -23,23 +23,18 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { phone, email, healthcareEmail, address, responseGuarantee, packages, services, textOverrides, newUsername, newPassword } = body;
 
-    if (newPassword && newPassword.trim().length > 0) {
-      await updateAdminPassword(newPassword.trim());
-    }
-
     const updated = await updateSiteContent({
       ...(phone ? { phone } : {}),
       ...(email ? { email } : {}),
       ...(healthcareEmail ? { healthcareEmail } : {}),
       ...(address ? { address } : {}),
       ...(responseGuarantee ? { responseGuarantee } : {}),
-      ...(newUsername ? { adminUsername: newUsername.trim() } : {}),
       ...(packages ? { packages } : {}),
       ...(services ? { services } : {}),
       ...(textOverrides ? { textOverrides } : {}),
     });
 
-    const { adminPasswordHash, ...cleanContent } = updated;
+    const { ...cleanContent } = updated;
     return NextResponse.json({ success: true, content: cleanContent });
   } catch (error) {
     return NextResponse.json({ error: "Failed to update content" }, { status: 500 });
