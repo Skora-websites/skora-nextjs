@@ -23,16 +23,15 @@ export async function POST(request: Request) {
 
     const user = await db.collection("users").findOne({
       email: username.toLowerCase(),
-      tenantId: "default",
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+      return NextResponse.json({ error: "Invalid credentials. No account found with this email." }, { status: 401 });
     }
 
     const role = (user.role || "").toLowerCase();
     if (role !== "super_admin" && role !== "hr_admin") {
-      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+      return NextResponse.json({ error: `Access denied. Your role is '${role}'. Only super_admin and hr_admin can access the admin portal.` }, { status: 403 });
     }
 
     if (user.loginStatus === "disabled") {
@@ -41,7 +40,7 @@ export async function POST(request: Request) {
 
     const passwordHash = user.passwordHash;
     if (!passwordHash) {
-      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+      return NextResponse.json({ error: "Invalid credentials. Account has no password set." }, { status: 401 });
     }
 
     const isValid = await bcrypt.compare(password, passwordHash);

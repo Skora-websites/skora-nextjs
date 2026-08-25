@@ -23,22 +23,22 @@ export async function loginAdminAction(usernameInput: string, passwordInput: str
       return { success: false, error: "Database not available. Please try again." };
     }
 
-    // Look up user by email (username field = email in MongoDB)
+    // Look up user by email — don't filter by tenantId since HRMS login doesn't either
     const user = await db.collection("users").findOne({
       email: username.toLowerCase(),
-      tenantId: "default",
     });
 
     if (!user) {
       console.warn(`[Admin Auth] Login failed — no user found for '${username}'`);
-      return { success: false, error: "Invalid credentials." };
+      console.warn(`[Admin Auth] All users in DB:`, await db.collection("users").countDocuments(), "total");
+      return { success: false, error: "Invalid credentials. No account found with this email." };
     }
 
     // Only allow super_admin or hr_admin to access admin portal
     const role = (user.role || "").toLowerCase();
     if (role !== "super_admin" && role !== "hr_admin") {
       console.warn(`[Admin Auth] Login failed — user '${username}' has role '${role}', not admin`);
-      return { success: false, error: "Invalid credentials." };
+      return { success: false, error: `Access denied. Your role is '${role}'. Only super_admin and hr_admin can access the admin portal.` };
     }
 
     // Check if account is active
@@ -49,8 +49,8 @@ export async function loginAdminAction(usernameInput: string, passwordInput: str
     // Verify password with bcrypt (same as HRMS portal)
     const passwordHash = user.passwordHash;
     if (!passwordHash) {
-      console.warn(`[Admin Auth] Login failed — user '${username}' has no password hash`);
-      return { success: false, error: "Invalid credentials." };
+      console.warn(`[Admin Auth] Login failed — user '${username}' has no password hash. Has fields:`, Object.keys(user).join(", "));
+      return { success: false, error: "Invalid credentials. Account has no password set." };
     }
 
     const isValid = await bcrypt.compare(password, passwordHash);
