@@ -4,6 +4,15 @@ import { ObjectId } from "mongodb";
 export type AttendanceStatus = "PRESENT" | "LATE" | "HALF_DAY" | "ABSENT";
 export type AUXState = "active" | "on_break" | "meeting";
 
+
+export interface LocationEntry {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  timestamp: string;
+  distanceFromOffice?: number;
+}
+
 export interface AUXEntry {
   state: AUXState;
   startTime: string;
@@ -29,6 +38,8 @@ export interface AttendanceRecord {
   auxHistory?: AUXEntry[];
   totalBreakMinutes?: number;
   effectiveWorkMinutes?: number;
+  locationHistory?: LocationEntry[];
+  currentLocation?: { latitude: number; longitude: number; accuracy: number; timestamp: string };
 }
 
 export function calculateAttendanceStatus(punchInDate: Date): AttendanceStatus {
@@ -177,4 +188,84 @@ export async function recordPunchOut(userId: string, dateStr: string): Promise<b
     { $set: { punchOutTime: nowISO, workHours, auxState: "active", auxHistory: history, totalBreakMinutes, effectiveWorkMinutes } }
   );
   return res.modifiedCount > 0;
+}
+
+/**
+ * Update the live GPS location for a currently punched-in employee.
+ * Pushes to locationHistory and updates currentLocation.
+ */
+export async function updateAttendanceLocation(
+  userId: string,
+  dateStr: string,
+  latitude: number,
+  longitude: number,
+  accuracy: number,
+  distanceFromOffice?: number
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const record = await db.collection("attendance").findOne({ userId, date: dateStr });
+  if (!record || record.punchOutTime) return false;
+
+  const nowISO = new Date().toISOString();
+  const entry: LocationEntry = { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice };
+
+  // Push to history and update current location
+  await db.collection("attendance").updateOne(
+    { _id: record._id },
+    {
+      $push: { locationHistory: entry } as any,
+      $set: {
+        currentLocation: { latitude, longitude, accuracy, timestamp: nowISO },
+      },
+    }
+  );
+  return true;
+}
+
+/**
+ * Get live locations for all currently punched-in employees.
+ * Returns latest position for each active attendance record today.
+ */
+export async function getLiveEmployeeLocations(tenantId?: string): Promise<Array<{
+  userId: string;
+  userName: string;
+  userEmail: string;
+  employeeCode?: string;
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  timestamp: string;
+  distanceFromOffice?: number;
+  auxState?: AUXState;
+}>> {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  const todayStr = now.getFullYear() + "-" +
+    String(now.getMonth() + 1).padStart(2, "0") + "-" +
+    String(now.getDate()).padStart(2, "0");
+
+  const query: Record<string, unknown> = {
+    date: todayStr,
+    punchOutTime: { $exists: false },
+    currentLocation: { $exists: true },
+  };
+  if (tenantId) query.tenantId = tenantId;
+
+  const records = await db.collection("attendance").find(query).toArray();
+  return records
+    .filter((r: any) => r.currentLocation)
+    .map((r: any) => ({
+      userId: r.userId,
+      userName: r.userName,
+      userEmail: r.userEmail,
+      employeeCode: r.employeeCode,
+      latitude: r.currentLocation.latitude,
+      longitude: r.currentLocation.longitude,
+      accuracy: r.currentLocation.accuracy,
+      timestamp: r.currentLocation.timestamp,
+      distanceFromOffice: r.currentLocation.distanceFromOffice,
+      auxState: r.auxState,
+    }));
 }

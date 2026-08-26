@@ -10,8 +10,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return badRequest("Email and password are required");
   }
 
-  // Authenticate against MongoDB
-  const user = await signInWithMongo(email, password);
+  // Authenticate against MongoDB — catch auth errors and return 401
+  let user;
+  try {
+    user = await signInWithMongo(email, password);
+  } catch (authError: any) {
+    const msg = authError?.message || "Invalid credentials";
+    return NextResponse.json(
+      { error: msg },
+      { status: 401 }
+    );
+  }
 
   // Create session in MongoDB
   const sessionToken = await createSession(user.id);

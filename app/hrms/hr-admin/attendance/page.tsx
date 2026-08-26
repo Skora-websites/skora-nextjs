@@ -63,8 +63,9 @@ export default function HrAdminAttendancePage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterDept, setFilterDept] = useState("all");
-  const [activeView, setActiveView] = useState<"roster" | "punched" | "calendar">("roster");
+  const [activeView, setActiveView] = useState<"roster" | "punched" | "calendar" | "live">("roster");
 
+  const [liveLocations, setLiveLocations] = useState<any[]>([]);
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
   const isToday = selectedDate === todayStr;
 
@@ -117,6 +118,23 @@ export default function HrAdminAttendancePage() {
     };
   }, [loadData]);
 
+
+  // ── Fetch live employee locations ────────────────────────
+  useEffect(() => {
+    if (activeView !== "live") return;
+    const fetchLive = async () => {
+      try {
+        const res = await fetch("/api/hrm/v2/attendance/location");
+        if (res.ok) {
+          const data = await res.json();
+          setLiveLocations(Array.isArray(data.data) ? data.data : []);
+        }
+      } catch { /* retry next interval */ }
+    };
+    fetchLive();
+    const interval = setInterval(fetchLive, 15000);
+    return () => clearInterval(interval);
+  }, [activeView]);
   // ── Quick Date Navigators ──────────────────────────────────
   const setQuickDate = (dateVal: string) => {
     setSelectedDate(dateVal);
@@ -655,6 +673,63 @@ export default function HrAdminAttendancePage() {
                 );
               })}
             </div>
+          </div>
+
+        )}
+        {activeView === "live" && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-blue-500" /> Live Employee Locations
+              </h3>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Updates every 15s · {liveLocations.length} employee(s) tracked
+              </span>
+            </div>
+            {liveLocations.length === 0 ? (
+              <div className="text-center py-12 rounded-xl bg-slate-50 dark:bg-black/40 border border-gray-200 dark:border-white/5">
+                <MapPin className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No employees are currently tracked</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Employees will appear here after punching in with GPS tracking enabled</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {liveLocations.map((loc) => {
+                  const secondsAgo = Math.round((Date.now() - new Date(loc.timestamp).getTime()) / 1000);
+                  const isStale = secondsAgo > 120;
+                  return (
+                    <div key={loc.userId} className={
+                      "p-4 rounded-xl border bg-white dark:bg-[#0B0F19] dark:border-white/10 space-y-2 " +
+                      (isStale ? "border-amber-300 dark:border-amber-500/30" : "border-gray-100 dark:border-white/5")
+                    }>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{loc.userName}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">{loc.employeeCode || "—"} · {loc.userEmail}</p>
+                        </div>
+                        <span className={
+                          "w-2.5 h-2.5 rounded-full " + (isStale ? "bg-amber-400 animate-pulse" : "bg-emerald-500 animate-pulse")
+                        } />
+                      </div>
+                      <div className="text-xs space-y-1 text-slate-600 dark:text-slate-400">
+                        <p className="flex items-center gap-1.5"><MapPin className="h-3 w-3 text-blue-500" /> {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}</p>
+                        <p>Accuracy: ±{Math.round(loc.accuracy)}m {loc.distanceFromOffice !== undefined ? "· " + loc.distanceFromOffice + "m from office" : ""}</p>
+                        <p className={isStale ? "text-amber-500" : "text-emerald-500"}>
+                          {isStale ? "Last update: " + secondsAgo + "s ago" : "Live · " + secondsAgo + "s ago"}
+                        </p>
+                      </div>
+                      <span className={"inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full " +
+                        (loc.auxState === "meeting" ? "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300" :
+                         loc.auxState === "on_break" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300" :
+                         "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300")}
+                      >
+                        {loc.auxState === "meeting" ? "In Meeting" : loc.auxState === "on_break" ? "On Break" : "Active"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -40,7 +40,6 @@ const protectedHrmsRoutes = [
   "/hrms/engage",
   "/hrms/analytics",
   "/hrms/reports",
-  "/hrms/access-denied",
 ];
 
 // ── Role-gated route prefixes ─────────────────────────────

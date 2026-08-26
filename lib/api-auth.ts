@@ -5,6 +5,13 @@ import { getDb } from "@/lib/db/mongo-helper";
 import { normalizeRole, hasPermission, type PermissionKey } from "@/lib/rbac";
 import { ObjectId } from "mongodb";
 
+/** getDb with a 5s timeout to prevent hanging when MongoDB is unreachable */
+async function getDbWithTimeout() {
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+  const dbPromise = getDb();
+  return Promise.race([dbPromise, timeout]);
+}
+
 // ── Types ───────────────────────────────────────────────
 
 export interface AuthenticatedRequest {
@@ -34,7 +41,7 @@ async function verifySession(): Promise<{
   if (!sessionToken) return null;
 
   try {
-    const db = await getDb();
+    const db = await getDbWithTimeout();
     if (!db) return null;
 
     // Find session in MongoDB

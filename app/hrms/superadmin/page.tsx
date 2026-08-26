@@ -76,6 +76,38 @@ interface EscalationRecord {
   status: string;
 }
 
+interface LiveStatusEmployee {
+  userId: string;
+  name: string;
+  email: string;
+  employeeCode: string;
+  department: string;
+  designation: string;
+  role: string;
+  status: string; // punched_in | punched_out | absent
+  auxState: string | null; // active | on_break | meeting | null
+  punchInTime: string | null;
+  punchOutTime: string | null;
+  effectiveWorkMinutes: number;
+  totalBreakMinutes: number;
+  workHours: number;
+  totalElapsedMinutes: number;
+  currentLocation: any;
+  auxSince: string | null;
+  location: string | null;
+  status_label: string;
+}
+
+interface LiveStatusSummary {
+  totalEmployees: number;
+  punchedIn: number;
+  onBreak: number;
+  inMeeting: number;
+  active: number;
+  punchedOut: number;
+  absent: number;
+}
+
 interface LeaveRequest {
   id: string;
   employeeName: string;
@@ -133,6 +165,12 @@ export default function SuperadminOverviewPage() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   });
 
+  // Live Operations Dashboard
+  const [liveEmployees, setLiveEmployees] = useState<LiveStatusEmployee[]>([]);
+  const [liveSummary, setLiveSummary] = useState<LiveStatusSummary | null>(null);
+  const [liveSearch, setLiveSearch] = useState("");
+  const [liveFilter, setLiveFilter] = useState<"all" | "punched_in" | "on_break" | "in_meeting" | "active" | "punched_out" | "absent">("all");
+
   useEffect(() => {
     loadData();
 
@@ -154,8 +192,7 @@ export default function SuperadminOverviewPage() {
 
   const loadData = async (isSilent = false) => {
     if (!isSilent) setLoading(true);
-    try {
-      const [empRes, attRes, escRes, leaveRes, projRes, hrRes, mgrRes] =
+    try {        const [empRes, attRes, escRes, leaveRes, projRes, hrRes, mgrRes, liveRes] =
         await Promise.allSettled([
           fetch("/api/hrm/v2/users?action=list").then((r) => (r.ok ? r.json() : null)),
           fetch("/api/hrm/v2/attendance").then((r) => (r.ok ? r.json() : null)),
@@ -164,6 +201,7 @@ export default function SuperadminOverviewPage() {
           fetch("/api/hrm/v2/projects").then((r) => (r.ok ? r.json() : null)),
           fetch("/api/hrm/v2/users?action=list&role=hr_admin").then((r) => (r.ok ? r.json() : null)),
           fetch("/api/hrm/v2/users?action=list&role=manager").then((r) => (r.ok ? r.json() : null)),
+          fetch("/api/hrm/v2/attendance/live-status").then((r) => (r.ok ? r.json() : null)),
         ]);
 
       if (empRes.status === "fulfilled" && empRes.value) {
@@ -196,6 +234,10 @@ export default function SuperadminOverviewPage() {
       if (mgrRes.status === "fulfilled" && mgrRes.value) {
         const d = mgrRes.value.data;
         setManagers(Array.isArray(d) ? d : []);
+      }
+      if (liveRes.status === "fulfilled" && liveRes.value) {
+        setLiveEmployees(Array.isArray(liveRes.value.data) ? liveRes.value.data : []);
+        if (liveRes.value.summary) setLiveSummary(liveRes.value.summary);
       }
     } catch {
       // use empty state
@@ -400,6 +442,240 @@ export default function SuperadminOverviewPage() {
           label="Audit Logs"
           color="orange"
         />
+      </div>
+
+      {/* ═══ LIVE OPERATIONS DASHBOARD ═══ */}
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-white/10">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-blue-500 animate-pulse" />
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Live Operations Dashboard</h2>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                Real-time AUX status · Effective hours · Punch times · Auto-refreshes every 10s
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-200 dark:border-white/10">
+              {([
+                ["all", "All"],
+                ["punched_in", "Punched In"],
+                ["on_break", "On Break"],
+                ["in_meeting", "In Meeting"],
+                ["active", "Active"],
+                ["punched_out", "Punched Out"],
+                ["absent", "Absent"],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setLiveFilter(key)}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${
+                    liveFilter === key
+                      ? "bg-white dark:bg-primary text-slate-900 dark:text-white shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={liveSearch}
+                onChange={(e) => setLiveSearch(e.target.value)}
+                className="w-32 pl-7 pr-2 py-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        {liveSummary && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+            <div className="text-center p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+              <p className="text-lg font-extrabold text-blue-600 dark:text-blue-400">{liveSummary.punchedIn}</p>
+              <p className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">Punched In</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+              <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{liveSummary.active}</p>
+              <p className="text-[10px] text-emerald-500 dark:text-emerald-400 font-medium">Active</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+              <p className="text-lg font-extrabold text-amber-600 dark:text-amber-400">{liveSummary.onBreak}</p>
+              <p className="text-[10px] text-amber-500 dark:text-amber-400 font-medium">On Break</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20">
+              <p className="text-lg font-extrabold text-purple-600 dark:text-purple-400">{liveSummary.inMeeting}</p>
+              <p className="text-[10px] text-purple-500 dark:text-purple-400 font-medium">In Meeting</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+              <p className="text-lg font-extrabold text-slate-600 dark:text-slate-400">{liveSummary.punchedOut}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Punched Out</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+              <p className="text-lg font-extrabold text-red-600 dark:text-red-400">{liveSummary.absent}</p>
+              <p className="text-[10px] text-red-500 dark:text-red-400 font-medium">Absent</p>
+            </div>
+          </div>
+        )}
+
+        {/* Live Employee Cards */}
+        <div className="space-y-2">
+          {liveEmployees
+            .filter((emp) => {
+              if (liveFilter === "punched_in") return emp.status === "punched_in";
+              if (liveFilter === "on_break") return emp.status === "punched_in" && emp.auxState === "on_break";
+              if (liveFilter === "in_meeting") return emp.status === "punched_in" && emp.auxState === "meeting";
+              if (liveFilter === "active") return emp.status === "punched_in" && emp.auxState === "active";
+              if (liveFilter === "punched_out") return emp.status === "punched_out";
+              if (liveFilter === "absent") return emp.status === "absent";
+              return true;
+            })
+            .filter((emp) => {
+              if (!liveSearch) return true;
+              const q = liveSearch.toLowerCase();
+              return (
+                emp.name.toLowerCase().includes(q) ||
+                emp.email.toLowerCase().includes(q) ||
+                emp.employeeCode.toLowerCase().includes(q) ||
+                emp.department.toLowerCase().includes(q)
+              );
+            })
+            .map((emp) => {
+              const auxColor =
+                emp.auxState === "on_break"
+                  ? "amber"
+                  : emp.auxState === "meeting"
+                  ? "purple"
+                  : "emerald";
+              const auxLabel =
+                emp.auxState === "on_break"
+                  ? "On Break"
+                  : emp.auxState === "meeting"
+                  ? "In Meeting"
+                  : emp.auxState === "active"
+                  ? "Active"
+                  : "—";
+              const statusColor =
+                emp.status === "punched_in"
+                  ? "emerald"
+                  : emp.status === "punched_out"
+                  ? "slate"
+                  : "red";
+
+              return (
+                <div
+                  key={emp.userId}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-all ${
+                    emp.status === "punched_in"
+                      ? "bg-white dark:bg-black/30 border-gray-100 dark:border-white/5 hover:shadow-md"
+                      : emp.status === "punched_out"
+                      ? "bg-slate-50 dark:bg-black/20 border-gray-100 dark:border-white/5 opacity-70"
+                      : "bg-red-50/50 dark:bg-red-500/5 border-red-100 dark:border-red-500/10"
+                  }`}
+                >
+                  {/* Employee Info */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${
+                      statusColor === "emerald" ? "bg-emerald-500" : statusColor === "slate" ? "bg-slate-400" : "bg-red-400"
+                    }`}>
+                      {emp.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white truncate">{emp.name}</span>
+                        <span className="font-mono text-[10px] text-primary font-bold">{emp.employeeCode}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        {emp.department} · {emp.designation}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status & AUX */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {emp.status === "punched_in" && (
+                      <>
+                        {/* AUX Badge */}
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                          auxColor === "amber"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30"
+                            : auxColor === "purple"
+                            ? "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30"
+                        }`}>
+                          {auxLabel}
+                        </span>
+
+                        {/* Effective Hours */}
+                        <div className="text-center min-w-[70px]">
+                          <p className="text-sm font-extrabold text-slate-900 dark:text-white font-mono">
+                            {Math.floor(emp.effectiveWorkMinutes / 60)}h {emp.effectiveWorkMinutes % 60}m
+                          </p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500">Work</p>
+                        </div>
+
+                        {/* Break */}
+                        {emp.totalBreakMinutes > 0 && (
+                          <div className="text-center min-w-[60px]">
+                            <p className="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">
+                              {emp.totalBreakMinutes}m
+                            </p>
+                            <p className="text-[9px] text-slate-400 dark:text-slate-500">Break</p>
+                          </div>
+                        )}
+
+                        {/* Punch-in time */}
+                        <div className="text-center min-w-[70px]">
+                          <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                            {emp.punchInTime ? new Date(emp.punchInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500">Punch In</p>
+                        </div>
+                      </>
+                    )}
+
+                    {emp.status === "punched_out" && (
+                      <>
+                        <div className="text-center min-w-[70px]">
+                          <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                            {emp.punchInTime ? new Date(emp.punchInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500">In</p>
+                        </div>
+                        <div className="text-center min-w-[70px]">
+                          <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                            {emp.punchOutTime ? new Date(emp.punchOutTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500">Out</p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400 border border-slate-200 dark:border-slate-500/30">
+                          {emp.workHours}h logged
+                        </span>
+                      </>
+                    )}
+
+                    {emp.status === "absent" && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30">
+                        Not Punched In
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+          {liveEmployees.length === 0 && (
+            <div className="text-center py-12 text-slate-400 dark:text-slate-500">
+              <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-xs font-medium">No attendance data available yet</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ═══ EMPLOYEE DIRECTORY ═══ */}

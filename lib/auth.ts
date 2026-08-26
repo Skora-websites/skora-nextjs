@@ -2,6 +2,13 @@ import "server-only";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getDb } from "./db/mongo-helper";
+
+/** getDb with a 5s timeout so requests don't hang forever if MongoDB is unreachable */
+async function getDbWithTimeout(): Promise<Awaited<ReturnType<typeof getDb>>> {
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+  const dbPromise = getDb();
+  return Promise.race([dbPromise, timeout]);
+}
 import { normalizeRole } from "./rbac";
 import { ObjectId } from "mongodb";
 import crypto from "crypto";
@@ -44,7 +51,7 @@ export async function auth(): Promise<Session> {
   if (!sessionToken) return { user: null };
 
   try {
-    const db = await getDb();
+    const db = await getDbWithTimeout();
     if (!db) return { user: null };
 
     const session = await db.collection("sessions").findOne({
@@ -136,7 +143,7 @@ export async function signInWithMongo(
   email: string,
   password: string
 ): Promise<{ id: string; email: string; role: string; displayName: string }> {
-  const db = await getDb();
+  const db = await getDbWithTimeout();
   if (!db) throw new Error("Database not available");
 
   const user = await db.collection("users").findOne({ email: email.toLowerCase() });

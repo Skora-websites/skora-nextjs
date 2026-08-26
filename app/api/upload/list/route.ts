@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     if (!client) {
       return NextResponse.json({ success: true, documents: [] });
     }
-    const db = client.db("skora_db");
+    const db = client.db("hrms");
     const docs = await db.collection("onboarding_documents").find({}).sort({ uploadedAt: -1 }).toArray();
     return NextResponse.json({ success: true, documents: docs });
   } catch (err: any) {

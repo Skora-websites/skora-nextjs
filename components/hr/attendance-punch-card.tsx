@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Clock,
   MapPin,
@@ -11,10 +11,13 @@ import {
   AlertTriangle,
   Send,
   X,
+  Zap,
+  Coffee,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
-import { punchInAction, punchOutAction } from "@/lib/actions/attendance-actions";
+import { punchInAction, punchOutAction, updateAUXStateAction } from "@/lib/actions/attendance-actions";
 import { isWithinGeofence } from "@/lib/geofencing";
 
 // ── Office config (fetched from tenant) ────────────────────
@@ -67,6 +70,21 @@ export function AttendancePunchCard() {
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
   const [officeRules, setOfficeRules] = useState<OfficeRules>(DEFAULT_RULES);
 
+  // Live GPS tracking state
+  const [gpsTrackingActive, setGpsTrackingActive] = useState(false);
+  const [lastGpsUpdate, setLastGpsUpdate] = useState<string | null>(null);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // AUX state (Active / On Break / Meeting)
+  const [auxState, setAuxState] = useState<"active" | "on_break" | "meeting">("active");
+  const [auxSwitching, setAuxSwitching] = useState(false);
+  const [auxSince, setAuxSince] = useState<string | null>(null);
+  const auxPeriodsRef = useRef<Array<{ state: string; start: string; end?: string }>>([]);
+  const periodStartRef = useRef<string | null>(null);
+  const [totalElapsed, setTotalElapsed] = useState(0);
+
   // Early punch-out approval state
   const [showEarlyLeaveModal, setShowEarlyLeaveModal] = useState(false);
   const [earlyLeaveReason, setEarlyLeaveReason] = useState("");
@@ -107,31 +125,78 @@ export function AttendancePunchCard() {
     const storedState = localStorage.getItem(punchStateKey(userId));
     if (storedState) {
       try {
-        const parsed = JSON.parse(storedState);
-        if (parsed.punchedIn && parsed.date === todayStr) {
+        const parsed = JSON.parse(storedState);          if (parsed.punchedIn && parsed.date === todayStr) {
           setPunchedIn(true);
           setPunchTime(parsed.punchTime);
           setPunchOutTime(parsed.punchOutTime || null);
           setLocationName(parsed.locationName || "GPS Verified");
           setStatusLabel(parsed.statusLabel || "PRESENT");
           setDistanceMeters(parsed.distanceMeters || null);
+          if (parsed.auxState) setAuxState(parsed.auxState);
+          if (parsed.auxSince) setAuxSince(parsed.auxSince);
+          // Restore AUX periods from localStorage for accurate timer
+          if (parsed.auxPeriods && Array.isArray(parsed.auxPeriods)) {
+            auxPeriodsRef.current = parsed.auxPeriods;
+          } else {
+            // Build a single period from punch-in to now
+            auxPeriodsRef.current = [{ state: parsed.auxState || "active", start: parsed.punchTime }];
+          }
+          periodStartRef.current = parsed.auxSince || parsed.punchTime;
           if (!parsed.punchOutTime) {
-            const elapsed = Math.floor(
-              (Date.now() - new Date(parsed.punchTime).getTime()) / 1000
-            );
-            setWorkSeconds(elapsed > 0 ? elapsed : 0);
+            // Compute effective work seconds from AUX history
+            const periods = auxPeriodsRef.current;
+            let totalMs = 0;
+            const nowMs = Date.now();
+            for (const p of periods) {
+              if (p.state === "active" || p.state === "meeting") {
+                const startMs = new Date(p.start).getTime();
+                const endMs = p.end ? new Date(p.end).getTime() : nowMs;
+                totalMs += endMs - startMs;
+              }
+            }
+            setWorkSeconds(Math.max(0, Math.floor(totalMs / 1000)));
+            // Also compute total elapsed (wall clock)
+            const totalSecs = Math.floor((Date.now() - new Date(parsed.punchTime).getTime()) / 1000);
+            setTotalElapsed(totalSecs > 0 ? totalSecs : 0);
           }
         }
       } catch { /* ignore */ }
     }
   }, [userId, todayStr]);
 
-  // ── Timer ─────────────────────────────────────────────────
+  // ── Compute effective work seconds from AUX history ───────
+  const computeEffectiveWorkSeconds = useCallback(() => {
+    const periods = auxPeriodsRef.current;
+    if (!periods || periods.length === 0) return 0;
+    let totalMs = 0;
+    const nowMs = Date.now();
+    for (const p of periods) {
+      if (p.state === "active" || p.state === "meeting") {
+        const startMs = new Date(p.start).getTime();
+        const endMs = p.end ? new Date(p.end).getTime() : nowMs;
+        totalMs += endMs - startMs;
+      }
+    }
+    return Math.max(0, Math.floor(totalMs / 1000));
+  }, []);
+
+  // ── Timer — effective work ticks only during active/meeting ──
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (punchedIn && !punchOutTime && (auxState === "active" || auxState === "meeting")) {
+      interval = setInterval(() => {
+        setWorkSeconds(computeEffectiveWorkSeconds());
+      }, 1000);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [punchedIn, punchOutTime, auxState, computeEffectiveWorkSeconds]);
+
+  // ── Total elapsed timer (wall clock — always ticks) ────────
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (punchedIn && !punchOutTime) {
       interval = setInterval(() => {
-        setWorkSeconds((prev) => prev + 1);
+        setTotalElapsed((prev) => prev + 1);
       }, 1000);
     }
     return () => { if (interval) clearInterval(interval); };
@@ -170,6 +235,55 @@ export function AttendancePunchCard() {
     return "PRESENT";
   };
 
+  // ── Handle AUX state change ──────────────────────────────
+  const handleAUXChange = async (newState: "active" | "on_break" | "meeting") => {
+    if (auxSwitching || newState === auxState) return;
+    setAuxSwitching(true);
+    const nowISO = new Date().toISOString();
+    try {
+      const res = await updateAUXStateAction(userId, todayStr, newState);
+      if (res.success) {
+        // Finalize current period and start new one
+        const periods = auxPeriodsRef.current;
+        if (periods.length > 0 && !periods[periods.length - 1].end) {
+          periods[periods.length - 1].end = nowISO;
+        }
+        periods.push({ state: newState, start: nowISO });
+        periodStartRef.current = nowISO;
+
+        setAuxState(newState);
+        setAuxSince(nowISO);
+
+        // Recompute effective work seconds
+        setWorkSeconds(computeEffectiveWorkSeconds());
+
+        // Persist to localStorage
+        const stored = localStorage.getItem(punchStateKey(userId));
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.auxState = newState;
+          parsed.auxSince = nowISO;
+          parsed.auxPeriods = auxPeriodsRef.current;
+          localStorage.setItem(punchStateKey(userId), JSON.stringify(parsed));
+        }
+      } else {
+        setErrorMsg(res.error || "Failed to update AUX state");
+      }
+    } catch {
+      setErrorMsg("Failed to update AUX state. Please try again.");
+    }
+    setAuxSwitching(false);
+  };
+
+  // ── AUX elapsed time display ──────────────────────────────
+  const auxElapsed = (): string => {
+    if (!auxSince) return "";
+    const secs = Math.floor((Date.now() - new Date(auxSince).getTime()) / 1000);
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  };
+
   // ── Check if punch-out is early (before office end) ──────
   const isEarlyPunchOut = (): boolean => {
     const now = new Date();
@@ -177,10 +291,98 @@ export function AttendancePunchCard() {
     return currentHour < officeRules.officeEnd;
   };
 
+
+  const isLocalhost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '::1'
+  );
+
+  // Send location to server
+  const sendLocationUpdate = useCallback(async (lat: number, lng: number, acc: number) => {
+    try {
+      await fetch("/api/hrm/v2/attendance/location", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latitude: lat, longitude: lng, accuracy: acc }),
+      });
+      setLastGpsUpdate(new Date().toISOString());
+      setGpsAccuracy(acc);
+    } catch { /* retry next cycle */ }
+  }, []);
+
+  // Start continuous GPS tracking
+  const startGpsTracking = useCallback(() => {
+    if (isLocalhost) {
+      setGpsTrackingActive(true);
+      setLastGpsUpdate(new Date().toISOString());
+      setGpsAccuracy(5);
+      locationIntervalRef.current = setInterval(() => {
+        const mockLat = DEFAULT_OFFICE.latitude + (Math.random() - 0.5) * 0.0002;
+        const mockLng = DEFAULT_OFFICE.longitude + (Math.random() - 0.5) * 0.0002;
+        sendLocationUpdate(mockLat, mockLng, 5);
+      }, 30000);
+      return;
+    }
+    if (!navigator.geolocation) return;
+    setGpsTrackingActive(true);
+    setLastGpsUpdate(new Date().toISOString());
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        setGpsAccuracy(pos.coords.accuracy);
+        (window as any).__gpsLatestPosition = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy
+        };
+      },
+      (err) => { console.warn("GPS tracking error:", err.message); },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
+    locationIntervalRef.current = setInterval(() => {
+      const p = (window as any).__gpsLatestPosition;
+      if (p) sendLocationUpdate(p.latitude, p.longitude, p.accuracy);
+    }, 30000);
+  }, [isLocalhost, sendLocationUpdate]);
+
+  // Stop GPS tracking
+  const stopGpsTracking = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current);
+      locationIntervalRef.current = null;
+    }
+    setGpsTrackingActive(false);
+    setLastGpsUpdate(null);
+    setGpsAccuracy(null);
+    (window as any).__gpsLatestPosition = null;
+  }, []);
+  // Resume tracking if page reloads while punched in
+  useEffect(() => {
+    if (punchedIn && !punchOutTime && !gpsTrackingActive) {
+      startGpsTracking();
+    }
+  }, [punchedIn, punchOutTime, gpsTrackingActive]);
+
   // ── Handle Punch In ──────────────────────────────────────
+
   const handleMarkAttendance = () => {
     setErrorMsg(null);
     setLoadingLocation(true);
+
+    // In development (localhost), skip GPS verification
+    if (isLocalhost) {
+      const now = new Date();
+      const currentHour = now.getHours() + now.getMinutes() / 60;
+      const status = getAttendanceStatus(currentHour);
+      const isHalfDay = currentHour >= officeRules.halfDayAfter;
+      const locationStr = "GPS skipped (localhost development mode)";
+      setDistanceMeters(0);
+      executePunchIn(locationStr, isHalfDay ? "HALF_DAY" : status, isHalfDay);
+      return;
+    }
 
     if (!navigator.geolocation) {
       setLoadingLocation(false);
@@ -262,10 +464,16 @@ export function AttendancePunchCard() {
           JSON.stringify({
             punchedIn: true, date: todayStr, punchTime: res.record.punchInTime,
             locationName: res.record.location || locStr, statusLabel: res.record.status || finalStatus,
-            distanceMeters, synced: true,
+            distanceMeters, synced: true, auxState: "active", auxSince: res.record.punchInTime,
+            auxPeriods: [{ state: "active", start: res.record.punchInTime }],
           })
         );
+        auxPeriodsRef.current = [{ state: "active", start: res.record.punchInTime }];
+        periodStartRef.current = res.record.punchInTime;
+        setAuxState("active");
+        setAuxSince(res.record.punchInTime);
         window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in", record: res.record } }));
+        startGpsTracking();
       }
     } catch { /* server unavailable */ }
 
@@ -290,9 +498,14 @@ export function AttendancePunchCard() {
         JSON.stringify({
           punchedIn: true, date: todayStr, punchTime: now.toISOString(),
           locationName: locStr + " (Offline - pending sync)", statusLabel: finalStatus,
-          distanceMeters, synced: false,
+          distanceMeters, synced: false, auxState: "active", auxSince: now.toISOString(),
+          auxPeriods: [{ state: "active", start: now.toISOString() }],
         })
       );
+      auxPeriodsRef.current = [{ state: "active", start: now.toISOString() }];
+      periodStartRef.current = now.toISOString();
+      setAuxState("active");
+      setAuxSince(now.toISOString());
       window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in-local", record: localRecord } }));
       setErrorMsg("Database unavailable. Attendance saved locally and will sync when the server is back online.");
     }
@@ -312,12 +525,17 @@ export function AttendancePunchCard() {
   };
 
   const executePunchOut = async () => {
+    stopGpsTracking();
     await punchOutAction(userId, todayStr);
 
     setPunchedIn(false);
     setPunchOutTime(new Date().toISOString());
     setWorkSeconds(0);
     setDistanceMeters(null);
+    setAuxState("active");
+    setAuxSince(null);
+    auxPeriodsRef.current = [];
+    periodStartRef.current = null;
     localStorage.removeItem(punchStateKey(userId));
 
     window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-out", userId } }));
@@ -404,10 +622,21 @@ export function AttendancePunchCard() {
             Work days: {officeRules.workDays.map(d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d]).join(", ")}
           </p>
         </div>
-        {distanceMeters !== null && punchedIn && (
-          <span className="self-start sm:self-center flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-            <Navigation className="h-3.5 w-3.5" /> {distanceMeters}m from office
-          </span>
+        {punchedIn && !punchOutTime && (
+          <div className="self-start sm:self-center flex flex-col items-end gap-1.5">
+            {distanceMeters !== null && (
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                <Navigation className="h-3.5 w-3.5" /> {distanceMeters}m from office
+              </span>
+            )}
+            {gpsTrackingActive && (
+              <span className="flex items-center gap-1.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                GPS Tracking Active
+                {gpsAccuracy && <span className="text-blue-400">±{Math.round(gpsAccuracy)}m</span>}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -468,8 +697,16 @@ export function AttendancePunchCard() {
             {formatTime(workSeconds)}
           </span>
           <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-medium">
-            Elapsed Shift Hours
+            Effective Work Hours
           </span>
+          <span className="text-[9px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            Total elapsed: {formatTime(totalElapsed)}
+          </span>
+          {auxState === "on_break" && (
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block mt-1">
+              ⏸ Timer paused — on break
+            </span>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -503,8 +740,86 @@ export function AttendancePunchCard() {
       {/* Geofence notice */}
       {!punchedIn && !errorMsg && (
         <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center flex items-center justify-center gap-1">
-          <MapPin className="h-3 w-3" /> Punch in requires GPS location within {DEFAULT_OFFICE.radius}m of the office
+          <MapPin className="h-3 w-3" /> {isLocalhost ? "Development mode \u2014 GPS verification disabled" : `Punch in requires GPS location within ${DEFAULT_OFFICE.radius}m of the office`}
         </p>
+      )}
+
+      {/* ═══ AUX State Toggle (Active / On Break / Meeting) ═══ */}
+      {punchedIn && !punchOutTime && (
+        <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 dark:from-black/30 dark:to-blue-500/5 border border-gray-200 dark:border-white/10">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-primary" /> AUX Status
+            </span>
+            {auxSince && (
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                In {auxState === "active" ? "Active" : auxState === "on_break" ? "Break" : "Meeting"} for {auxElapsed()}
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleAUXChange("active")}
+              disabled={auxSwitching}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border
+                ${auxState === "active"
+                  ? "bg-emerald-500 text-white border-emerald-600 shadow-md shadow-emerald-500/20"
+                  : "bg-white dark:bg-black/40 text-slate-600 dark:text-slate-400 border-gray-200 dark:border-white/10 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30"
+                }`
+            }
+            >
+              <Zap className="h-3.5 w-3.5" /> Active
+            </button>
+            <button
+              onClick={() => handleAUXChange("on_break")}
+              disabled={auxSwitching}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border
+                ${auxState === "on_break"
+                  ? "bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/20"
+                  : "bg-white dark:bg-black/40 text-slate-600 dark:text-slate-400 border-gray-200 dark:border-white/10 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:border-amber-300 dark:hover:border-amber-500/30"
+                }`
+            }
+            >
+              <Coffee className="h-3.5 w-3.5" /> On Break
+            </button>
+            <button
+              onClick={() => handleAUXChange("meeting")}
+              disabled={auxSwitching}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border
+                ${auxState === "meeting"
+                  ? "bg-purple-500 text-white border-purple-600 shadow-md shadow-purple-500/20"
+                  : "bg-white dark:bg-black/40 text-slate-600 dark:text-slate-400 border-gray-200 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:border-purple-300 dark:hover:border-purple-500/30"
+                }`
+            }
+            >
+              <Users className="h-3.5 w-3.5" /> Meeting
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center">
+            {auxState === "active" && "Working — all logged hours count toward your shift."}
+            {auxState === "on_break" && "On break — timer paused. Extra break deducts from login hours."}
+            {auxState === "meeting" && "In meeting — counts as active work time."}
+          </p>
+          {/* Work / Break breakdown bar */}
+          {totalElapsed > 60 && (
+            <div className="mt-3">
+              <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+                <span>Work: {formatTime(workSeconds)}</span>
+                <span>Break: {formatTime(Math.max(0, totalElapsed - workSeconds))}</span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden flex">
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-500"
+                  style={{ width: `${totalElapsed > 0 ? (workSeconds / totalElapsed) * 100 : 0}%` }}
+                />
+                <div
+                  className="h-full bg-amber-400 transition-all duration-500"
+                  style={{ width: `${totalElapsed > 0 ? ((totalElapsed - workSeconds) / totalElapsed) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* ═══ Early Leave Approval Modal ═══ */}

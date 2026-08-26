@@ -68,6 +68,15 @@ export default function SuperAdminSettingsPage() {
             if (s.enforce2FA !== undefined) setEnforce2FA(s.enforce2FA);
             if (s.passwordMinLength !== undefined) setPasswordMinLength(s.passwordMinLength);
             if (s.passwordExpiryDays !== undefined) setPasswordExpiryDays(s.passwordExpiryDays);
+            if (s.apiKeys) {
+              if (s.apiKeys.geolocation !== undefined) setGeolocationKey(s.apiKeys.geolocation);
+              if (s.apiKeys.paymentGateway !== undefined) setPaymentGatewayKey(s.apiKeys.paymentGateway);
+              if (s.apiKeys.paymentProvider !== undefined) setPaymentProvider(s.apiKeys.paymentProvider);
+            }
+            if (s.syncSettings) {
+              if (s.syncSettings.autoSync !== undefined) setAutoSync(s.syncSettings.autoSync);
+              if (s.syncSettings.lastSync !== undefined) setLastSync(s.syncSettings.lastSync);
+            }
           }
         }
       } catch { /* use defaults */ }
@@ -87,6 +96,19 @@ export default function SuperAdminSettingsPage() {
           userId: "system",
           settings: {
             officeRules: { officeStart, officeEnd, lateAfter, workDays, requiredHours, breakAllowance, meetingCountsAsWork: true },
+            sessionTimeout,
+            enforce2FA,
+            passwordMinLength,
+            passwordExpiryDays,
+            apiKeys: {
+              geolocation: geolocationKey,
+              paymentGateway: paymentGatewayKey,
+              paymentProvider,
+            },
+            syncSettings: {
+              autoSync,
+              lastSync,
+            },
           },
         }),
       });

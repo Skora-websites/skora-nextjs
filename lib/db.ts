@@ -47,7 +47,7 @@ export interface SiteContent {
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
-const DB_FILE = path.join(DATA_DIR, "skora_db.json");
+const DB_FILE = path.join(DATA_DIR, "hrms.json");
 
 const defaultPackages: PackageItem[] = [
   {
@@ -208,7 +208,7 @@ export async function getLeads(): Promise<Lead[]> {
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("skora_db");
+        const db = client.db("hrms");
         const collection = db.collection<Lead>("leads");
         const leads = await collection.find({}).sort({ createdAt: -1 }).toArray();
         if (leads.length > 0) {
@@ -242,7 +242,7 @@ export async function createLead(leadData: Omit<Lead, "id" | "createdAt" | "stat
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("skora_db");
+        const db = client.db("hrms");
         const collection = db.collection<Lead>("leads");
         await collection.insertOne(newLead);
         return newLead;
@@ -263,7 +263,7 @@ export async function updateLeadStatus(id: string, status: Lead["status"]): Prom
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("skora_db");
+        const db = client.db("hrms");
         const collection = db.collection<Lead>("leads");
         const result = await collection.findOneAndUpdate(
           { id },
@@ -294,7 +294,7 @@ export async function deleteLead(id: string): Promise<boolean> {
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("skora_db");
+        const db = client.db("hrms");
         const collection = db.collection<Lead>("leads");
         const res = await collection.deleteOne({ id });
         return res.deletedCount > 0;
@@ -317,7 +317,7 @@ export async function getSiteContent(): Promise<SiteContent> {
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("skora_db");
+        const db = client.db("hrms");
         const collection = db.collection<SiteContent>("content");
         const content = await collection.findOne({ key: "global_site_content" });
         if (content) {
@@ -371,7 +371,7 @@ export async function updateSiteContent(partialContent: Partial<SiteContent>): P
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("skora_db");
+        const db = client.db("hrms");
         const collection = db.collection("content");
         await collection.updateOne(
           { key: "global_site_content" },
@@ -384,7 +384,7 @@ export async function updateSiteContent(partialContent: Partial<SiteContent>): P
     }
   }
 
-  // Always sync and write to local codebase JSON file (data/skora_db.json)
+  // Always sync and write to local codebase JSON file (data/hrms.json)
   const localDb = ensureLocalDbFile();
   localDb.content = updatedContent;
   writeLocalDb(localDb);
@@ -402,7 +402,7 @@ export async function getAdminUser(): Promise<AdminUser> {
   try {
     const client = await getMongoClient();
     if (client) {
-      const db = client.db("skora_db");
+      const db = client.db("hrms");
       const collection = db.collection<AdminUser>("admin");
       let user = await collection.findOne({ key: "admin_user" });
       if (!user) {
@@ -468,7 +468,7 @@ export async function updateAdminCredentials(newUsername?: string, newPassword?:
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("skora_db");
+        const db = client.db("hrms");
         const collection = db.collection("admin");
         await collection.updateOne(
           { key: "admin_user" },
