@@ -74,6 +74,9 @@ export function AttendancePunchCard() {
   const [gpsTrackingActive, setGpsTrackingActive] = useState(false);
   const [lastGpsUpdate, setLastGpsUpdate] = useState<string | null>(null);
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [bgStatus, setBgStatus] = useState<"active" | "paused" | "resumed">("active");
+  const wakeLockRef2 = useRef<WakeLockSentinel | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -359,6 +362,56 @@ export function AttendancePunchCard() {
     setGpsAccuracy(null);
     (window as any).__gpsLatestPosition = null;
   }, []);
+  // Acquire Wake Lock — keeps screen on so GPS stays active
+  const acquireWakeLock = useCallback(async () => {
+    if (!("wakeLock" in navigator)) return;
+    try {
+      const wl = await navigator.wakeLock.request("screen");
+      wakeLockRef2.current = wl;
+      setWakeLockActive(true);
+      wl.addEventListener("release", () => {
+        wakeLockRef2.current = null;
+        setWakeLockActive(false);
+      });
+    } catch { /* not supported */ }
+  }, []);
+
+  // Release Wake Lock
+  const releaseWakeLock = useCallback(async () => {
+    if (wakeLockRef2.current) {
+      try { await wakeLockRef2.current.release(); } catch {}
+      wakeLockRef2.current = null;
+    }
+    setWakeLockActive(false);
+  }, []);
+
+  // Visibility API — auto-resume GPS when app comes back to foreground
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && punchedIn && !punchOutTime) {
+        // App came back to foreground — resume GPS
+        if (!gpsTrackingActive) startGpsTracking();
+        acquireWakeLock();
+        setBgStatus("resumed");
+      } else if (document.visibilityState === "hidden") {
+        setBgStatus("paused");
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [punchedIn, punchOutTime, gpsTrackingActive, startGpsTracking, acquireWakeLock]);
+
+  // Re-acquire Wake Lock on window focus (iOS requirement)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (punchedIn && !punchOutTime && !wakeLockRef2.current) {
+        acquireWakeLock();
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [punchedIn, punchOutTime, acquireWakeLock]);
+
   // Resume tracking if page reloads while punched in
   useEffect(() => {
     if (punchedIn && !punchOutTime && !gpsTrackingActive) {
@@ -630,11 +683,28 @@ export function AttendancePunchCard() {
               </span>
             )}
             {gpsTrackingActive && (
-              <span className="flex items-center gap-1.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                GPS Tracking Active
-                {gpsAccuracy && <span className="text-blue-400">±{Math.round(gpsAccuracy)}m</span>}
-              </span>
+              <div className="flex flex-col items-end gap-1">
+                <span className="flex items-center gap-1.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                  GPS Active
+                  {gpsAccuracy && <span className="text-blue-400">±{Math.round(gpsAccuracy)}m</span>}
+                </span>
+                {wakeLockActive && (
+                  <span className="text-[9px] text-emerald-500 dark:text-emerald-400 font-medium">
+                    🔒 Screen lock held — GPS stays active
+                  </span>
+                )}
+                {bgStatus === "paused" && (
+                  <span className="text-[9px] text-amber-500 dark:text-amber-400 font-medium animate-pulse">
+                    ⏸️ Background — GPS paused (open app to resume)
+                  </span>
+                )}
+                {bgStatus === "resumed" && (
+                  <span className="text-[9px] text-emerald-500 dark:text-emerald-400 font-medium">
+                    ✅ Resumed — GPS tracking active
+                  </span>
+                )}
+              </div>
             )}
           </div>
         )}

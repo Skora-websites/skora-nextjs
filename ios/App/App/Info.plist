@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDisplayName</key>
+    <string>Skora HRMS</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+
+    <!-- ═══ Location Permissions ═══ -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Skora HRMS needs your location for attendance tracking. Your location is used to verify you are at the office when you punch in.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Skora HRMS needs background location access to continuously track your attendance location even when the app is not actively in use. This ensures accurate punch-in/punch-out records.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Skora HRMS needs background location access for attendance tracking.</string>
+    <key>NSLocationTemporaryUsageDescriptionDictionary</key>
+    <dict>
+        <key>AttendanceTracking</key>
+        <string>Skora HRMS needs temporary precise location to verify your office location for attendance.</string>
+    </dict>
+
+    <!-- ═══ Background Modes ═══ -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+
+    <!-- ═══ Required Device Capabilities ═══ -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+        <string>location-services</string>
+    </array>
+
+    <!-- ═══ Status Bar ═══ -->
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+
+    <!-- ═══ Launch Screen ═══ -->
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+
+    <!-- ═══ Supported Interface Orientations ═══ -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- ═══ Camera Permission (for document scanning) ═══ -->
+    <key>NSCameraUsageDescription</key>
+    <string>Skora HRMS needs camera access to scan documents for onboarding.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Skora HRMS needs photo library access to upload documents.</string>
+</dict>
+</plist>

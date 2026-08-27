@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Skora HRMS</string>
+    <string name="title_activity_main">Skora HRMS</string>
+    <string name="package_name">com.skora.hrms</string>
+    <string name="custom_url_scheme">com.skora.hrms</string>
+</resources>

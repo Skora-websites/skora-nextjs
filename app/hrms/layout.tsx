@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Providers } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { CapacitorProvider } from "@/components/mobile/capacitor-provider";
+import { MobileStyles } from "@/components/mobile/mobile-layout";
+import { PWAProvider } from "@/components/mobile/pwa-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +30,21 @@ export default function HrmsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background font-sans antialiased text-foreground">
+    <>
+      <head>
+      {/* PWA Meta Tags */}
+      <link rel="manifest" href="/manifest.json" />
+      <meta name="theme-color" content="#6366f1" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta name="apple-mobile-web-app-title" content="Skora HRMS" />
+      <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+      <meta name="mobile-web-app-capable" content="yes" />
+      <meta name="application-name" content="Skora HRMS" />
+      <meta name="msapplication-TileColor" content="#6366f1" />
+      <meta name="msapplication-TileImage" content="/icons/icon-192.svg" />
+</head>
+      <div className="min-h-screen bg-background font-sans antialiased text-foreground">
       <script
         dangerouslySetInnerHTML={{
           __html: `
@@ -79,8 +96,15 @@ export default function HrmsLayout({
         }}
       />
       <Providers>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <CapacitorProvider>
+          <MobileStyles />
+          <PWAProvider />
+          {children}
+        </CapacitorProvider>
+        </AuthProvider>
       </Providers>
     </div>
+    </>
   );
 }
