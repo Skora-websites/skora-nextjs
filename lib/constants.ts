@@ -119,6 +119,7 @@ export const NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
  */
 export const SUPER_ADMIN_EMAILS = [
   "ashish17427@gmail.com",
+  "skorainfotech@gmail.com",
   process.env.SUPER_ADMIN_EMAIL || "",
   "admin@skora.info",
   "admin@edskora.com",

@@ -142,7 +142,7 @@ export async function destroySession(): Promise<void> {
 export async function signInWithMongo(
   email: string,
   password: string
-): Promise<{ id: string; email: string; role: string; displayName: string }> {
+): Promise<{ id: string; email: string; role: string; displayName: string; mustChangePassword: boolean }> {
   const db = await getDbWithTimeout();
   if (!db) throw new Error("Database not available");
 
@@ -164,6 +164,7 @@ export async function signInWithMongo(
     email: user.email,
     role: user.role || "employee",
     displayName: user.displayName || user.firstName || email,
+    mustChangePassword: (user as any).mustChangePassword === true,
   };
 }
 

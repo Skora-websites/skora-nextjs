@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
       loginStatus: "enabled",
       passwordHash,
       tenantId,
+      mustChangePassword: true,
     } as any);
 
     const authUser = { uid: newUser.id, email, displayName: displayName || firstName || email };
@@ -318,10 +319,41 @@ export async function PATCH(request: NextRequest) {
           return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
         }
         const newHash = await bcrypt.hash(np, 12);
-        await hrmUsersService.update(userId, { passwordHash: newHash } as any);
+        await hrmUsersService.update(userId, { passwordHash: newHash, mustChangePassword: false } as any);
         auditAction = "update_user";
         auditDetails = "Password changed";
-        break;
+        // Clear must_change_password cookie if present
+        const pwResponse = NextResponse.json({ success: true });
+        pwResponse.cookies.set("must_change_password", "", { path: "/", maxAge: 0 });
+        // Record audit log
+        if (auth.userId !== userId) {
+          await recordAuditLog({ tenantId, action: auditAction, performedById: auth.userId, performedByName: body._performedByName || "Admin", targetUserId: userId, targetUserEmail, details: auditDetails });
+        }
+        return pwResponse;
+      }
+
+      case "force-change-password": {
+        // Used on first login when mustChangePassword is true — no current password required
+        // Only allowed for the logged-in user changing their own password
+        if (userId !== auth.userId) {
+          return NextResponse.json({ error: "Can only change your own password" }, { status: 403 });
+        }
+        const { newPassword: fnp } = body;
+        if (!fnp) {
+          return NextResponse.json({ error: "New password is required" }, { status: 400 });
+        }
+        if (fnp.length < 8) {
+          return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+        }
+        if (!/[a-zA-Z]/.test(fnp) || !/[0-9]/.test(fnp)) {
+          return NextResponse.json({ error: "Password must contain at least one letter and one number" }, { status: 400 });
+        }
+        const forceHash = await bcrypt.hash(fnp, 12);
+        await hrmUsersService.update(userId, { passwordHash: forceHash, mustChangePassword: false } as any);
+        // Clear the cookie
+        const forceResponse = NextResponse.json({ success: true, message: "Password updated successfully" });
+        forceResponse.cookies.set("must_change_password", "", { path: "/", maxAge: 0 });
+        return forceResponse;
       }
 
       default: {

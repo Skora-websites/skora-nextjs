@@ -36,27 +36,24 @@ interface DocItem {
   fileUrl?: string;
 }
 
-const defaultDocs: DocItem[] = [
-  { id: "doc-1", name: "Government_Aadhaar_Passport_Proof.pdf", type: "ID Proof", date: "2026-08-19", size: "2.4 MB", fileUrl: "/uploads/sample_id.pdf" },
-  { id: "doc-2", name: "Offer_Letter_Signed_Copy.pdf", type: "Offer Letter", date: "2026-08-19", size: "1.1 MB", fileUrl: "/uploads/sample_offer.pdf" },
-];
+const defaultDocs: DocItem[] = [];
 
 export default function EmployeeProfilePage() {
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
 
-  const [phone, setPhone] = useState("+91 98765 43210");
-  const [emergencyContact, setEmergencyContact] = useState("Rajesh Sharma (+91 98111 22233)");
-  const [bankAccount, setBankAccount] = useState("HDFC Bank **** 4829");
+  const [phone, setPhone] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
 
   // Check if current user is Super Admin or HR Admin
   const isSuperAdmin = user?.role === "super_admin" || user?.email === "ashish17427@gmail.com";
 
   // Reporting Manager & Team Allocation Info
-  const [reportingManager] = useState(isSuperAdmin ? "System Superadmin (Executive Board)" : "Rajesh Kumar (Senior Manager)");
-  const [managerEmail] = useState(isSuperAdmin ? "ashish17427@gmail.com" : "rajesh.manager@skora.info");
-  const [domainWork] = useState(isSuperAdmin ? "Platform Administration & System Governance" : "Software Engineering & Core Development");
-  const [allottedTeam] = useState(isSuperAdmin ? "Executive Superadmin Operations" : "Frontend & PMS Core Team");
+  const [reportingManager] = useState("");
+  const [managerEmail] = useState("");
+  const [domainWork] = useState("");
+  const [allottedTeam] = useState("");
 
   // Verification Status — SUPER ADMIN IS AUTOMATICALLY FULLY VERIFIED & APPROVED
   const [verificationStatus, setVerificationStatus] = useState<"PENDING" | "APPROVED" | "REJECTED_48H">(

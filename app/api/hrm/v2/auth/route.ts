@@ -66,6 +66,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         passwordHash,
         tenantId: "default",
         onboardingStatus: "pending",
+        mustChangePassword: true,
       } as any);
 
       // Create onboarding task record in DB so HR Admin can see it
@@ -218,6 +219,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         status: "active",
         passwordHash,
         tenantId: "default",
+        mustChangePassword: true,
       } as any);
 
       return NextResponse.json({ data: { uid: newUser.id, email } }, { status: 201 });

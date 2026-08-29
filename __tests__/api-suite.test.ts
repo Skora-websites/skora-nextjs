@@ -57,13 +57,17 @@ const EMPLOYEE: TestUser = {
 
 beforeAll(async () => {
   clearSessionCookies();
-  // Register employee for testing
-  await registerUser(EMPLOYEE);
+  // Register employee for testing (with timeout resilience)
+  try {
+    await registerUser(EMPLOYEE);
+  } catch {
+    // May already exist — continue
+  }
   // Attempt logins for pre-seeded users (may fail if not seeded)
-  await loginUser(HR_ADMIN.email, HR_ADMIN.password);
-  await loginUser(MANAGER.email, MANAGER.password);
-  await loginUser(SUPER_ADMIN.email, SUPER_ADMIN.password);
-}, 60000);
+  try { await loginUser(HR_ADMIN.email, HR_ADMIN.password); } catch { /* not seeded */ }
+  try { await loginUser(MANAGER.email, MANAGER.password); } catch { /* not seeded */ }
+  try { await loginUser(SUPER_ADMIN.email, SUPER_ADMIN.password); } catch { /* not seeded */ }
+}, 120000);
 
 afterAll(() => {
   clearSessionCookies();

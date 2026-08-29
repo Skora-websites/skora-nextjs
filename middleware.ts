@@ -98,7 +98,18 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ── 2b. Authenticated user on auth routes → dashboard ───
+  // ── 2b. Forced password change — redirect to /hrms/force-change-password ──
+  const mustChangePw = request.cookies.get("must_change_password")?.value;
+  if (hasHrmsSession && userRole && mustChangePw === "1") {
+    // Allow the force-change-password page itself through
+    if (pathname !== "/hrms/force-change-password") {
+      return NextResponse.redirect(new URL("/hrms/force-change-password", request.url));
+    }
+    // On the force-change-password page, skip other redirects and proceed
+    return NextResponse.next();
+  }
+
+  // ── 2c. Authenticated user on auth routes → dashboard ───
   if (hasHrmsSession && userRole) {
     const isAuthRoute = hrmsAuthRoutes.some(
       (route) => pathname === route || pathname.startsWith(route + "/")

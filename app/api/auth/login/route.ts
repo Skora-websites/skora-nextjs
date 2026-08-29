@@ -39,5 +39,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     maxAge: SESSION_EXPIRES_IN_MS / 1000,
   });
 
+  // Check if user must change password on first login
+  const mustChange = (user as any).mustChangePassword === true;
+  if (mustChange) {
+    response.cookies.set("must_change_password", "1", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_EXPIRES_IN_MS / 1000,
+    });
+  }
+
   return response;
 }, { label: "Login" });
