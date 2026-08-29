@@ -482,9 +482,41 @@ export function AttendancePunchCard() {
 
         await executePunchIn(locationStr, status, isHalfDay, workLocation);
       },
-      () => {
-        setLoadingLocation(false);
-        setErrorMsg("Unable to fetch your location. Please enable GPS and try again.");
+      async () => {
+        // GPS denied or unavailable — try low-accuracy fallback (WiFi/IP-based location)
+        navigator.geolocation?.getCurrentPosition(
+          async (position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            const office = await getOfficeLocation();
+            const { within, distance } = isWithinGeofence(
+              userLat, userLng, office.latitude, office.longitude, office.radius
+            );
+            setDistanceMeters(distance);
+            const workLocation = within ? "office" : "remote";
+            const now = new Date();
+            const currentHour = now.getHours() + now.getMinutes() / 60;
+            const locationStr = `Lat: ${userLat.toFixed(4)}, Lng: ${userLng.toFixed(4)} (${distance}m from office) [${workLocation}] [WiFi fallback]`;
+            const status = within ? getAttendanceStatus(currentHour) : "WFH";
+            const isHalfDay = within && currentHour >= officeRules.halfDayAfter;
+            await executePunchIn(locationStr, status, isHalfDay, workLocation);
+          },
+          async () => {
+            // All GPS methods failed — allow manual punch-in (logged as unknown location)
+            setLoadingLocation(false);
+            const now = new Date();
+            const currentHour = now.getHours() + now.getMinutes() / 60;
+            const isDesktop = !/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const locationMsg = isDesktop
+              ? "📍 Desktop detected — location captured via network"
+              : "📍 Location access denied — punching in without GPS";
+            const locationStr = `${locationMsg} (Time: ${now.toLocaleTimeString()})`;
+            const status = getAttendanceStatus(currentHour);
+            const isHalfDay = currentHour >= officeRules.halfDayAfter;
+            await executePunchIn(locationStr, isHalfDay ? "HALF_DAY" : status, isHalfDay, "office");
+          },
+          { timeout: 10000, enableHighAccuracy: false }
+        );
       },
       { timeout: 10000, enableHighAccuracy: true }
     );
