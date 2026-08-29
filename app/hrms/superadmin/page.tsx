@@ -95,6 +95,7 @@ interface LiveStatusEmployee {
   currentLocation: any;
   auxSince: string | null;
   location: string | null;
+  workLocation: "office" | "remote" | null;
   status_label: string;
 }
 
@@ -106,6 +107,8 @@ interface LiveStatusSummary {
   active: number;
   punchedOut: number;
   absent: number;
+  inOffice: number;
+  remote: number;
 }
 
 interface LeaveRequest {
@@ -169,7 +172,7 @@ export default function SuperadminOverviewPage() {
   const [liveEmployees, setLiveEmployees] = useState<LiveStatusEmployee[]>([]);
   const [liveSummary, setLiveSummary] = useState<LiveStatusSummary | null>(null);
   const [liveSearch, setLiveSearch] = useState("");
-  const [liveFilter, setLiveFilter] = useState<"all" | "punched_in" | "on_break" | "in_meeting" | "active" | "punched_out" | "absent">("all");
+  const [liveFilter, setLiveFilter] = useState<"all" | "punched_in" | "in_office" | "remote" | "on_break" | "in_meeting" | "active" | "punched_out" | "absent">("all");
 
   useEffect(() => {
     loadData();
@@ -461,6 +464,8 @@ export default function SuperadminOverviewPage() {
               {([
                 ["all", "All"],
                 ["punched_in", "Punched In"],
+                ["in_office", "🏢 Office"],
+                ["remote", "🏠 Remote"],
                 ["on_break", "On Break"],
                 ["in_meeting", "In Meeting"],
                 ["active", "Active"],
@@ -495,10 +500,18 @@ export default function SuperadminOverviewPage() {
 
         {/* Summary Cards */}
         {liveSummary && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-5">
             <div className="text-center p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
               <p className="text-lg font-extrabold text-blue-600 dark:text-blue-400">{liveSummary.punchedIn}</p>
               <p className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">Punched In</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+              <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{liveSummary.inOffice}</p>
+              <p className="text-[10px] text-emerald-500 dark:text-emerald-400 font-medium">🏢 In Office</p>
+            </div>
+            <div className="text-center p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+              <p className="text-lg font-extrabold text-blue-600 dark:text-blue-400">{liveSummary.remote}</p>
+              <p className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">🏠 Remote</p>
             </div>
             <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
               <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{liveSummary.active}</p>
@@ -528,6 +541,8 @@ export default function SuperadminOverviewPage() {
           {liveEmployees
             .filter((emp) => {
               if (liveFilter === "punched_in") return emp.status === "punched_in";
+              if (liveFilter === "in_office") return emp.status === "punched_in" && emp.workLocation === "office";
+              if (liveFilter === "remote") return emp.status === "punched_in" && emp.workLocation === "remote";
               if (liveFilter === "on_break") return emp.status === "punched_in" && emp.auxState === "on_break";
               if (liveFilter === "in_meeting") return emp.status === "punched_in" && emp.auxState === "meeting";
               if (liveFilter === "active") return emp.status === "punched_in" && emp.auxState === "active";
@@ -600,6 +615,15 @@ export default function SuperadminOverviewPage() {
                   <div className="flex items-center gap-3 flex-wrap">
                     {emp.status === "punched_in" && (
                       <>
+                        {/* Work Location Badge */}
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                          emp.workLocation === "remote"
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30"
+                        }`}>
+                          {emp.workLocation === "remote" ? "🏠 Remote" : "🏢 Office"}
+                        </span>
+
                         {/* AUX Badge */}
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
                           auxColor === "amber"

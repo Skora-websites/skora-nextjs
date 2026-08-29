@@ -40,6 +40,7 @@ export interface AttendanceRecord {
   effectiveWorkMinutes?: number;
   locationHistory?: LocationEntry[];
   currentLocation?: { latitude: number; longitude: number; accuracy: number; timestamp: string };
+  workLocation?: "office" | "remote";
 }
 
 export function calculateAttendanceStatus(punchInDate: Date): AttendanceStatus {
@@ -109,6 +110,7 @@ export async function recordPunchIn(data: {
   status?: string;
   tenantId?: string;
   managerId?: string;
+  workLocation?: "office" | "remote";
 }): Promise<AttendanceRecord | null> {
   const db = await getDb();
   if (!db) return null;
@@ -136,6 +138,7 @@ export async function recordPunchIn(data: {
     tenantId: data.tenantId || "default", userId: data.userId, userName: data.userName,
     userEmail: data.userEmail, employeeCode: data.employeeCode || "EMP-2026-1001",
     date: todayStr, punchInTime: nowISO, location: data.location || "Primary Office (GPS Verified)",
+    workLocation: data.workLocation || "office",
     status, managerId: data.managerId, auxState: "active" as AUXState,
     auxHistory: initialAUX, totalBreakMinutes: 0, effectiveWorkMinutes: 0, createdAt: now,
   };

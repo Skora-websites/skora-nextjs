@@ -455,34 +455,32 @@ export function AttendancePunchCard() {
 
         setDistanceMeters(distance);
 
-        if (!within) {
-          setLoadingLocation(false);
-          setErrorMsg(
-            `You are ${distance}m away from the office. Punch in is only allowed within ${office.radius}m radius. Please move closer to the office.`
-          );
-          return;
-        }
+        // Determine work location based on GPS distance from office
+        const workLocation = within ? "office" : "remote";
 
         const now = new Date();
         const currentHour = now.getHours() + now.getMinutes() / 60;
 
-        if (currentHour < officeRules.officeStart) {
-          setLoadingLocation(false);
-          setErrorMsg(`Office hours start at ${formatHour(officeRules.officeStart)}. You cannot punch in before then.`);
-          return;
+        // Only enforce office hours for in-office punch-ins
+        if (within) {
+          if (currentHour < officeRules.officeStart) {
+            setLoadingLocation(false);
+            setErrorMsg(`Office hours start at ${formatHour(officeRules.officeStart)}. You cannot punch in before then.`);
+            return;
+          }
+
+          if (currentHour >= officeRules.officeEnd + 1) {
+            setLoadingLocation(false);
+            setErrorMsg(`Office hours end at ${formatHour(officeRules.officeEnd)}. Late punch-ins are not accepted.`);
+            return;
+          }
         }
 
-        if (currentHour >= officeRules.officeEnd + 1) {
-          setLoadingLocation(false);
-          setErrorMsg(`Office hours end at ${formatHour(officeRules.officeEnd)}. Late punch-ins are not accepted.`);
-          return;
-        }
+        const locationStr = `Lat: ${userLat.toFixed(4)}, Lng: ${userLng.toFixed(4)} (${distance}m from office) [${workLocation}]`;
+        const status = within ? getAttendanceStatus(currentHour) : "WFH";
+        const isHalfDay = within && currentHour >= officeRules.halfDayAfter;
 
-        const locationStr = `Lat: ${userLat.toFixed(4)}, Lng: ${userLng.toFixed(4)} (${distance}m from office)`;
-        const status = getAttendanceStatus(currentHour);
-        const isHalfDay = currentHour >= officeRules.halfDayAfter;
-
-        await executePunchIn(locationStr, status, isHalfDay);
+        await executePunchIn(locationStr, status, isHalfDay, workLocation);
       },
       () => {
         setLoadingLocation(false);
@@ -492,7 +490,7 @@ export function AttendancePunchCard() {
     );
   };
 
-  const executePunchIn = async (locStr: string, status: string, isHalfDay: boolean) => {
+  const executePunchIn = async (locStr: string, status: string, isHalfDay: boolean, workLocation: "office" | "remote" = "office") => {
     const userName = user?.name || user?.email || "Employee";
     const userEmail = user?.email || "employee@company.com";
     const empCode = user?.id ? `EMP-2026-${user.id.substring(0, 4).toUpperCase()}` : "EMP-2026-XXXX";
@@ -502,7 +500,7 @@ export function AttendancePunchCard() {
     try {
       const res = await punchInAction({
         userId, userName, userEmail, employeeCode: empCode,
-        location: locStr, status: finalStatus,
+        location: locStr, status: finalStatus, workLocation,
       });
       if (res.success && res.record) {
         serverSaved = true;

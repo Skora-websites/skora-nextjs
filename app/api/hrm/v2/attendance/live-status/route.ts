@@ -96,6 +96,7 @@ export async function GET() {
           totalElapsedMinutes: 0,
           currentLocation: null,
           auxSince: null,
+          workLocation: null,
         };
       }
 
@@ -173,6 +174,7 @@ export async function GET() {
         currentLocation: record.currentLocation || null,
         auxSince,
         location: record.location || null,
+        workLocation: record.workLocation || (record.location && record.location.includes("[remote]") ? "remote" : "office"),
         status_label: record.status || "—",
       };
     });
@@ -204,6 +206,8 @@ export async function GET() {
       punchedOut: enriched.filter((e: any) => e.status === "punched_out")
         .length,
       absent: enriched.filter((e: any) => e.status === "absent").length,
+      inOffice: enriched.filter((e: any) => e.status === "punched_in" && e.workLocation === "office").length,
+      remote: enriched.filter((e: any) => e.status === "punched_in" && e.workLocation === "remote").length,
     };
 
     return NextResponse.json({ data: enriched, summary });

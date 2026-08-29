@@ -29,6 +29,7 @@ export async function punchInAction(data: {
   status?: string;
   tenantId?: string;
   managerId?: string;
+  workLocation?: "office" | "remote";
 }) {
   try {
     const record = await recordPunchIn(data);
@@ -42,7 +43,7 @@ export async function punchInAction(data: {
           await db.collection("notifications").insertOne({
             userId: data.managerId || "admin",
             title: `Attendance Marked: ${data.userName}`,
-            body: `${data.userName} (${data.employeeCode || "Employee"}) punched in at ${new Date(record.punchInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. Status: ${record.status}. Location: ${record.location}`,
+            body: `${data.userName} (${data.employeeCode || "Employee"}) punched in at ${new Date(record.punchInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. Status: ${record.status}. ${data.workLocation === "remote" ? "🏠 Working from Home" : "🏢 In Office"} — ${record.location}`,
             type: "attendance",
             isRead: false,
             createdAt: new Date(),
