@@ -742,9 +742,23 @@ export function AttendancePunchCard() {
 
       {/* Error message */}
       {errorMsg && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-3 text-xs text-red-600 dark:text-red-400">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{errorMsg}</span>
+        <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-3 text-xs text-red-600 dark:text-red-400">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div className="space-y-1.5">
+              <span className="font-bold block">{errorMsg}</span>
+              <span className="block text-[10px] opacity-80">
+                To fix: Go to your phone <strong>Settings</strong> → <strong>Apps</strong> → <strong>Chrome/Safari</strong> → <strong>Location</strong> → Set to <strong>"Allow"</strong>.
+                Then refresh this page and try again.
+              </span>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-[10px] font-bold underline hover:no-underline"
+              >
+                ↻ Refresh page and retry
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -840,7 +854,7 @@ export function AttendancePunchCard() {
       {/* Geofence notice */}
       {!punchedIn && !errorMsg && (
         <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center flex items-center justify-center gap-1">
-          <MapPin className="h-3 w-3" /> {isLocalhost ? "Development mode \u2014 GPS verification disabled" : `Punch in requires GPS location within ${DEFAULT_OFFICE.radius}m of the office`}
+          <MapPin className="h-3 w-3" /> {isLocalhost ? "Development mode — GPS verification disabled" : "Punch in from anywhere — your location will be captured automatically"}
         </p>
       )}
 
