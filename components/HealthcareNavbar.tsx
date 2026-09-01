@@ -56,8 +56,6 @@ export default function HealthcareNavbar({ onOpenConsultation }: HealthcareNavba
             alt="Skora Health logo"
             className="h-9 w-9 object-contain rounded-full border border-[#DCE8E0] bg-white shadow-sm group-hover:scale-105 transition-transform"
           />
-          <span>SKORA</span>
-          <span className="text-[#1F6B43]">.health</span>
           <span className="w-2 h-2 rounded-full bg-[#1F6B43] shadow-[0_0_10px_#1f6b43] animate-ping" />
         </Link>
 
