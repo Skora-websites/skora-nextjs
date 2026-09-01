@@ -597,7 +597,7 @@ export default function HomePage() {
             className="lg:col-span-7 space-y-8 gsap-scroll-card"
           >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFF6FF] text-[#2563EB] text-xs font-bold font-mono uppercase border border-[#2563EB]/30">
-              <span>✦ ABOUT SKORA DIGITAL ✦</span>
+              <span>✦ ABOUT OUR DIGITAL STUDIO ✦</span>
             </div>
 
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0B1310] leading-tight uppercase">
@@ -885,7 +885,7 @@ export default function HomePage() {
             Our Advantage /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0B1310] uppercase">
-            WHY CHOOSE SKORA?
+            WHY CHOOSE US?
           </h2>
         </div>
 

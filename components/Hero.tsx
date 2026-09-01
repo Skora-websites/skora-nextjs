@@ -131,7 +131,7 @@ export default function Hero({ onOpenConsultation }: HeroProps) {
           <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
             <div className="gsap-hero-title inline-flex items-center gap-2 px-4 py-2 rounded-full glass-pill text-xs sm:text-sm font-medium border border-blue-500/30 bg-blue-500/10 shadow-lg shadow-blue-500/10">
               <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
-              <span>✦ Innovation doesn&apos;t wait. Neither does SKORA ✦</span>
+              <span>✦ Innovation doesn&apos;t wait. Neither do we ✦</span>
             </div>
 
             <h1 className="gsap-hero-title text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.08]">

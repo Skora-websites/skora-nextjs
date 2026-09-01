@@ -217,7 +217,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
 
             <div className="gsap-doc-footer-title">
               <a
-                href={`mailto:${siteContent.healthcareEmail || siteContent.email || "ashish17427@gmail.com"}`}
+                href={`mailto:${siteContent.healthcareEmail || siteContent.email || "info@skorainfotech.com"}`}
                 onClick={(e) => {
                   if (onOpenConsultation) {
                     onOpenConsultation("Healthcare Email Inquiry");
@@ -382,9 +382,9 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
             <h4 className="text-sm font-bold text-[#11261D] tracking-wide">
               Keep in touch
             </h4>
-            <p className="text-slate-700 font-mono">{siteContent.healthcareEmail || siteContent.email || "ashish17427@gmail.com"}</p>
+            <p className="text-slate-700 font-mono">{siteContent.healthcareEmail || siteContent.email || "info@skorainfotech.com"}</p>
             <p className="text-slate-500 pt-4" suppressHydrationWarning>
-              © {new Date().getFullYear()} SKORA Healthcare IT Division. All Rights Reserved.
+              © {new Date().getFullYear()} All Rights Reserved.
             </p>
           </div>
 

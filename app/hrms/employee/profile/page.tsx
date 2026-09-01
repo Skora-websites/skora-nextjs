@@ -50,11 +50,11 @@ export default function EmployeeProfilePage() {
   const [bankAccount, setBankAccount] = useState("HDFC Bank **** 4829");
 
   // Check if current user is Super Admin or HR Admin
-  const isSuperAdmin = user?.role === "super_admin" || user?.email === "ashish17427@gmail.com";
+  const isSuperAdmin = user?.role === "super_admin" || user?.email === "info@skorainfotech.com";
 
   // Reporting Manager & Team Allocation Info
   const [reportingManager] = useState(isSuperAdmin ? "System Superadmin (Executive Board)" : "Rajesh Kumar (Senior Manager)");
-  const [managerEmail] = useState(isSuperAdmin ? "ashish17427@gmail.com" : "rajesh.manager@skora.info");
+  const [managerEmail] = useState(isSuperAdmin ? "info@skorainfotech.com" : "rajesh.manager@skora.info");
   const [domainWork] = useState(isSuperAdmin ? "Platform Administration & System Governance" : "Software Engineering & Core Development");
   const [allottedTeam] = useState(isSuperAdmin ? "Executive Superadmin Operations" : "Frontend & PMS Core Team");
 
@@ -407,7 +407,7 @@ export default function EmployeeProfilePage() {
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white text-lg">{user?.name || "Super Admin"}</h3>
                 <p className="text-xs text-primary font-semibold uppercase">{user?.role || "Super Admin"}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email || "ashish17427@gmail.com"}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email || "info@skorainfotech.com"}</p>
               </div>
             </div>
 

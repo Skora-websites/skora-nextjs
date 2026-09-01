@@ -215,7 +215,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
 
             <div className="gsap-footer-title">
               <a
-                href={`mailto:${siteContent.email || "ashish17427@gmail.com"}`}
+                href={`mailto:${siteContent.email || "info@skorainfotech.com"}`}
                 onClick={(e) => {
                   if (onOpenConsultation) {
                     onOpenConsultation("Direct Email Inquiry");
@@ -380,9 +380,9 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
             <h4 className="text-sm font-bold text-white tracking-wide">
               Keep in touch
             </h4>
-            <p className="text-slate-300 font-mono">{siteContent.email || "ashish17427@gmail.com"}</p>
+            <p className="text-slate-300 font-mono">{siteContent.email || "info@skorainfotech.com"}</p>
             <p className="text-slate-500 pt-4" suppressHydrationWarning>
-              © {new Date().getFullYear()} SKORA Digital. All Rights Reserved.
+              © {new Date().getFullYear()} All Rights Reserved.
             </p>
           </div>
 

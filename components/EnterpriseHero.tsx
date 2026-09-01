@@ -140,7 +140,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
         {/* Kinetic Hero Title (Top pill badge removed per user request) */}
         <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-white sm:text-6xl lg:text-[5.4rem] drop-shadow-[0_10px_35px_rgba(0,0,0,0.5)]">
           Innovation doesn&apos;t wait.<br />
-          Neither does <span className="text-sky-300 drop-shadow-[0_0_30px_rgba(125,211,252,0.6)]">Skora.</span>
+          Neither do we.
         </h1>
 
         {/* Subtitle */}

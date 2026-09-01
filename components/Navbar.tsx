@@ -154,21 +154,18 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             {/* Skora Logo -> Redirects to Landing Page (/) */}
             <Link
               href="/"
-              className={`relative z-50 flex items-center gap-2 text-2xl font-extrabold tracking-tight transition-colors duration-300 ${logoTextClass}`}
+              className={`relative z-50 flex items-center transition-colors duration-300 ${logoTextClass}`}
             >
               <img
                 src="/skora-logo.png"
                 alt="Skora logo"
                 className="h-9 w-9 object-contain rounded-full ring-1 ring-white/50 bg-white/10 shadow-sm"
               />
-              <span className="flex items-center gap-1.5">
-                Skora
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    isTransparentNav ? "bg-sky-400 shadow-[0_0_8px_#38bdf8]" : "bg-blue-600"
-                  }`}
-                />
-              </span>
+              <span
+                className={`ml-2 h-2.5 w-2.5 rounded-full ${
+                  isTransparentNav ? "bg-sky-400 shadow-[0_0_8px_#38bdf8]" : "bg-blue-600"
+                }`}
+              />
             </Link>
 
             <nav className="hidden h-full items-center gap-8 lg:flex">

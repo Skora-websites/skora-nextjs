@@ -731,7 +731,7 @@ export default function HealthcarePortal() {
                 <br />
                 <span className="hero-word inline-block overflow-hidden align-bottom">
                   <span className="hero-word-inner inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#1F6B43] via-[#2A8C57] to-emerald-600">
-                    With SKORA
+                    With Us
                   </span>
                 </span>
               </h1>
@@ -876,7 +876,7 @@ export default function HealthcarePortal() {
       <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10 bg-white rounded-[3rem] border border-[#DCE8E0] my-8 shadow-sm">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#1F6B43] block mb-2">
-            Why Doctors Trust SKORA /
+            Why Doctors Trust Us /
           </span>
           <h2 className="text-3xl sm:text-5xl font-black text-[#11261D] tracking-tight uppercase">
             BUILT EXCLUSIVELY FOR CLINICIANS

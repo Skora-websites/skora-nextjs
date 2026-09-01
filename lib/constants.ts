@@ -118,7 +118,7 @@ export const NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
  * Add additional emails here to designate multiple super admins.
  */
 export const SUPER_ADMIN_EMAILS = [
-  "ashish17427@gmail.com",
+  "info@skorainfotech.com",
   process.env.SUPER_ADMIN_EMAIL || "",
   "admin@skora.info",
   "admin@edskora.com",

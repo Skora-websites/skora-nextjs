@@ -67,7 +67,7 @@ export default function CapabilitiesSection() {
             <span>MNC ENTERPRISE CAPABILITIES</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-950">
-            What We Build at <span className="text-blue-600">Skora</span>
+            What We Build <span className="text-blue-600">For Growth</span>
           </h2>
           <p className="mt-3 text-base sm:text-lg text-slate-600 font-medium leading-relaxed">
             Empowering global institutions with battle-tested enterprise platforms, cloud infrastructure, and specialized healthcare solutions.
