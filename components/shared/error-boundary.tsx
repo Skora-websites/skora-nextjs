@@ -67,8 +67,15 @@ export function LoadingFallback({ label = "Loading..." }: { label?: string }) {
   return (
     <div className="flex min-h-[400px] items-center justify-center" role="status">
       <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="relative">
+          <img
+            src="/skora-logo.png"
+            alt="Loading logo"
+            className="h-16 w-16 rounded-full border border-slate-200 bg-white object-contain p-2 shadow-lg"
+          />
+          <div className="absolute inset-0 animate-ping rounded-full border-2 border-blue-400/40" />
+        </div>
+        <p className="text-sm font-medium text-slate-600">{label}</p>
       </div>
     </div>
   );
