@@ -25,6 +25,11 @@ export const metadata: Metadata = {
     "CRM Solutions",
   ],
   authors: [{ name: "SKORA Digital Team" }],
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
   openGraph: {
     title: "SKORA.digital — Digital Marketing & Tech Solutions",
     description: "Rank higher, scale infrastructure, build custom SaaS, Mobile & CRM applications.",

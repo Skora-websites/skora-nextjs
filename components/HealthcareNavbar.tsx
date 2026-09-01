@@ -51,9 +51,11 @@ export default function HealthcareNavbar({ onOpenConsultation }: HealthcareNavba
           href="/healthcare"
           className="flex items-center gap-2 text-xl sm:text-2xl font-black text-[#11261D] tracking-tight group"
         >
-          <div className="w-9 h-9 rounded-full bg-[#1F6B43] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-            <Stethoscope size={18} />
-          </div>
+          <img
+            src="/skora-logo.png"
+            alt="Skora Health logo"
+            className="h-9 w-9 object-contain rounded-full border border-[#DCE8E0] bg-white shadow-sm group-hover:scale-105 transition-transform"
+          />
           <span>SKORA</span>
           <span className="text-[#1F6B43]">.health</span>
           <span className="w-2 h-2 rounded-full bg-[#1F6B43] shadow-[0_0_10px_#1f6b43] animate-ping" />
