@@ -76,12 +76,21 @@ async function resolveSRV(srvUri: string): Promise<string> {
   }
 }
 
+// TLS is required for mongodb+srv:// (Atlas) but must NOT be forced for
+// plain mongodb:// connections (local dev), where mongod typically has no TLS.
+const isSrv = uri?.startsWith("mongodb+srv://") === true;
+const uriRequestsTls = /[?&](tls|ssl)=true/i.test(uri ?? "");
+
 const clientOptions: MongoClientOptions = {
   serverSelectionTimeoutMS: 15000,
   connectTimeoutMS: 15000,
-  tls: true,
-  tlsAllowInvalidCertificates: true,
-  tlsAllowInvalidHostnames: true,
+  ...(isSrv || uriRequestsTls
+    ? {
+        tls: true,
+        tlsAllowInvalidCertificates: true,
+        tlsAllowInvalidHostnames: true,
+      }
+    : {}),
   retryWrites: true,
   w: "majority" as any,
 };

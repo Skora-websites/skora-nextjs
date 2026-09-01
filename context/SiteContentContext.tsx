@@ -34,7 +34,8 @@ const defaultContent: SiteContent = {
   phone: "+91 92173 75835",
   email: "ashish17427@gmail.com",
   healthcareEmail: "ashish17427@gmail.com",
-  address: "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India",
+  address: "5 market square, High street, Uxbridge, UB8 1LH
+London",
   responseGuarantee: "Rapid 4-Hour Response Guarantee",
   packages: [
     {

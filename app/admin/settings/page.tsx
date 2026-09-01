@@ -8,7 +8,8 @@ export default function AdminSettingsPage() {
   const [phone, setPhone] = useState("+91 92173 75835");
   const [email, setEmail] = useState("ashish17427@gmail.com");
   const [healthcareEmail, setHealthcareEmail] = useState("ashish17427@gmail.com");
-  const [address, setAddress] = useState("Gaur City 2, Greater Noida, Uttar Pradesh 201308, India");
+  const [address, setAddress] = useState("5 market square, High street, Uxbridge, UB8 1LH
+London");
   const [responseGuarantee, setResponseGuarantee] = useState("Rapid 4-Hour Response Guarantee");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

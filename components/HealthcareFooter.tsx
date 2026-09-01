@@ -394,7 +394,8 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
               FIND US HERE
             </h4>
             <p className="text-slate-700 leading-relaxed font-medium">
-              {siteContent.address || "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India"}
+              {siteContent.address || "5 market square, High street, Uxbridge, UB8 1LH
+London"}
             </p>
           </div>
 
