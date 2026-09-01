@@ -392,8 +392,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
               FIND US HERE
             </h4>
             <p className="text-slate-300 leading-relaxed font-medium">
-              {siteContent.address || "5 market square, High street, Uxbridge, UB8 1LH
-London"}
+              {siteContent.address || "5 market square, High street, Uxbridge, UB8 1LH London"}
             </p>
           </div>
 
