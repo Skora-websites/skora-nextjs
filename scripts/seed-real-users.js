@@ -103,9 +103,9 @@ const USERS = [
   },
   {
     email: "hr@skorainfotech.com",
-    displayName: "Shivangi Gupta",
-    firstName: "Shivangi",
-    lastName: "Gupta",
+    displayName: "Vishal Srivastava",
+    firstName: "Vishal",
+    lastName: "Srivastava",
     role: "hr_admin",
     department: "Human Resources",
     designation: "HR Manager",
@@ -162,6 +162,16 @@ const USERS = [
     employeeCode: "EMP-MKT-002",
   },
 
+  {
+    email: "sg.shivangi@outlook.com",
+    displayName: "Shivangi Gupta",
+    firstName: "Shivangi",
+    lastName: "Gupta",
+    role: "employee",
+    department: "Marketing",
+    designation: "Marketing Executive",
+    employeeCode: "EMP-MKT-003",
+  },
   {
     email: "sapnadelhi2004@gmail.com",
     displayName: "Sapna",
