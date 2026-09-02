@@ -29,7 +29,7 @@ export default function HrAdminOnboardingPage() {
   const loadCandidates = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/hrm/v2/onboarding/pending");
+      const res = await fetch("/api/hrm/v2/onboarding?pending=true");
       if (res.ok) {
         const data = await res.json();
         setCandidates(data.data || []);
@@ -38,12 +38,40 @@ export default function HrAdminOnboardingPage() {
     setLoading(false);
   };
 
-  const handleApprove = (id: string) => {
-    const code = `EMP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+  const handleApprove = async (id: string) => {
+    const code = "EMP-2026-" + Math.floor(1000 + Math.random() * 9000);
+    try {
+      // Update onboarding task status
+      await fetch("/api/hrm/v2/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_task", taskId: id, status: "approved" }),
+      });
+      // Update user status to active
+      const candidate = candidates.find((c) => c.id === id);
+      if (candidate) {
+        await fetch("/api/hrm/v2/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: candidate.id, action: "status", status: "active" }),
+        });
+      }
+    } catch (err) {
+      console.error("Failed to approve onboarding:", err);
+    }
     setCandidates((prev) => prev.map((c) => c.id === id ? { ...c, status: "approved" as const, employeeCode: code } : c));
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = async (id: string) => {
+    try {
+      await fetch("/api/hrm/v2/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_task", taskId: id, status: "rejected" }),
+      });
+    } catch (err) {
+      console.error("Failed to reject onboarding:", err);
+    }
     setCandidates((prev) => prev.map((c) => c.id === id ? { ...c, status: "rejected_48h" as const, deadlineHoursRemaining: 48 } : c));
   };
 

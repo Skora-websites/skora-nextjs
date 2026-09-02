@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   XCircle,
   FileText,
+  Send,
+  Download,
   TrendingUp,
   ClipboardList,
   AlertCircle,
