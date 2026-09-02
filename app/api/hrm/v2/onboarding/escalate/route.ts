@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the employee's onboarding record
-    const onboardingRecord = await db.collection("employeeOnboardingTasks").findOne({
+    const onboardingRecord = await db.collection("employee_onboarding_tasks").findOne({
       userId: auth.userId,
       status: { $in: ["rejected", "pending"] },
     });
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark as escalated
-    await db.collection("employeeOnboardingTasks").updateOne(
+    await db.collection("employee_onboarding_tasks").updateOne(
       { _id: onboardingRecord._id },
       {
         $set: {

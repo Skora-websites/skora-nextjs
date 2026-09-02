@@ -154,6 +154,8 @@ interface OnboardingCandidate {
   employeeName: string;
   email: string;
   department?: string;
+  documentName?: string;
+  documentUrl?: string;
   status: string;
   submittedAt: string;
 }
@@ -1188,6 +1190,11 @@ export default function SuperadminOverviewPage() {
                 <div>
                   <span className="font-bold text-slate-900 dark:text-white block">{c.employeeName || c.name}</span>
                   <span className="text-slate-500 text-[10px]">{c.email} {c.department ? "· " + c.department : ""}</span>
+                  {c.documentName && (
+                    <span className="text-[10px] text-primary block mt-1">
+                      <FileText className="h-3 w-3 inline mr-1" />{c.documentName}
+                    </span>
+                  )}
                 </div>
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">PENDING</span>
               </div>

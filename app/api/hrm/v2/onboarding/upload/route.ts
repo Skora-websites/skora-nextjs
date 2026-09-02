@@ -52,6 +52,15 @@ export async function POST(request: NextRequest) {
     // Save metadata and document to MongoDB
     const db = await getDb();
     if (db) {
+      // Also update the employee_onboarding_tasks record so CEO/HR can see the document
+      const task = await db.collection("employee_onboarding_tasks").findOne({ userId });
+      if (task) {
+        await db.collection("employee_onboarding_tasks").updateOne(
+          { _id: task._id },
+          { $set: { documentName: file.name, documentUrl: dataUrl, updatedAt: new Date() } }
+        );
+      }
+
       await db.collection("onboardingDocuments").insertOne({
         userId,
         fileName: file.name,

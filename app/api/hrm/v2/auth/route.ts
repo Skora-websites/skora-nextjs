@@ -72,7 +72,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       // Create onboarding task record in DB so HR Admin can see it
       const db = await getDb();
       if (db) {
-        await db.collection("employeeOnboardingTasks").insertOne({
+        await db.collection("employee_onboarding_tasks").insertOne({
           userId: newUser.id,
           tenantId: "default",
           employeeName: displayName || firstName || email,
