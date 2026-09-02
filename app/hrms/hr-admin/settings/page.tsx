@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,8 +41,60 @@ export default function HrAdminSettingsPage() {
   const [officeLat, setOfficeLat] = useState("");
   const [officeLng, setOfficeLng] = useState("");
 
-  const handleSave = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(true);
+
+  // Load existing settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await fetch("/api/hrm/v2/settings?role=hr_admin");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data) {
+            const s = data.data;
+            if (s.holidays) setHolidays(s.holidays);
+            if (s.leaveAccrual) {
+              if (s.leaveAccrual.cl !== undefined) setClAccrual(s.leaveAccrual.cl);
+              if (s.leaveAccrual.sl !== undefined) setSlAccrual(s.leaveAccrual.sl);
+              if (s.leaveAccrual.al !== undefined) setAlAccrual(s.leaveAccrual.al);
+              if (s.leaveAccrual.carryForward !== undefined) setCarryForward(s.leaveAccrual.carryForward);
+              if (s.leaveAccrual.carryForwardLimit !== undefined) setCarryForwardLimit(s.leaveAccrual.carryForwardLimit);
+            }
+            if (s.payrollDeductions) {
+              if (s.payrollDeductions.pfPercent !== undefined) setPfPercent(s.payrollDeductions.pfPercent);
+              if (s.payrollDeductions.esiPercent !== undefined) setEsiPercent(s.payrollDeductions.esiPercent);
+              if (s.payrollDeductions.professionalTax !== undefined) setProfessionalTax(s.payrollDeductions.professionalTax);
+              if (s.payrollDeductions.tdsEnabled !== undefined) setTdsEnabled(s.payrollDeductions.tdsEnabled);
+            }
+            if (s.geofence) {
+              if (s.geofence.latitude !== undefined) setOfficeLat(s.geofence.latitude);
+              if (s.geofence.longitude !== undefined) setOfficeLng(s.geofence.longitude);
+            }
+          }
+        }
+      } catch { /* use defaults */ }
+      setLoading(false);
+    };
+    loadSettings();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/hrm/v2/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "hr_admin",
+          settings: {
+            holidays,
+            leaveAccrual: { cl: clAccrual, sl: slAccrual, al: alAccrual, carryForward, carryForwardLimit },
+            payrollDeductions: { pfPercent, esiPercent, professionalTax, tdsEnabled },
+            geofence: { latitude: officeLat, longitude: officeLng },
+          },
+        }),
+      });
+    } catch { /* ignore */ }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

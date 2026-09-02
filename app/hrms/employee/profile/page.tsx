@@ -168,8 +168,21 @@ export default function EmployeeProfilePage() {
     ? `EMP-2026-${user.id.substring(0, 4).toUpperCase()}`
     : "EMP-2026-1008";
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/hrm/v2/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?.id || "",
+          action: "profile",
+          phone,
+          emergencyContact,
+          bankAccount,
+        }),
+      });
+    } catch { /* ignore */ }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

@@ -433,9 +433,11 @@ export default function HrAdminDashboardPage() {
         subtitle="Create projects, set client budgets, assign Project Managers"
         icon={<Briefcase className="h-5 w-5 text-blue-500" />}
         action={
-          <Button size="sm" className="bg-primary text-white font-bold text-xs">
-            <ClipboardList className="h-3.5 w-3.5 mr-1" /> Create Project
-          </Button>
+          <a href="/hrms/projects/all">
+            <Button size="sm" className="bg-primary text-white font-bold text-xs">
+              <ClipboardList className="h-3.5 w-3.5 mr-1" /> Create Project
+            </Button>
+          </a>
         }
       >
         <div className="p-8 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-slate-500 dark:text-slate-400 text-xs">
@@ -454,9 +456,11 @@ export default function HrAdminDashboardPage() {
         subtitle="Run end-of-month payroll: locked timesheets, deductions, overtime, payslips"
         icon={<DollarSign className="h-5 w-5 text-emerald-500" />}
         action={
-          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">
-            <DollarSign className="h-3.5 w-3.5 mr-1" /> Run Payroll
-          </Button>
+          <a href="/hrms/hr-admin/payroll">
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">
+              <DollarSign className="h-3.5 w-3.5 mr-1" /> Run Payroll
+            </Button>
+          </a>
         }
       >
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">

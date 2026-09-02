@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,8 +31,52 @@ export default function ManagerSettingsPage() {
   const [showRosterOnTop, setShowRosterOnTop] = useState(true);
   const [defaultView, setDefaultView] = useState("overview");
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await fetch("/api/hrm/v2/settings?role=manager");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data) {
+            const s = data.data;
+            if (s.notifications) {
+              if (s.notifications.overtime !== undefined) setNotifyOvertime(s.notifications.overtime);
+              if (s.notifications.leaveRequests !== undefined) setNotifyLeaveRequests(s.notifications.leaveRequests);
+              if (s.notifications.regularization !== undefined) setNotifyRegularization(s.notifications.regularization);
+              if (s.notifications.taskAssigned !== undefined) setNotifyTaskAssigned(s.notifications.taskAssigned);
+            }
+            if (s.autoAssignment) {
+              if (s.autoAssignment.enabled !== undefined) setAutoAssignEnabled(s.autoAssignment.enabled);
+              if (s.autoAssignment.strategy) setAutoAssignStrategy(s.autoAssignment.strategy);
+            }
+            if (s.dashboard) {
+              if (s.dashboard.compactMode !== undefined) setCompactMode(s.dashboard.compactMode);
+              if (s.dashboard.showRosterOnTop !== undefined) setShowRosterOnTop(s.dashboard.showRosterOnTop);
+              if (s.dashboard.defaultView) setDefaultView(s.dashboard.defaultView);
+            }
+          }
+        }
+      } catch { /* use defaults */ }
+    };
+    loadSettings();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/hrm/v2/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "manager",
+          settings: {
+            notifications: { overtime: notifyOvertime, leaveRequests: notifyLeaveRequests, regularization: notifyRegularization, taskAssigned: notifyTaskAssigned },
+            autoAssignment: { enabled: autoAssignEnabled, strategy: autoAssignStrategy },
+            dashboard: { compactMode, showRosterOnTop, defaultView },
+          },
+        }),
+      });
+    } catch { /* ignore */ }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
