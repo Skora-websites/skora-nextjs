@@ -1,976 +1,278 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Clock,
-  MapPin,
-  CheckCircle2,
-  LogOut,
-  Navigation,
-  AlertCircle,
-  AlertTriangle,
-  Send,
-  X,
-  Zap,
-  Coffee,
-  Users,
-} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, CheckCircle2, Clock, Coffee, LogOut, MapPin, Navigation, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { punchInAction, punchOutAction, updateAUXStateAction } from "@/lib/actions/attendance-actions";
 import { isWithinGeofence } from "@/lib/geofencing";
 
-// ── Office config (fetched from tenant) ────────────────────
-interface OfficeLocation {
-  latitude: number;
-  longitude: number;
-  radius: number; // meters
+interface OfficeLocation { latitude: number; longitude: number; radius: number; }
+interface OfficeRules { officeStart: number; officeEnd: number; lateAfter: number; workDays: number[]; halfDayAfter: number; }
+type AuxState = "active" | "on_break" | "meeting";
+
+const DEFAULT_OFFICE: OfficeLocation = { latitude: 28.6007594, longitude: 77.4319307, radius: 100 };
+const DEFAULT_RULES: OfficeRules = { officeStart: 10, officeEnd: 19, lateAfter: 10.5, workDays: [1, 2, 3, 4, 5], halfDayAfter: 14.5 };
+
+function todayString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-interface OfficeRules {
-  officeStart: number; // hour (e.g. 10 = 10:00 AM)
-  officeEnd: number;   // hour (e.g. 19 = 7:00 PM)
-  lateAfter: number;   // hour (e.g. 10.5 = 10:30 AM)
-  workDays: number[];  // 0=Sun, 1=Mon, ... 6=Sat
-  halfDayAfter: number; // hour after which it's half-day
+function formatHour(hour: number) {
+  const h = Math.floor(hour);
+  const minutes = Math.round((hour - h) * 60);
+  const normalized = h % 24;
+  const ampm = normalized >= 12 ? "PM" : "AM";
+  const display = normalized === 0 ? 12 : normalized > 12 ? normalized - 12 : normalized;
+  return `${display}:${String(minutes).padStart(2, "0")} ${ampm}`;
 }
 
-const DEFAULT_OFFICE: OfficeLocation = {
-  latitude: 28.6007594,
-  longitude: 77.4319307,
-  radius: 100,
-};
-
-const DEFAULT_RULES: OfficeRules = {
-  officeStart: 10,
-  officeEnd: 19,
-  lateAfter: 10.5,
-  workDays: [1, 2, 3, 4, 5], // Mon-Fri
-  halfDayAfter: 14.5,
-};
-
-// ── Per-user localStorage keys ─────────────────────────────
-function punchStateKey(userId: string) {
-  return `employee-punch-state-${userId}`;
+function formatDuration(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 export function AttendancePunchCard() {
   const { user } = useAuth();
   const userId = user?.id || "";
-
-  const [punchedIn, setPunchedIn] = useState(false);
-  const [punchTime, setPunchTime] = useState<string | null>(null);
-  const [punchOutTime, setPunchOutTime] = useState<string | null>(null);
-  const [locationName, setLocationName] = useState<string | null>(null);
-  const [statusLabel, setStatusLabel] = useState<string>("PRESENT");
-  const [workSeconds, setWorkSeconds] = useState(0);
-  const [loadingLocation, setLoadingLocation] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
-  const [officeRules, setOfficeRules] = useState<OfficeRules>(DEFAULT_RULES);
-
-  // Live GPS tracking state
-  const [gpsTrackingActive, setGpsTrackingActive] = useState(false);
-  const [lastGpsUpdate, setLastGpsUpdate] = useState<string | null>(null);
+  const today = useMemo(() => todayString(), []);
+  const [record, setRecord] = useState<any | null>(null);
+  const [office, setOffice] = useState<OfficeLocation>(DEFAULT_OFFICE);
+  const [rules, setRules] = useState<OfficeRules>(DEFAULT_RULES);
+  const [distance, setDistance] = useState<number | null>(null);
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
-  const [wakeLockActive, setWakeLockActive] = useState(false);
-  const [bgStatus, setBgStatus] = useState<"active" | "paused" | "resumed">("active");
-  const wakeLockRef2 = useRef<WakeLockSentinel | null>(null);
-  const watchIdRef = useRef<number | null>(null);
-  const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // AUX state (Active / On Break / Meeting)
-  const [auxState, setAuxState] = useState<"active" | "on_break" | "meeting">("active");
+  const [loading, setLoading] = useState(true);
+  const [punching, setPunching] = useState(false);
   const [auxSwitching, setAuxSwitching] = useState(false);
-  const [auxSince, setAuxSince] = useState<string | null>(null);
-  const auxPeriodsRef = useRef<Array<{ state: string; start: string; end?: string }>>([]);
-  const periodStartRef = useRef<string | null>(null);
-  const [totalElapsed, setTotalElapsed] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [showEarlyLeave, setShowEarlyLeave] = useState(false);
+  const [earlyReason, setEarlyReason] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
+  const watchRef = useRef<number | null>(null);
 
-  // Early punch-out approval state
-  const [showEarlyLeaveModal, setShowEarlyLeaveModal] = useState(false);
-  const [earlyLeaveReason, setEarlyLeaveReason] = useState("");
-  const [submittingApproval, setSubmittingApproval] = useState(false);
-
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const todayDay = new Date().getDay();
-
-  // ── Fetch office rules from DB ────────────────────────────
-  useEffect(() => {
-    const fetchRules = async () => {
-      try {
-        const res = await fetch("/api/hrm/v2/tenants/current");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.officeRules) {
-            setOfficeRules({
-              officeStart: data.officeRules.officeStart ?? DEFAULT_RULES.officeStart,
-              officeEnd: data.officeRules.officeEnd ?? DEFAULT_RULES.officeEnd,
-              lateAfter: data.officeRules.lateAfter ?? DEFAULT_RULES.lateAfter,
-              workDays: data.officeRules.workDays ?? DEFAULT_RULES.workDays,
-              halfDayAfter: data.officeRules.halfDayAfter ?? DEFAULT_RULES.halfDayAfter,
-            });
-          }
-        }
-      } catch { /* use defaults */ }
-    };
-    fetchRules();
-  }, []);
-
-  // ── Check if today is a work day ──────────────────────────
-  const isWorkDay = officeRules.workDays.includes(todayDay);
-
-  // ── Restore state from per-user localStorage ──────────────
-  useEffect(() => {
+  const refreshAttendance = useCallback(async () => {
     if (!userId) return;
-    const storedState = localStorage.getItem(punchStateKey(userId));
-    if (storedState) {
+    try {
+      const response = await fetch(`/api/hrm/v2/attendance?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(today)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Unable to load today's attendance");
+      const data = await response.json();
+      const rows = Array.isArray(data.data) ? data.data : [];
+      setRecord(rows[0] || null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to load today's attendance");
+    } finally {
+      setLoading(false);
+    }
+  }, [today, userId]);
+
+  useEffect(() => {
+    refreshAttendance();
+    const loadConfig = async () => {
       try {
-        const parsed = JSON.parse(storedState);          if (parsed.punchedIn && parsed.date === todayStr) {
-          setPunchedIn(true);
-          setPunchTime(parsed.punchTime);
-          setPunchOutTime(parsed.punchOutTime || null);
-          setLocationName(parsed.locationName || "GPS Verified");
-          setStatusLabel(parsed.statusLabel || "PRESENT");
-          setDistanceMeters(parsed.distanceMeters || null);
-          if (parsed.auxState) setAuxState(parsed.auxState);
-          if (parsed.auxSince) setAuxSince(parsed.auxSince);
-          // Restore AUX periods from localStorage for accurate timer
-          if (parsed.auxPeriods && Array.isArray(parsed.auxPeriods)) {
-            auxPeriodsRef.current = parsed.auxPeriods;
-          } else {
-            // Build a single period from punch-in to now
-            auxPeriodsRef.current = [{ state: parsed.auxState || "active", start: parsed.punchTime }];
-          }
-          periodStartRef.current = parsed.auxSince || parsed.punchTime;
-          if (!parsed.punchOutTime) {
-            // Compute effective work seconds from AUX history
-            const periods = auxPeriodsRef.current;
-            let totalMs = 0;
-            const nowMs = Date.now();
-            for (const p of periods) {
-              if (p.state === "active" || p.state === "meeting") {
-                const startMs = new Date(p.start).getTime();
-                const endMs = p.end ? new Date(p.end).getTime() : nowMs;
-                totalMs += endMs - startMs;
-              }
-            }
-            setWorkSeconds(Math.max(0, Math.floor(totalMs / 1000)));
-            // Also compute total elapsed (wall clock)
-            const totalSecs = Math.floor((Date.now() - new Date(parsed.punchTime).getTime()) / 1000);
-            setTotalElapsed(totalSecs > 0 ? totalSecs : 0);
-          }
+        const response = await fetch("/api/hrm/v2/tenants/current", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        setRules({
+          officeStart: data.officeRules?.officeStart ?? DEFAULT_RULES.officeStart,
+          officeEnd: data.officeRules?.officeEnd ?? DEFAULT_RULES.officeEnd,
+          lateAfter: data.officeRules?.lateAfter ?? DEFAULT_RULES.lateAfter,
+          workDays: data.officeRules?.workDays ?? DEFAULT_RULES.workDays,
+          halfDayAfter: data.officeRules?.halfDayAfter ?? DEFAULT_RULES.halfDayAfter,
+        });
+        if (Number.isFinite(data.latitude) && Number.isFinite(data.longitude)) {
+          setOffice({ latitude: Number(data.latitude), longitude: Number(data.longitude), radius: Number(data.geofenceRadius) || 100 });
         }
-      } catch { /* ignore */ }
-    }
-  }, [userId, todayStr]);
-
-  // ── Compute effective work seconds from AUX history ───────
-  const computeEffectiveWorkSeconds = useCallback(() => {
-    const periods = auxPeriodsRef.current;
-    if (!periods || periods.length === 0) return 0;
-    let totalMs = 0;
-    const nowMs = Date.now();
-    for (const p of periods) {
-      if (p.state === "active" || p.state === "meeting") {
-        const startMs = new Date(p.start).getTime();
-        const endMs = p.end ? new Date(p.end).getTime() : nowMs;
-        totalMs += endMs - startMs;
-      }
-    }
-    return Math.max(0, Math.floor(totalMs / 1000));
-  }, []);
-
-  // ── Timer — effective work ticks only during active/meeting ──
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (punchedIn && !punchOutTime && (auxState === "active" || auxState === "meeting")) {
-      interval = setInterval(() => {
-        setWorkSeconds(computeEffectiveWorkSeconds());
-      }, 1000);
-    }
-    return () => { if (interval) clearInterval(interval); };
-  }, [punchedIn, punchOutTime, auxState, computeEffectiveWorkSeconds]);
-
-  // ── Total elapsed timer (wall clock — always ticks) ────────
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (punchedIn && !punchOutTime) {
-      interval = setInterval(() => {
-        setTotalElapsed((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => { if (interval) clearInterval(interval); };
-  }, [punchedIn, punchOutTime]);
-
-  // ── Clear messages after 4 seconds ────────────────────────
-  useEffect(() => {
-    if (successMsg) {
-      const t = setTimeout(() => setSuccessMsg(null), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [successMsg]);
-
-  // ── Fetch office location ─────────────────────────────────
-  const getOfficeLocation = async (): Promise<OfficeLocation> => {
-    try {
-      const res = await fetch("/api/hrm/v2/tenants/current");
-      if (res.ok) {
-        const data = await res.json();
-        if (data.latitude && data.longitude) {
-          return {
-            latitude: data.latitude,
-            longitude: data.longitude,
-            radius: data.geofenceRadius || 100,
-          };
-        }
-      }
-    } catch { /* use default */ }
-    return DEFAULT_OFFICE;
-  };
-
-  // ── Determine attendance status based on time ────────────
-  const getAttendanceStatus = (punchHour: number): string => {
-    if (!isWorkDay) return "WEEK_OFF";
-    if (punchHour > officeRules.lateAfter) return "LATE";
-    return "PRESENT";
-  };
-
-  // ── Handle AUX state change ──────────────────────────────
-  const handleAUXChange = async (newState: "active" | "on_break" | "meeting") => {
-    if (auxSwitching || newState === auxState) return;
-    setAuxSwitching(true);
-    const nowISO = new Date().toISOString();
-    try {
-      const res = await updateAUXStateAction(userId, todayStr, newState);
-      if (res.success) {
-        // Finalize current period and start new one
-        const periods = auxPeriodsRef.current;
-        if (periods.length > 0 && !periods[periods.length - 1].end) {
-          periods[periods.length - 1].end = nowISO;
-        }
-        periods.push({ state: newState, start: nowISO });
-        periodStartRef.current = nowISO;
-
-        setAuxState(newState);
-        setAuxSince(nowISO);
-
-        // Recompute effective work seconds
-        setWorkSeconds(computeEffectiveWorkSeconds());
-
-        // Persist to localStorage
-        const stored = localStorage.getItem(punchStateKey(userId));
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.auxState = newState;
-          parsed.auxSince = nowISO;
-          parsed.auxPeriods = auxPeriodsRef.current;
-          localStorage.setItem(punchStateKey(userId), JSON.stringify(parsed));
-        }
-      } else {
-        setErrorMsg(res.error || "Failed to update AUX state");
-      }
-    } catch {
-      setErrorMsg("Failed to update AUX state. Please try again.");
-    }
-    setAuxSwitching(false);
-  };
-
-  // ── AUX elapsed time display ──────────────────────────────
-  const auxElapsed = (): string => {
-    if (!auxSince) return "";
-    const secs = Math.floor((Date.now() - new Date(auxSince).getTime()) / 1000);
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return m > 0 ? `${m}m ${s}s` : `${s}s`;
-  };
-
-  // ── Check if punch-out is early (before office end) ──────
-  const isEarlyPunchOut = (): boolean => {
-    const now = new Date();
-    const currentHour = now.getHours() + now.getMinutes() / 60;
-    return currentHour < officeRules.officeEnd;
-  };
-
-
-  const isLocalhost = typeof window !== 'undefined' && (
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '::1'
-  );
-
-  // Send location to server
-  const sendLocationUpdate = useCallback(async (lat: number, lng: number, acc: number) => {
-    try {
-      await fetch("/api/hrm/v2/attendance/location", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ latitude: lat, longitude: lng, accuracy: acc }),
-      });
-      setLastGpsUpdate(new Date().toISOString());
-      setGpsAccuracy(acc);
-    } catch { /* retry next cycle */ }
-  }, []);
-
-  // Start continuous GPS tracking
-  const startGpsTracking = useCallback(() => {
-    if (isLocalhost) {
-      setGpsTrackingActive(true);
-      setLastGpsUpdate(new Date().toISOString());
-      setGpsAccuracy(5);
-      locationIntervalRef.current = setInterval(() => {
-        const mockLat = DEFAULT_OFFICE.latitude + (Math.random() - 0.5) * 0.0002;
-        const mockLng = DEFAULT_OFFICE.longitude + (Math.random() - 0.5) * 0.0002;
-        sendLocationUpdate(mockLat, mockLng, 5);
-      }, 30000);
-      return;
-    }
-    if (!navigator.geolocation) return;
-    setGpsTrackingActive(true);
-    setLastGpsUpdate(new Date().toISOString());
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        setGpsAccuracy(pos.coords.accuracy);
-        (window as any).__gpsLatestPosition = {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          accuracy: pos.coords.accuracy
-        };
-      },
-      (err) => { console.warn("GPS tracking error:", err.message); },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
-    );
-    locationIntervalRef.current = setInterval(() => {
-      const p = (window as any).__gpsLatestPosition;
-      if (p) sendLocationUpdate(p.latitude, p.longitude, p.accuracy);
-    }, 30000);
-  }, [isLocalhost, sendLocationUpdate]);
-
-  // Stop GPS tracking
-  const stopGpsTracking = useCallback(() => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-    if (locationIntervalRef.current) {
-      clearInterval(locationIntervalRef.current);
-      locationIntervalRef.current = null;
-    }
-    setGpsTrackingActive(false);
-    setLastGpsUpdate(null);
-    setGpsAccuracy(null);
-    (window as any).__gpsLatestPosition = null;
-  }, []);
-  // Acquire Wake Lock — keeps screen on so GPS stays active
-  const acquireWakeLock = useCallback(async () => {
-    if (!("wakeLock" in navigator)) return;
-    try {
-      const wl = await navigator.wakeLock.request("screen");
-      wakeLockRef2.current = wl;
-      setWakeLockActive(true);
-      wl.addEventListener("release", () => {
-        wakeLockRef2.current = null;
-        setWakeLockActive(false);
-      });
-    } catch { /* not supported */ }
-  }, []);
-
-  // Release Wake Lock
-  const releaseWakeLock = useCallback(async () => {
-    if (wakeLockRef2.current) {
-      try { await wakeLockRef2.current.release(); } catch {}
-      wakeLockRef2.current = null;
-    }
-    setWakeLockActive(false);
-  }, []);
-
-  // Visibility API — auto-resume GPS when app comes back to foreground
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible" && punchedIn && !punchOutTime) {
-        // App came back to foreground — resume GPS
-        if (!gpsTrackingActive) startGpsTracking();
-        acquireWakeLock();
-        setBgStatus("resumed");
-      } else if (document.visibilityState === "hidden") {
-        setBgStatus("paused");
-      }
+      } catch { /* server defaults remain in place */ }
     };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [punchedIn, punchOutTime, gpsTrackingActive, startGpsTracking, acquireWakeLock]);
+    loadConfig();
+  }, [refreshAttendance]);
 
-  // Re-acquire Wake Lock on window focus (iOS requirement)
+  const punchedIn = Boolean(record?.punchInTime);
+  const punchedOut = Boolean(record?.punchOutTime);
+  const auxState: AuxState = record?.auxState === "on_break" || record?.auxState === "meeting" ? record.auxState : "active";
+  const workLocation = record?.workLocation || (record?.location?.includes?.("[remote]") ? "remote" : "office");
+
+  const effectiveSeconds = useMemo(() => {
+    if (!record?.punchInTime) return 0;
+    const history = Array.isArray(record.auxHistory) ? record.auxHistory : [];
+    const now = Date.now();
+    let total = 0;
+    for (const period of history) {
+      if (period.state !== "active" && period.state !== "meeting") continue;
+      const start = new Date(period.startTime).getTime();
+      const end = period.endTime ? new Date(period.endTime).getTime() : now;
+      if (Number.isFinite(start)) total += Math.max(0, end - start);
+    }
+    if (history.length === 0) total = Math.max(0, now - new Date(record.punchInTime).getTime());
+    return Math.floor(total / 1000);
+  }, [record]);
+
+  const [tick, setTick] = useState(0);
   useEffect(() => {
-    const handleFocus = () => {
-      if (punchedIn && !punchOutTime && !wakeLockRef2.current) {
-        acquireWakeLock();
-      }
-    };
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [punchedIn, punchOutTime, acquireWakeLock]);
+    if (!punchedIn || punchedOut) return;
+    const id = window.setInterval(() => setTick(v => v + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [punchedIn, punchedOut]);
+  void tick;
 
-  // Resume tracking if page reloads while punched in
-  useEffect(() => {
-    if (punchedIn && !punchOutTime && !gpsTrackingActive) {
-      startGpsTracking();
-    }
-  }, [punchedIn, punchOutTime, gpsTrackingActive]);
+  useEffect(() => () => {
+    if (watchRef.current !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchRef.current);
+  }, []);
 
-  // ── Handle Punch In ──────────────────────────────────────
+  const getPosition = () => new Promise<GeolocationPosition>((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error("Geolocation is required for attendance."));
+    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
+  });
 
-  const handleMarkAttendance = () => {
-    setErrorMsg(null);
-    setLoadingLocation(true);
-
-    // In development (localhost), skip GPS verification
-    if (isLocalhost) {
-      const now = new Date();
-      const currentHour = now.getHours() + now.getMinutes() / 60;
-      const status = getAttendanceStatus(currentHour);
-      const isHalfDay = currentHour >= officeRules.halfDayAfter;
-      const locationStr = "GPS skipped (localhost development mode)";
-      setDistanceMeters(0);
-      executePunchIn(locationStr, isHalfDay ? "HALF_DAY" : status, isHalfDay);
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      setLoadingLocation(false);
-      setErrorMsg("Geolocation is required for punch in. Please enable location access in your browser.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const userLat = position.coords.latitude;
-        const userLng = position.coords.longitude;
-        const office = await getOfficeLocation();
-
-        const { within, distance } = isWithinGeofence(
-          userLat, userLng, office.latitude, office.longitude, office.radius
-        );
-
-        setDistanceMeters(distance);
-
-        // Determine work location based on GPS distance from office
-        const workLocation = within ? "office" : "remote";
-
-        const now = new Date();
-        const currentHour = now.getHours() + now.getMinutes() / 60;
-
-        // Only enforce office hours for in-office punch-ins
-        if (within) {
-          if (currentHour < officeRules.officeStart) {
-            setLoadingLocation(false);
-            setErrorMsg(`Office hours start at ${formatHour(officeRules.officeStart)}. You cannot punch in before then.`);
-            return;
-          }
-
-          if (currentHour >= officeRules.officeEnd + 1) {
-            setLoadingLocation(false);
-            setErrorMsg(`Office hours end at ${formatHour(officeRules.officeEnd)}. Late punch-ins are not accepted.`);
-            return;
-          }
-        }
-
-        const locationStr = `Lat: ${userLat.toFixed(4)}, Lng: ${userLng.toFixed(4)} (${distance}m from office) [${workLocation}]`;
-        const status = within ? getAttendanceStatus(currentHour) : "WFH";
-        const isHalfDay = within && currentHour >= officeRules.halfDayAfter;
-
-        await executePunchIn(locationStr, status, isHalfDay, workLocation);
-      },
-      async () => {
-        // GPS denied or unavailable — try low-accuracy fallback (WiFi/IP-based location)
-        navigator.geolocation?.getCurrentPosition(
-          async (position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-            const office = await getOfficeLocation();
-            const { within, distance } = isWithinGeofence(
-              userLat, userLng, office.latitude, office.longitude, office.radius
-            );
-            setDistanceMeters(distance);
-            const workLocation = within ? "office" : "remote";
-            const now = new Date();
-            const currentHour = now.getHours() + now.getMinutes() / 60;
-            const locationStr = `Lat: ${userLat.toFixed(4)}, Lng: ${userLng.toFixed(4)} (${distance}m from office) [${workLocation}] [WiFi fallback]`;
-            const status = within ? getAttendanceStatus(currentHour) : "WFH";
-            const isHalfDay = within && currentHour >= officeRules.halfDayAfter;
-            await executePunchIn(locationStr, status, isHalfDay, workLocation);
-          },
-          async () => {
-            // All GPS methods failed — allow manual punch-in (logged as unknown location)
-            setLoadingLocation(false);
-            const now = new Date();
-            const currentHour = now.getHours() + now.getMinutes() / 60;
-            const isDesktop = !/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const locationMsg = isDesktop
-              ? "📍 Desktop detected — location captured via network"
-              : "📍 Location access denied — punching in without GPS";
-            const locationStr = `${locationMsg} (Time: ${now.toLocaleTimeString()})`;
-            const status = getAttendanceStatus(currentHour);
-            const isHalfDay = currentHour >= officeRules.halfDayAfter;
-            await executePunchIn(locationStr, isHalfDay ? "HALF_DAY" : status, isHalfDay, "office");
-          },
-          { timeout: 10000, enableHighAccuracy: false }
-        );
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  };
-
-  const executePunchIn = async (locStr: string, status: string, isHalfDay: boolean, workLocation: "office" | "remote" = "office") => {
-    const userName = user?.name || user?.email || "Employee";
-    const userEmail = user?.email || "employee@company.com";
-    const empCode = user?.id ? `EMP-2026-${user.id.substring(0, 4).toUpperCase()}` : "EMP-2026-XXXX";
-    const finalStatus = isHalfDay ? "HALF_DAY" : status;
-
-    let serverSaved = false;
+  const handlePunchIn = async () => {
+    setError(null); setSuccess(null); setPunching(true);
     try {
-      const res = await punchInAction({
-        userId, userName, userEmail, employeeCode: empCode,
-        location: locStr, status: finalStatus, workLocation,
+      if (!rules.workDays.includes(new Date().getDay())) throw new Error("Today is a scheduled weekly off.");
+      const position = await getPosition();
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
+      setGpsAccuracy(accuracy);
+      const result = isWithinGeofence(lat, lng, office.latitude, office.longitude, office.radius);
+      setDistance(result.distance);
+      const currentHour = new Date().getHours() + new Date().getMinutes() / 60;
+      const isOffice = result.within;
+      if (isOffice && currentHour < rules.officeStart) throw new Error(`Office hours start at ${formatHour(rules.officeStart)}.`);
+      if (isOffice && currentHour >= rules.officeEnd + 1) throw new Error(`Late punch-ins are not accepted after ${formatHour(rules.officeEnd + 1)}.`);
+      const status = isOffice ? (currentHour > rules.lateAfter ? "LATE" : currentHour >= rules.halfDayAfter ? "HALF_DAY" : "PRESENT") : "WFH";
+      const punch = await punchInAction({
+        userId,
+        userName: user?.name || user?.email || "Employee",
+        userEmail: user?.email || "",
+        location: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)} (${Math.round(result.distance)}m from office) [${isOffice ? "office" : "remote"}]`,
+        status,
+        workLocation: isOffice ? "office" : "remote",
       });
-      if (res.success && res.record) {
-        serverSaved = true;
-        setPunchedIn(true);
-        setPunchTime(res.record.punchInTime);
-        setLocationName(res.record.location || locStr);
-        setStatusLabel(res.record.status || finalStatus);
-        setWorkSeconds(0);
-        setPunchOutTime(null);
-        localStorage.setItem(
-          punchStateKey(userId),
-          JSON.stringify({
-            punchedIn: true, date: todayStr, punchTime: res.record.punchInTime,
-            locationName: res.record.location || locStr, statusLabel: res.record.status || finalStatus,
-            distanceMeters, synced: true, auxState: "active", auxSince: res.record.punchInTime,
-            auxPeriods: [{ state: "active", start: res.record.punchInTime }],
-          })
-        );
-        auxPeriodsRef.current = [{ state: "active", start: res.record.punchInTime }];
-        periodStartRef.current = res.record.punchInTime;
-        setAuxState("active");
-        setAuxSince(res.record.punchInTime);
-        window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in", record: res.record } }));
-        startGpsTracking();
-      }
-    } catch { /* server unavailable */ }
-
-    if (!serverSaved) {
-      const now = new Date();
-      const localRecord = {
-        userId, userName, userEmail, employeeCode: empCode,
-        date: todayStr, punchInTime: now.toISOString(), location: locStr, status: finalStatus,
-      };
-      const pending = JSON.parse(localStorage.getItem("pending-attendance") || "[]");
-      pending.push(localRecord);
-      localStorage.setItem("pending-attendance", JSON.stringify(pending));
-
-      setPunchedIn(true);
-      setPunchTime(now.toISOString());
-      setLocationName(locStr + " (Offline - pending sync)");
-      setStatusLabel(finalStatus);
-      setWorkSeconds(0);
-      setPunchOutTime(null);
-      localStorage.setItem(
-        punchStateKey(userId),
-        JSON.stringify({
-          punchedIn: true, date: todayStr, punchTime: now.toISOString(),
-          locationName: locStr + " (Offline - pending sync)", statusLabel: finalStatus,
-          distanceMeters, synced: false, auxState: "active", auxSince: now.toISOString(),
-          auxPeriods: [{ state: "active", start: now.toISOString() }],
-        })
-      );
-      auxPeriodsRef.current = [{ state: "active", start: now.toISOString() }];
-      periodStartRef.current = now.toISOString();
-      setAuxState("active");
-      setAuxSince(now.toISOString());
-      window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in-local", record: localRecord } }));
-      setErrorMsg("Database unavailable. Attendance saved locally and will sync when the server is back online.");
-    }
-
-    setLoadingLocation(false);
-  };
-
-  // ── Handle Punch Out ─────────────────────────────────────
-  const handlePunchOut = async () => {
-    // Always allow punch-out, but check if it's early
-    if (isEarlyPunchOut() && isWorkDay) {
-      setShowEarlyLeaveModal(true);
-      return;
-    }
-
-    await executePunchOut();
+      if (!punch.success || !punch.record) throw new Error(punch.error || "Attendance was not saved. Please try again.");
+      setRecord(punch.record);
+      setSuccess("Attendance recorded successfully.");
+      window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in", record: punch.record } }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Attendance could not be recorded.");
+    } finally { setPunching(false); }
   };
 
   const executePunchOut = async () => {
-    stopGpsTracking();
-    await punchOutAction(userId, todayStr);
-
-    setPunchedIn(false);
-    setPunchOutTime(new Date().toISOString());
-    setWorkSeconds(0);
-    setDistanceMeters(null);
-    setAuxState("active");
-    setAuxSince(null);
-    auxPeriodsRef.current = [];
-    periodStartRef.current = null;
-    localStorage.removeItem(punchStateKey(userId));
-
-    window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-out", userId } }));
-  };
-
-  // ── Submit early leave request ────────────────────────────
-  const submitEarlyLeaveRequest = async () => {
-    if (!earlyLeaveReason.trim()) return;
-    setSubmittingApproval(true);
-
+    setError(null); setSuccess(null); setPunching(true);
     try {
-      // Create an early departure notification to HR (not a full leave request since there's no leave type)
-      // This sends an approval request that HR and CEO need to review
-      await fetch("/api/hrm/v2/notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "send_to_role",
-          role: "hr_admin",
-          title: "Early Departure Approval Required",
-          body: `${user?.name || user?.email} requests early punch-out at ${new Date().toLocaleTimeString()}. Reason: ${earlyLeaveReason}. Requires CEO approval.`,
-          type: "approval",
-          referenceType: "early_departure",
-          referenceId: userId,
-        }),
-      });
+      const result = await punchOutAction(userId, today);
+      if (!result.success) throw new Error(result.error || "Punch-out was not saved.");
+      await refreshAttendance();
+      setSuccess("Punch-out recorded successfully.");
+      if (watchRef.current !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchRef.current);
+      window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-out", userId } }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Punch-out could not be recorded.");
+    } finally { setPunching(false); }
+  };
 
-      // Also send notification to HR
-      await fetch("/api/hrm/v2/notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "send",
-          userId: userId,
-          title: "Early Departure Request",
-          body: `${user?.name || user?.email} requested early punch-out. Reason: ${earlyLeaveReason}`,
-          type: "approval",
-        }),
-      });
-
-      // Still allow the punch-out
-      await executePunchOut();
-      setShowEarlyLeaveModal(false);
-      setEarlyLeaveReason("");
-      setSuccessMsg("Early departure request sent to HR for approval.");
-    } catch {
-      // Still punch out even if notification fails
-      await executePunchOut();
-      setShowEarlyLeaveModal(false);
-      setEarlyLeaveReason("");
+  const handlePunchOut = async () => {
+    const hour = new Date().getHours() + new Date().getMinutes() / 60;
+    if (rules.workDays.includes(new Date().getDay()) && hour < rules.officeEnd) {
+      setShowEarlyLeave(true);
+      return;
     }
-
-    setSubmittingApproval(false);
+    await executePunchOut();
   };
 
-  // ── Helpers ──────────────────────────────────────────────
-  const formatTime = (totalSecs: number) => {
-    const hrs = Math.floor(totalSecs / 3600);
-    const mins = Math.floor((totalSecs % 3600) / 60);
-    const secs = totalSecs % 60;
-    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  const submitEarlyLeave = async () => {
+    if (!earlyReason.trim()) { setError("Please enter a reason for early departure."); return; }
+    setSendingRequest(true); setError(null);
+    try {
+      const response = await fetch("/api/hrm/v2/notifications", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send_to_role", role: "hr_admin", title: "Early Departure Approval Required", body: `${user?.name || user?.email} requested early punch-out. Reason: ${earlyReason.trim()}.`, type: "approval", referenceType: "early_departure", referenceId: userId }),
+      });
+      if (!response.ok) throw new Error("Approval request could not be submitted.");
+      setShowEarlyLeave(false); setEarlyReason("");
+      setSuccess("Early departure request sent. Your attendance remains open until punch-out is completed.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Approval request failed."); }
+    finally { setSendingRequest(false); }
   };
 
-  const formatHour = (h: number) => {
-    const hrs = Math.floor(h);
-    const mins = Math.round((h - hrs) * 60);
-    const ampm = hrs >= 12 ? "PM" : "AM";
-    const displayHr = hrs > 12 ? hrs - 12 : hrs === 0 ? 12 : hrs;
-    return `${displayHr}:${mins.toString().padStart(2, "0")} ${ampm}`;
+  const changeAux = async (next: AuxState) => {
+    if (next === auxState || auxSwitching || !punchedIn || punchedOut) return;
+    setAuxSwitching(true); setError(null);
+    try {
+      const result = await updateAUXStateAction(userId, today, next);
+      if (!result.success || !result.record) throw new Error(result.error || "AUX state could not be updated.");
+      setRecord(result.record);
+    } catch (e) { setError(e instanceof Error ? e.message : "AUX state could not be updated."); }
+    finally { setAuxSwitching(false); }
   };
+
+  if (loading) return <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 text-sm text-slate-500">Loading attendance…</div>;
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
-      {/* Header */}
+    <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 shadow-sm dark:shadow-2xl text-slate-900 dark:text-white">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-white/10">
         <div>
-          <h3 className="font-bold text-base flex items-center gap-2 text-slate-900 dark:text-white">
-            <Clock className="h-5 w-5 text-primary animate-pulse" /> Daily Attendance &amp; Shift Punch
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Office: <strong>{formatHour(officeRules.officeStart)} – {formatHour(officeRules.officeEnd)}</strong> · Late after <strong>{formatHour(officeRules.lateAfter)}</strong>
-          </p>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-            Work days: {officeRules.workDays.map(d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d]).join(", ")}
-          </p>
+          <h3 className="font-bold text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /> Daily Attendance &amp; Shift Punch</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Office: <strong>{formatHour(rules.officeStart)} – {formatHour(rules.officeEnd)}</strong> · Late after <strong>{formatHour(rules.lateAfter)}</strong></p>
         </div>
-        {punchedIn && !punchOutTime && (
-          <div className="self-start sm:self-center flex flex-col items-end gap-1.5">
-            {distanceMeters !== null && (
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-                <Navigation className="h-3.5 w-3.5" /> {distanceMeters}m from office
-              </span>
-            )}
-            {gpsTrackingActive && (
-              <div className="flex flex-col items-end gap-1">
-                <span className="flex items-center gap-1.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                  GPS Active
-                  {gpsAccuracy && <span className="text-blue-400">±{Math.round(gpsAccuracy)}m</span>}
-                </span>
-                {wakeLockActive && (
-                  <span className="text-[9px] text-emerald-500 dark:text-emerald-400 font-medium">
-                    🔒 Screen lock held — GPS stays active
-                  </span>
-                )}
-                {bgStatus === "paused" && (
-                  <span className="text-[9px] text-amber-500 dark:text-amber-400 font-medium animate-pulse">
-                    ⏸️ Background — GPS paused (open app to resume)
-                  </span>
-                )}
-                {bgStatus === "resumed" && (
-                  <span className="text-[9px] text-emerald-500 dark:text-emerald-400 font-medium">
-                    ✅ Resumed — GPS tracking active
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {punchedIn && !punchedOut && <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full">LIVE · {workLocation === "remote" ? "Remote" : "Office"}</span>}
       </div>
 
-      {/* Error message */}
-      {errorMsg && (
-        <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-3 text-xs text-red-600 dark:text-red-400">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <div className="space-y-1.5">
-              <span className="font-bold block">{errorMsg}</span>
-              <span className="block text-[10px] opacity-80">
-                To fix: Go to your phone <strong>Settings</strong> → <strong>Apps</strong> → <strong>Chrome/Safari</strong> → <strong>Location</strong> → Set to <strong>"Allow"</strong>.
-                Then refresh this page and try again.
-              </span>
-              <button
-                onClick={() => window.location.reload()}
-                className="text-[10px] font-bold underline hover:no-underline"
-              >
-                ↻ Refresh page and retry
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {error && <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-3 text-xs text-red-600 dark:text-red-400"><AlertCircle className="h-4 w-4 shrink-0" /><span>{error}</span></div>}
+      {success && <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3 text-xs text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="h-4 w-4" /><span>{success}</span></div>}
 
-      {/* Success message */}
-      {successMsg && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3 text-xs text-emerald-600 dark:text-emerald-400">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>{successMsg}</span>
-        </div>
-      )}
-
-      {/* Main content */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-5 rounded-xl bg-slate-50 dark:bg-black/40 border border-gray-200 dark:border-white/5">
         <div>
-          <span className="text-xs text-slate-500 dark:text-slate-400 block mb-1">
-            {punchedIn && !punchOutTime ? "Punched In at:" : punchOutTime ? "Punched Out at:" : "Status:"}
-          </span>
-          <p className="text-base font-bold text-slate-900 dark:text-white">
-            {punchedIn && punchTime
-              ? new Date(punchTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-              : "Not Punched In Today"}
-          </p>
-          {punchOutTime && (
-            <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-              Out: {new Date(punchOutTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </p>
-          )}
-          {punchedIn && (
-            <div className="mt-2 space-y-1">
-              <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${
-                statusLabel === "LATE" ? "text-yellow-600 dark:text-yellow-400" :
-                statusLabel === "HALF_DAY" ? "text-orange-600 dark:text-orange-400" :
-                statusLabel === "WEEK_OFF" ? "text-blue-600 dark:text-blue-400" :
-                "text-emerald-600 dark:text-emerald-400"
-              }`}>
-                <CheckCircle2 className="h-4 w-4" /> Status: {statusLabel}
-              </span>
-              {locationName && (
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 text-primary" /> {locationName}
-                </p>
-              )}
-            </div>
-          )}
+          <span className="text-xs text-slate-500 dark:text-slate-400">{punchedIn ? "Punched In at:" : "Status:"}</span>
+          <p className="text-base font-bold mt-1">{punchedIn ? new Date(record.punchInTime).toLocaleTimeString() : "Not Punched In Today"}</p>
+          {punchedOut && <p className="text-sm font-semibold text-emerald-600 mt-1">Out: {new Date(record.punchOutTime).toLocaleTimeString()}</p>}
+          {punchedIn && <div className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">Status: {record.status || "PRESENT"}</div>}
+          {record?.location && <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1"><MapPin className="h-3 w-3" /> {record.location}</p>}
+          {distance !== null && <p className="text-[11px] text-slate-500 mt-1"><Navigation className="inline h-3 w-3" /> {Math.round(distance)}m from office{gpsAccuracy ? ` · GPS ±${Math.round(gpsAccuracy)}m` : ""}</p>}
         </div>
 
-        {/* Stopwatch */}
-        <div className="text-center bg-white dark:bg-black/60 px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 shadow-inner">
-          <span className="font-mono text-3xl font-extrabold tracking-wider text-slate-900 dark:text-white">
-            {formatTime(workSeconds)}
-          </span>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-medium">
-            Effective Work Hours
-          </span>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500 block mt-0.5">
-            Total elapsed: {formatTime(totalElapsed)}
-          </span>
-          {auxState === "on_break" && (
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block mt-1">
-              ⏸ Timer paused — on break
-            </span>
-          )}
+        <div className="text-center bg-white dark:bg-black/60 px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10">
+          <span className="font-mono text-3xl font-extrabold tracking-wider">{formatDuration(effectiveSeconds)}</span>
+          <span className="text-[10px] text-slate-500 block mt-1">Effective Work Time</span>
         </div>
 
-        {/* Action Buttons */}
         <div>
           {!punchedIn ? (
-            <Button
-              onClick={handleMarkAttendance}
-              disabled={loadingLocation}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 px-6 h-11 text-sm shadow-md"
-            >
-              {loadingLocation ? (
-                <span className="flex items-center gap-2">
-                  <Navigation className="h-4 w-4 animate-spin" /> Validating Geofence...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">📍 Punch In</span>
-              )}
-            </Button>
-          ) : punchOutTime ? (
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10">
-              ✓ Shift Complete
-            </span>
+            <Button onClick={handlePunchIn} disabled={punching} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 px-6 h-11">{punching ? "Validating…" : <><MapPin className="h-4 w-4" /> Punch In</>}</Button>
+          ) : punchedOut ? (
+            <span className="text-xs font-bold text-emerald-600 px-4 py-2 rounded-xl border border-emerald-200 bg-emerald-50">✓ Shift Complete</span>
           ) : (
-            <Button onClick={handlePunchOut} variant="danger" className="font-bold gap-2 px-6 h-11 text-sm">
-              <LogOut className="h-4 w-4" /> Punch Out
-            </Button>
+            <Button onClick={handlePunchOut} disabled={punching} variant="danger" className="font-bold gap-2 px-6 h-11"><LogOut className="h-4 w-4" /> {punching ? "Saving…" : "Punch Out"}</Button>
           )}
         </div>
       </div>
 
-      {/* Geofence notice */}
-      {!punchedIn && !errorMsg && (
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center flex items-center justify-center gap-1">
-          <MapPin className="h-3 w-3" /> {isLocalhost ? "Development mode — GPS verification disabled" : "Punch in from anywhere — your location will be captured automatically"}
-        </p>
-      )}
+      {!punchedIn && <p className="text-[10px] text-slate-400 mt-3 text-center flex items-center justify-center gap-1"><MapPin className="h-3 w-3" /> GPS verification is required to punch in.</p>}
 
-      {/* ═══ AUX State Toggle (Active / On Break / Meeting) ═══ */}
-      {punchedIn && !punchOutTime && (
-        <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 dark:from-black/30 dark:to-blue-500/5 border border-gray-200 dark:border-white/10">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-primary" /> AUX Status
-            </span>
-            {auxSince && (
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                In {auxState === "active" ? "Active" : auxState === "on_break" ? "Break" : "Meeting"} for {auxElapsed()}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleAUXChange("active")}
-              disabled={auxSwitching}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border
-                ${auxState === "active"
-                  ? "bg-emerald-500 text-white border-emerald-600 shadow-md shadow-emerald-500/20"
-                  : "bg-white dark:bg-black/40 text-slate-600 dark:text-slate-400 border-gray-200 dark:border-white/10 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30"
-                }`
-            }
-            >
-              <Zap className="h-3.5 w-3.5" /> Active
+      {punchedIn && !punchedOut && <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-200 dark:border-white/10">
+        <div className="flex items-center gap-2 mb-3 text-xs font-semibold"><Zap className="h-3.5 w-3.5 text-primary" /> AUX Status</div>
+        <div className="flex gap-2">
+          {(["active", "on_break", "meeting"] as AuxState[]).map(state => (
+            <button key={state} onClick={() => changeAux(state)} disabled={auxSwitching} className={`flex-1 py-2.5 rounded-xl text-xs font-bold border ${auxState === state ? "bg-primary text-white border-primary" : "bg-white dark:bg-black/40 border-gray-200 dark:border-white/10"}`}>
+              {state === "active" ? <><Zap className="inline h-3.5 w-3.5 mr-1" />Active</> : state === "on_break" ? <><Coffee className="inline h-3.5 w-3.5 mr-1" />On Break</> : <><Users className="inline h-3.5 w-3.5 mr-1" />Meeting</>}
             </button>
-            <button
-              onClick={() => handleAUXChange("on_break")}
-              disabled={auxSwitching}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border
-                ${auxState === "on_break"
-                  ? "bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/20"
-                  : "bg-white dark:bg-black/40 text-slate-600 dark:text-slate-400 border-gray-200 dark:border-white/10 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:border-amber-300 dark:hover:border-amber-500/30"
-                }`
-            }
-            >
-              <Coffee className="h-3.5 w-3.5" /> On Break
-            </button>
-            <button
-              onClick={() => handleAUXChange("meeting")}
-              disabled={auxSwitching}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border
-                ${auxState === "meeting"
-                  ? "bg-purple-500 text-white border-purple-600 shadow-md shadow-purple-500/20"
-                  : "bg-white dark:bg-black/40 text-slate-600 dark:text-slate-400 border-gray-200 dark:border-white/10 hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:border-purple-300 dark:hover:border-purple-500/30"
-                }`
-            }
-            >
-              <Users className="h-3.5 w-3.5" /> Meeting
-            </button>
-          </div>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center">
-            {auxState === "active" && "Working — all logged hours count toward your shift."}
-            {auxState === "on_break" && "On break — timer paused. Extra break deducts from login hours."}
-            {auxState === "meeting" && "In meeting — counts as active work time."}
-          </p>
-          {/* Work / Break breakdown bar */}
-          {totalElapsed > 60 && (
-            <div className="mt-3">
-              <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
-                <span>Work: {formatTime(workSeconds)}</span>
-                <span>Break: {formatTime(Math.max(0, totalElapsed - workSeconds))}</span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden flex">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-500"
-                  style={{ width: `${totalElapsed > 0 ? (workSeconds / totalElapsed) * 100 : 0}%` }}
-                />
-                <div
-                  className="h-full bg-amber-400 transition-all duration-500"
-                  style={{ width: `${totalElapsed > 0 ? ((totalElapsed - workSeconds) / totalElapsed) * 100 : 0}%` }}
-                />
-              </div>
-            </div>
-          )}
+          ))}
         </div>
-      )}
+      </div>}
 
-      {/* ═══ Early Leave Approval Modal ═══ */}
-      {showEarlyLeaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#0B0F19] rounded-2xl border border-gray-200 dark:border-white/10 p-6 w-full max-w-md space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" /> Early Departure Request
-              </h3>
-              <button onClick={() => setShowEarlyLeaveModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              You are punching out before the office end time ({formatHour(officeRules.officeEnd)}). This will be sent to HR for approval and requires CEO sign-off.
-            </p>
-            <textarea
-              placeholder="Reason for early departure..."
-              value={earlyLeaveReason}
-              onChange={(e) => setEarlyLeaveReason(e.target.value)}
-              rows={3}
-              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowEarlyLeaveModal(false)} className="text-xs">Cancel</Button>
-              <Button
-                onClick={submitEarlyLeaveRequest}
-                disabled={submittingApproval || !earlyLeaveReason.trim()}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-1"
-              >
-                {submittingApproval ? "Submitting..." : <><Send className="h-3 w-3" /> Submit & Punch Out</>}
-              </Button>
-            </div>
-          </div>
+      {showEarlyLeave && <div className="mt-4 rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 p-4">
+        <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">Early departure request</h4>
+        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">Your attendance will remain open. Submit a reason for HR approval, then punch out after approval.</p>
+        <textarea value={earlyReason} onChange={e => setEarlyReason(e.target.value)} rows={3} maxLength={500} className="mt-3 w-full rounded-lg border border-amber-200 bg-white p-2 text-xs text-slate-900" placeholder="Reason for early departure" />
+        <div className="flex gap-2 mt-3">
+          <Button onClick={submitEarlyLeave} disabled={sendingRequest} className="gap-2">{sendingRequest ? "Sending…" : "Request Approval"}</Button>
+          <Button onClick={() => setShowEarlyLeave(false)} variant="outline">Cancel</Button>
         </div>
-      )}
+      </div>}
     </div>
   );
 }
