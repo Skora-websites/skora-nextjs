@@ -160,7 +160,7 @@ export default function ManagerDashboardPage() {
           accent="text-emerald-600 dark:text-emerald-400"
         />
         <StatCard
-          icon={<CheckCircle2 className="h-5-5 text-blue-500" />}
+          icon={<CheckCircle2 className="h-5 w-5 text-blue-500" />}
           label="Present Today"
           value={presentToday}
           accent="text-blue-600 dark:text-blue-400"
