@@ -23,14 +23,7 @@ import { motion } from "framer-motion";
 
 // ── Mock Data ───────────────────────────────────────────
 
-const MOCK_GOALS = [
-  { id: "1", title: "Increase customer satisfaction score to 95%", employee: "Alice Johnson", category: "Performance", priority: "high", status: "in_progress", progress: 72, targetDate: "2026-07-15" },
-  { id: "2", title: "Complete React certification", employee: "Bob Smith", category: "Development", priority: "medium", status: "in_progress", progress: 45, targetDate: "2026-06-30" },
-  { id: "3", title: "Reduce bug resolution time by 30%", employee: "Carol Williams", category: "Performance", priority: "high", status: "achieved", progress: 100, targetDate: "2026-05-01" },
-  { id: "4", title: "Mentor 2 junior developers", employee: "David Brown", category: "Career", priority: "low", status: "in_progress", progress: 50, targetDate: "2026-08-01" },
-  { id: "5", title: "Complete leadership training program", employee: "Alice Johnson", category: "Development", priority: "medium", status: "draft", progress: 10, targetDate: "2026-09-01" },
-  { id: "6", title: "Improve code coverage to 85%", employee: "Bob Smith", category: "Performance", priority: "high", status: "not_achieved", progress: 30, targetDate: "2026-04-30" },
-];
+const MOCK_GOALS: any[] = [];
 
 const statusBadge: Record<string, "success" | "warning" | "danger" | "info" | "primary"> = {
   draft: "info",
@@ -133,7 +126,7 @@ export default function GoalsPage() {
                   <Badge variant={statusBadge[goal.status]} size="sm">
                     <span className="flex items-center gap-1">
                       {statusIcons[goal.status]}
-                      {goal.status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                      {goal.status.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                     </span>
                   </Badge>
                 </div>

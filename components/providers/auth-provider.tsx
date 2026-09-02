@@ -28,6 +28,7 @@ export interface AuthUser {
   email?: string | null;
   image?: string | null;
   role: string;
+  department?: string | null;
 }
 
 interface AuthContextType {

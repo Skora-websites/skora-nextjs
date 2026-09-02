@@ -17,13 +17,7 @@ import { motion } from "framer-motion";
 
 // ── Mock Data ───────────────────────────────────────────
 
-const MOCK_CANDIDATES = [
-  { id: "1", name: "Alice Johnson", email: "alice@example.com", phone: "+91 98765 43210", position: "Senior Frontend Developer", location: "Bangalore", status: "interviewing", appliedDate: "2026-05-16" },
-  { id: "2", name: "Bob Smith", email: "bob@example.com", phone: "+91 87654 32109", position: "Backend Engineer", location: "Remote", status: "review", appliedDate: "2026-05-14" },
-  { id: "3", name: "Carol Williams", email: "carol@example.com", phone: "+91 76543 21098", position: "HR Manager", location: "Mumbai", status: "shortlisted", appliedDate: "2026-05-12" },
-  { id: "4", name: "David Brown", email: "david@example.com", phone: "+91 65432 10987", position: "Product Designer", location: "Remote", status: "new", appliedDate: "2026-05-10" },
-  { id: "5", name: "Eve Davis", email: "eve@example.com", phone: "+91 54321 09876", position: "Senior Frontend Developer", location: "Bangalore", status: "offered", appliedDate: "2026-05-08" },
-];
+const MOCK_CANDIDATES: any[] = [];
 
 const statusBadge: Record<string, "success" | "warning" | "info" | "primary" | "danger"> = {
   new: "info",

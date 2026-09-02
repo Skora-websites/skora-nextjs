@@ -19,14 +19,7 @@ import { motion } from "framer-motion";
 
 // ── Mock Data ───────────────────────────────────────────
 
-const MOCK_APPLICATIONS = [
-  { id: "1", candidate: "Alice Johnson", position: "Senior Frontend Developer", stage: "technical_interview", status: "in_progress", updatedAt: "2026-05-18" },
-  { id: "2", candidate: "Bob Smith", position: "Backend Engineer", stage: "resume_review", status: "in_progress", updatedAt: "2026-05-17" },
-  { id: "3", candidate: "Carol Williams", position: "HR Manager", stage: "hr_interview", status: "in_progress", updatedAt: "2026-05-16" },
-  { id: "4", candidate: "David Brown", position: "Product Designer", stage: "portfolio_review", status: "pending", updatedAt: "2026-05-15" },
-  { id: "5", candidate: "Eve Davis", position: "Senior Frontend Developer", stage: "offer", status: "accepted", updatedAt: "2026-05-14" },
-  { id: "6", candidate: "Frank Wilson", position: "DevOps Engineer", stage: "offer", status: "rejected", updatedAt: "2026-05-12" },
-];
+const MOCK_APPLICATIONS: any[] = [];
 
 const stageLabels: Record<string, string> = {
   new: "New Application",
@@ -111,7 +104,7 @@ export default function ApplicationsPage() {
                   <Badge variant={statusColors[app.status] || "info"} size="sm">
                     <span className="flex items-center gap-1">
                       {statusIcons[app.status]}
-                      {app.status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                      {app.status.replace("_", " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                     </span>
                   </Badge>
                   <span className="text-xs text-muted">Updated {app.updatedAt}</span>

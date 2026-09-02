@@ -21,16 +21,7 @@ import { motion } from "framer-motion";
 
 // ── Mock Data ───────────────────────────────────────────
 
-const MOCK_KPIS = [
-  { id: "1", name: "Code Review Turnaround", employee: "Alice Johnson", category: "productivity", target: 24, actual: 18, unit: "hours", weight: 20, period: "Q2 2026", status: "achieved" },
-  { id: "2", name: "Bug Fix Rate", employee: "Bob Smith", category: "quality", target: 95, actual: 88, unit: "%", weight: 25, period: "Q2 2026", status: "behind" },
-  { id: "3", name: "Customer Tickets Resolved", employee: "Carol Williams", category: "productivity", target: 50, actual: 62, unit: "tickets", weight: 30, period: "Q2 2026", status: "achieved" },
-  { id: "4", name: "Attendance Rate", employee: "David Brown", category: "attendance", target: 95, actual: 92, unit: "%", weight: 15, period: "Q2 2026", status: "on_track" },
-  { id: "5", name: "Feature Delivery Timeliness", employee: "Alice Johnson", category: "productivity", target: 90, actual: 75, unit: "%", weight: 25, period: "Q2 2026", status: "behind" },
-  { id: "6", name: "Sprint Completion Rate", employee: "Eve Davis", category: "productivity", target: 85, actual: 90, unit: "%", weight: 20, period: "Q1 2026", status: "achieved" },
-  { id: "7", name: "Client Satisfaction Score", employee: "Sarah Manager", category: "customer_satisfaction", target: 4.5, actual: 4.2, unit: "score", weight: 35, period: "Q1 2026", status: "on_track" },
-  { id: "8", name: "Sales Revenue Target", employee: "Frank Wilson", category: "sales", target: 100000, actual: 85000, unit: "$", weight: 40, period: "Q2 2026", status: "not_met" },
-];
+const MOCK_KPIS: any[] = [];
 
 const categoryColors: Record<string, string> = {
   productivity: "bg-blue-500/10 text-blue-500 border-blue-500/20",
@@ -112,7 +103,7 @@ export default function KpisPage() {
                           <Users className="h-3 w-3" />{kpi.employee}
                         </span>
                         <span className={`text-xs font-medium px-2 py-0.5 rounded border ${categoryColors[kpi.category] || categoryColors.other}`}>
-                          {kpi.category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                          {kpi.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                         </span>
                         <span className="text-xs text-muted flex items-center gap-1">
                           <Target className="h-3 w-3" />Target: {formatValue(kpi.target, kpi.unit)}
@@ -145,7 +136,7 @@ export default function KpisPage() {
                     <Badge variant={statusColors[kpi.status]} size="sm">
                       <span className="flex items-center gap-1">
                         {statusIcons[kpi.status]}
-                        {kpi.status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                        {kpi.status.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                       </span>
                     </Badge>
                   </div>

@@ -19,14 +19,7 @@ import { motion } from "framer-motion";
 
 // ── Mock Data ───────────────────────────────────────────
 
-const MOCK_REVIEWS = [
-  { id: "1", employee: "Alice Johnson", reviewer: "Sarah Manager", period: "Q2 2026", rating: 4.2, status: "acknowledged", dueDate: "2026-06-30" },
-  { id: "2", employee: "Bob Smith", reviewer: "Sarah Manager", period: "Q2 2026", rating: 3.8, status: "submitted", dueDate: "2026-06-30" },
-  { id: "3", employee: "Carol Williams", reviewer: "Sarah Manager", period: "Q2 2026", rating: 4.5, status: "completed", dueDate: "2026-06-15" },
-  { id: "4", employee: "David Brown", reviewer: "Sarah Manager", period: "Q1 2026", rating: 3.5, status: "completed", dueDate: "2026-03-30" },
-  { id: "5", employee: "Eve Davis", reviewer: "Sarah Manager", period: "Q1 2026", rating: 4.8, status: "completed", dueDate: "2026-03-30" },
-  { id: "6", employee: "Alice Johnson", reviewer: "Self", period: "Q2 2026", rating: 0, status: "draft", dueDate: "2026-06-20" },
-];
+const MOCK_REVIEWS: any[] = [];
 
 const statusColors: Record<string, "success" | "warning" | "danger" | "info" | "primary"> = {
   draft: "info",

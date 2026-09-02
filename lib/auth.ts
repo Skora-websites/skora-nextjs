@@ -23,6 +23,7 @@ export interface Session {
     email?: string | null;
     image?: string | null;
     role: string;
+    department?: string | null;
   } | null;
 }
 
@@ -76,6 +77,7 @@ export async function auth(): Promise<Session> {
         email: user.email || null,
         image: user.image || null,
         role,
+        department: user.department || user.departmentName || null,
       },
     };
   } catch {

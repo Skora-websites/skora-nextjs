@@ -19,7 +19,7 @@ export async function GET() {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
 
-    // Only admins and managers can see all employees
+    // Only admins and managers can see live status
     if (auth.role === "employee") {
       return NextResponse.json(
         { error: "Forbidden: insufficient permissions" },
@@ -43,6 +43,26 @@ export async function GET() {
       "-" +
       String(now.getDate()).padStart(2, "0");
 
+    // For managers, find their department to scope results
+    let managerDepartment: string | null = null;
+    if (auth.role === "manager") {
+      const managerUser = await db.collection("users").findOne({ _id: new (require("mongodb").ObjectId)(auth.userId) });
+      managerDepartment = managerUser?.department || managerUser?.departmentName || null;
+    }
+
+    // Build the user query filter
+    const userQuery: any = {
+      role: { $in: ["employee", "manager", "hr_admin"] },
+      status: { $ne: "inactive" },
+    };
+    // Managers only see their own department
+    if (managerDepartment) {
+      userQuery.$or = [
+        { department: managerDepartment },
+        { departmentName: managerDepartment },
+      ];
+    }
+
     // Fetch all attendance records for today
     const records = await db
       .collection("attendance")
@@ -52,10 +72,7 @@ export async function GET() {
     // Also fetch all users to include employees who haven't punched in yet
     const allUsers = await db
       .collection("users")
-      .find({
-        role: { $in: ["employee", "manager", "hr_admin"] },
-        status: { $ne: "inactive" },
-      })
+      .find(userQuery)
       .project({
         _id: 1,
         email: 1,
