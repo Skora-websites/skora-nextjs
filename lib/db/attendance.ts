@@ -1,9 +1,7 @@
 import { getDb } from "./mongo-helper";
-import { ObjectId } from "mongodb";
 
 export type AttendanceStatus = "PRESENT" | "LATE" | "HALF_DAY" | "ABSENT";
 export type AUXState = "active" | "on_break" | "meeting";
-
 
 export interface LocationEntry {
   latitude: number;
@@ -44,13 +42,9 @@ export interface AttendanceRecord {
 }
 
 export function calculateAttendanceStatus(punchInDate: Date): AttendanceStatus {
-  const hours = punchInDate.getHours();
-  const minutes = punchInDate.getMinutes();
-  const timeInMinutes = hours * 60 + minutes;
-  const tenThirtyAM = 10 * 60 + 30;
-  const onePM = 13 * 60;
-  if (timeInMinutes <= tenThirtyAM) return "PRESENT";
-  if (timeInMinutes <= onePM) return "LATE";
+  const timeInMinutes = punchInDate.getHours() * 60 + punchInDate.getMinutes();
+  if (timeInMinutes <= 10 * 60 + 30) return "PRESENT";
+  if (timeInMinutes <= 13 * 60) return "LATE";
   return "HALF_DAY";
 }
 
@@ -80,6 +74,10 @@ export function calculateBreakMinutes(auxHistory: AUXEntry[]): number {
   return Math.max(0, Math.round(totalMs / 60000));
 }
 
+function todayString(date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export async function getAttendanceRecords(filter?: {
   userId?: string;
   date?: string;
@@ -88,10 +86,9 @@ export async function getAttendanceRecords(filter?: {
 }): Promise<AttendanceRecord[]> {
   const db = await getDb();
   if (!db) return [];
-  const query: Record<string, unknown> = {};
+  const query: Record<string, unknown> = { tenantId: filter?.tenantId || "default" };
   if (filter?.userId) query.userId = filter.userId;
   if (filter?.date) query.date = filter.date;
-  if (filter?.tenantId) query.tenantId = filter.tenantId;
   if (filter?.managerId) query.managerId = filter.managerId;
   const docs = await db.collection("attendance").find(query).sort({ date: -1, punchInTime: -1 }).toArray();
   return docs.map((d) => ({
@@ -115,15 +112,14 @@ export async function recordPunchIn(data: {
   const db = await getDb();
   if (!db) return null;
   const now = new Date();
-  const todayStr = now.getFullYear() + "-" +
-    String(now.getMonth() + 1).padStart(2, "0") + "-" +
-    String(now.getDate()).padStart(2, "0");
-  const status = data.status || calculateAttendanceStatus(now);
+  const tenantId = data.tenantId || "default";
+  const todayStr = todayString(now);
+  const status = (data.status || calculateAttendanceStatus(now)) as AttendanceStatus;
   const nowISO = now.toISOString();
-  const existing = await db.collection("attendance").findOne({ userId: data.userId, date: todayStr });
+  const existing = await db.collection("attendance").findOne({ tenantId, userId: data.userId, date: todayStr });
   if (existing) {
     await db.collection("attendance").updateOne(
-      { _id: existing._id },
+      { _id: existing._id, tenantId },
       { $set: { userName: data.userName || existing.userName, userEmail: data.userEmail || existing.userEmail, employeeCode: data.employeeCode || existing.employeeCode, location: data.location || existing.location } }
     );
     return {
@@ -135,8 +131,8 @@ export async function recordPunchIn(data: {
   }
   const initialAUX: AUXEntry[] = [{ state: "active", startTime: nowISO }];
   const doc = {
-    tenantId: data.tenantId || "default", userId: data.userId, userName: data.userName,
-    userEmail: data.userEmail, employeeCode: data.employeeCode || "EMP-2026-1001",
+    tenantId, userId: data.userId, userName: data.userName,
+    userEmail: data.userEmail, employeeCode: data.employeeCode,
     date: todayStr, punchInTime: nowISO, location: data.location || "Primary Office (GPS Verified)",
     workLocation: data.workLocation || "office",
     status, managerId: data.managerId, auxState: "active" as AUXState,
@@ -146,91 +142,69 @@ export async function recordPunchIn(data: {
   return { ...doc, _id: res.insertedId.toString(), createdAt: now.toISOString() } as AttendanceRecord;
 }
 
-export async function recordAUXChange(userId: string, dateStr: string, newState: AUXState): Promise<AttendanceRecord | null> {
+export async function recordAUXChange(userId: string, dateStr: string, newState: AUXState, tenantId = "default"): Promise<AttendanceRecord | null> {
   const db = await getDb();
   if (!db) return null;
-  const record = await db.collection("attendance").findOne({ userId, date: dateStr });
+  const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr });
   if (!record) return null;
   const nowISO = new Date().toISOString();
   const history: AUXEntry[] = record.auxHistory || [];
-  const updatedHistory = history.map((entry: AUXEntry, idx: number) => {
-    if (idx === history.length - 1 && !entry.endTime) return { ...entry, endTime: nowISO };
-    return entry;
-  });
+  const updatedHistory = history.map((entry: AUXEntry, idx: number) => idx === history.length - 1 && !entry.endTime ? { ...entry, endTime: nowISO } : entry);
   updatedHistory.push({ state: newState, startTime: nowISO });
   const effectiveWorkMinutes = calculateEffectiveWorkMinutes(updatedHistory);
   const totalBreakMinutes = calculateBreakMinutes(updatedHistory);
   await db.collection("attendance").updateOne(
-    { _id: record._id },
+    { _id: record._id, tenantId },
     { $set: { auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes } }
   );
-  return {
-    ...record, _id: record._id.toString(), auxState: newState,
-    auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes,
-    createdAt: record.createdAt ? record.createdAt.toISOString() : new Date().toISOString(),
-  } as AttendanceRecord;
+  return { ...record, _id: record._id.toString(), auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes, createdAt: record.createdAt ? record.createdAt.toISOString() : new Date().toISOString() } as AttendanceRecord;
 }
 
-export async function recordPunchOut(userId: string, dateStr: string): Promise<boolean> {
+export async function recordPunchOut(userId: string, dateStr: string, tenantId = "default"): Promise<boolean> {
   const db = await getDb();
   if (!db) return false;
   const now = new Date();
   const nowISO = now.toISOString();
-  const record = await db.collection("attendance").findOne({ userId, date: dateStr });
-  if (!record) return false;
+  const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr });
+  if (!record || record.punchOutTime) return false;
   let history: AUXEntry[] = record.auxHistory || [];
-  history = history.map((entry: AUXEntry, idx: number) => {
-    if (idx === history.length - 1 && !entry.endTime) return { ...entry, endTime: nowISO };
-    return entry;
-  });
+  history = history.map((entry: AUXEntry, idx: number) => idx === history.length - 1 && !entry.endTime ? { ...entry, endTime: nowISO } : entry);
   const effectiveWorkMinutes = calculateEffectiveWorkMinutes(history);
   const totalBreakMinutes = calculateBreakMinutes(history);
   const workHours = Number((effectiveWorkMinutes / 60).toFixed(2));
   const res = await db.collection("attendance").updateOne(
-    { _id: record._id },
+    { _id: record._id, tenantId, punchOutTime: { $exists: false } },
     { $set: { punchOutTime: nowISO, workHours, auxState: "active", auxHistory: history, totalBreakMinutes, effectiveWorkMinutes } }
   );
   return res.modifiedCount > 0;
 }
 
-/**
- * Update the live GPS location for a currently punched-in employee.
- * Pushes to locationHistory and updates currentLocation.
- */
 export async function updateAttendanceLocation(
   userId: string,
   dateStr: string,
   latitude: number,
   longitude: number,
   accuracy: number,
-  distanceFromOffice?: number
+  distanceFromOffice?: number,
+  tenantId = "default"
 ): Promise<boolean> {
   const db = await getDb();
   if (!db) return false;
-  const record = await db.collection("attendance").findOne({ userId, date: dateStr });
-  if (!record || record.punchOutTime) return false;
-
+  const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr, punchOutTime: { $exists: false } });
+  if (!record) return false;
   const nowISO = new Date().toISOString();
   const entry: LocationEntry = { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice };
-
-  // Push to history and update current location
   await db.collection("attendance").updateOne(
-    { _id: record._id },
+    { _id: record._id, tenantId, punchOutTime: { $exists: false } },
     {
-      $push: { locationHistory: entry } as any,
-      $set: {
-        currentLocation: { latitude, longitude, accuracy, timestamp: nowISO },
-      },
+      $push: { locationHistory: { $each: [entry], $slice: -1000 } } as any,
+      $set: { currentLocation: { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice } },
     }
   );
   return true;
 }
 
-/**
- * Get live locations for all currently punched-in employees.
- * Returns latest position for each active attendance record today.
- */
-export async function getLiveEmployeeLocations(tenantId?: string): Promise<Array<{
+export async function getLiveEmployeeLocations(tenantId = "default"): Promise<Array<{
   userId: string;
   userName: string;
   userEmail: string;
@@ -244,31 +218,16 @@ export async function getLiveEmployeeLocations(tenantId?: string): Promise<Array
 }>> {
   const db = await getDb();
   if (!db) return [];
-  const now = new Date();
-  const todayStr = now.getFullYear() + "-" +
-    String(now.getMonth() + 1).padStart(2, "0") + "-" +
-    String(now.getDate()).padStart(2, "0");
-
-  const query: Record<string, unknown> = {
-    date: todayStr,
+  const records = await db.collection("attendance").find({
+    tenantId,
+    date: todayString(),
     punchOutTime: { $exists: false },
     currentLocation: { $exists: true },
-  };
-  if (tenantId) query.tenantId = tenantId;
-
-  const records = await db.collection("attendance").find(query).toArray();
-  return records
-    .filter((r: any) => r.currentLocation)
-    .map((r: any) => ({
-      userId: r.userId,
-      userName: r.userName,
-      userEmail: r.userEmail,
-      employeeCode: r.employeeCode,
-      latitude: r.currentLocation.latitude,
-      longitude: r.currentLocation.longitude,
-      accuracy: r.currentLocation.accuracy,
-      timestamp: r.currentLocation.timestamp,
-      distanceFromOffice: r.currentLocation.distanceFromOffice,
-      auxState: r.auxState,
-    }));
+  }).toArray();
+  return records.filter((r: any) => r.currentLocation).map((r: any) => ({
+    userId: r.userId, userName: r.userName, userEmail: r.userEmail, employeeCode: r.employeeCode,
+    latitude: r.currentLocation.latitude, longitude: r.currentLocation.longitude,
+    accuracy: r.currentLocation.accuracy, timestamp: r.currentLocation.timestamp,
+    distanceFromOffice: r.currentLocation.distanceFromOffice, auxState: r.auxState,
+  }));
 }
