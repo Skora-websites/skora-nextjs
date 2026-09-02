@@ -36,30 +36,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: await getAttendanceStats(tenantId, userId, m, y) });
     }
     const records = await getAttendanceRecords(tenantId, { userId: userId || undefined, date: date || undefined, status: status || undefined });
-    const enriched = records.map((rec: any) => {
-      let distanceMeters: number | undefined;
-      if (rec.location) {
-        const pi = rec.location.indexOf("(");
-        if (pi >= 0) {
-          const nums = rec.location.substring(pi + 1).split(/[^0-9]+/).filter((s: string) => s.length > 0);
-          if (nums.length > 0) distanceMeters = parseInt(nums[0], 10);
-        }
-      }
-      return { _id: rec._id || rec.id, userId: rec.userId, userName: rec.userName || rec.userDisplayName || "", userEmail: rec.userEmail || "", employeeCode: rec.employeeCode, date: rec.date || (rec.punchInTime ? new Date(rec.punchInTime).toISOString().split("T")[0] : ""), punchInTime: rec.punchInTime || rec.checkIn, punchOutTime: rec.punchOutTime || rec.checkOut, location: rec.location, distanceMeters, status: rec.status, workHours: rec.workHours || rec.totalHours, overtimeHours: rec.overtimeHours, regularizationStatus: rec.regularizationStatus, managerId: rec.managerId };
-    });
+    const enriched = records.map((rec: any) => ({
+      _id: rec._id || rec.id, userId: rec.userId, userName: rec.userName || rec.userDisplayName || "", userEmail: rec.userEmail || "",
+      employeeCode: rec.employeeCode, date: rec.date || (rec.punchInTime ? new Date(rec.punchInTime).toISOString().split("T")[0] : ""),
+      punchInTime: rec.punchInTime || rec.checkIn, punchOutTime: rec.punchOutTime || rec.checkOut, location: rec.location,
+      distanceMeters: rec.currentLocation?.distanceFromOffice, status: rec.status, workHours: rec.workHours || rec.totalHours,
+      overtimeHours: rec.overtimeHours, regularizationStatus: rec.regularizationStatus, managerId: rec.managerId,
+    }));
     return NextResponse.json({ data: enriched });
   } catch (error: any) {
     console.error("GET /api/hrm/v2/attendance error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Unable to load attendance" }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = await requireAuth();
+    const auth = await requireAdmin();
     if (isErrorResponse(auth)) return auth;
     const body = await request.json();
-    if (auth.role === "employee" && body.userId !== auth.userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!body.userId || !body.date) return NextResponse.json({ error: "userId and date are required" }, { status: 400 });
     const tenantId = auth.tenantId;
     let workdayType = body.workdayType || "regular";
     try {
@@ -70,7 +66,11 @@ export async function POST(request: NextRequest) {
         if (workDays && !workDays.includes(new Date(body.date).getDay())) workdayType = "weekly_off";
       }
     } catch {}
-    const record = await markAttendance(tenantId, { userId: body.userId, date: new Date(body.date), checkIn: body.checkIn ? new Date(body.checkIn) : undefined, checkOut: body.checkOut ? new Date(body.checkOut) : undefined, shiftId: body.shiftId, workdayType, source: body.source || "manual" });
+    const record = await markAttendance(tenantId, {
+      userId: body.userId, date: new Date(body.date), checkIn: body.checkIn ? new Date(body.checkIn) : undefined,
+      checkOut: body.checkOut ? new Date(body.checkOut) : undefined, shiftId: body.shiftId, workdayType,
+      source: body.source || "manual",
+    });
     if (body.calculateStats && record) {
       const d = new Date(body.date);
       await calculateAttendanceStats(tenantId, body.userId, d.getMonth() + 1, d.getFullYear());
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: record }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/hrm/v2/attendance error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Unable to save attendance" }, { status: 500 });
   }
 }
 
@@ -90,12 +90,15 @@ export async function PATCH(request: NextRequest) {
     if (!id) return NextResponse.json({ error: "id parameter required" }, { status: 400 });
     const existing = await getAttendanceById(id);
     if (!existing || (existing.tenantId && existing.tenantId !== auth.tenantId)) return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
-    const record = await updateAttendance(id, await request.json());
+    const body = await request.json();
+    delete body.tenantId;
+    delete body.userId;
+    const record = await updateAttendance(id, body);
     if (!record) return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
     return NextResponse.json({ data: record });
   } catch (error: any) {
     console.error("PATCH /api/hrm/v2/attendance error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Unable to update attendance" }, { status: 500 });
   }
 }
 
@@ -111,6 +114,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("DELETE /api/hrm/v2/attendance error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Unable to delete attendance" }, { status: 500 });
   }
 }
