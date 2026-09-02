@@ -1,20 +1,16 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
 import { getDb } from "./db/mongo-helper";
+import { normalizeRoleStrict } from "./role-utils";
+import { ObjectId } from "mongodb";
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
 
-/** getDb with a 5s timeout so requests don't hang forever if MongoDB is unreachable */
 async function getDbWithTimeout(): Promise<Awaited<ReturnType<typeof getDb>>> {
   const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
   const dbPromise = getDb();
   return Promise.race([dbPromise, timeout]);
 }
-import { normalizeRole } from "./rbac";
-import { ObjectId } from "mongodb";
-import crypto from "crypto";
-import bcrypt from "bcryptjs";
-
-// ── Types ───────────────────────────────────────────────
 
 export interface Session {
   user: {
@@ -27,25 +23,14 @@ export interface Session {
   } | null;
 }
 
-// ── Password Helpers ────────────────────────────────────
-
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
 
-export async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
 
-// ── Session Helpers ─────────────────────────────────────
-
-/**
- * Get the current session by reading the session cookie
- * and looking up the session in MongoDB.
- */
 export async function auth(): Promise<Session> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
@@ -54,22 +39,16 @@ export async function auth(): Promise<Session> {
   try {
     const db = await getDbWithTimeout();
     if (!db) return { user: null };
-
     const session = await db.collection("sessions").findOne({
       token: sessionToken,
       expiresAt: { $gt: new Date() },
     });
-
     if (!session) return { user: null };
 
-    // Look up the user
-    const user = await db.collection("users").findOne({
-      _id: new ObjectId(session.userId),
-    });
-
+    const user = await db.collection("users").findOne({ _id: new ObjectId(session.userId) });
     if (!user) return { user: null };
 
-    const role = normalizeRole(user.role);
+    const role = normalizeRoleStrict(user.role);
     return {
       user: {
         id: user._id.toString(),
@@ -85,9 +64,7 @@ export async function auth(): Promise<Session> {
   }
 }
 
-// ── Session Cookie Config ─────────────────────────────
-
-export const SESSION_EXPIRES_IN_MS = 60 * 60 * 24 * 5 * 1000; // 5 days
+export const SESSION_EXPIRES_IN_MS = 60 * 60 * 24 * 5 * 1000;
 
 export const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -96,81 +73,50 @@ export const SESSION_COOKIE_OPTIONS = {
   path: "/",
 };
 
-/**
- * Create a MongoDB session and return the session token.
- */
 export async function createSession(userId: string): Promise<string> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_EXPIRES_IN_MS);
-
-  await db.collection("sessions").insertOne({
-    token,
-    userId,
-    expiresAt,
-    createdAt: new Date(),
-  });
-
+  await db.collection("sessions").insertOne({ token, userId, expiresAt, createdAt: new Date() });
   return token;
 }
 
-/**
- * Destroy the current session and clear the cookie.
- */
 export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
-
   if (sessionToken) {
     try {
       const db = await getDb();
-      if (db) {
-        await db.collection("sessions").deleteOne({ token: sessionToken });
-      }
+      if (db) await db.collection("sessions").deleteOne({ token: sessionToken });
     } catch { /* ignore */ }
   }
-
   cookieStore.delete("session");
 }
 
-// ── MongoDB Auth Helpers (replacing Firebase) ─────────
-
-/**
- * Sign in with email/password using MongoDB.
- * Returns the user document on success, throws on failure.
- */
 export async function signInWithMongo(
   email: string,
   password: string
 ): Promise<{ id: string; email: string; role: string; displayName: string; mustChangePassword: boolean }> {
   const db = await getDbWithTimeout();
   if (!db) throw new Error("Database not available");
-
-  const user = await db.collection("users").findOne({ email: email.toLowerCase() });
+  const user = await db.collection("users").findOne({ email: email.toLowerCase().trim() });
   if (!user) throw new Error("Invalid email or password");
-
   const passwordHash = user.passwordHash || user.password;
   if (!passwordHash) throw new Error("Invalid email or password");
-
   const valid = await verifyPassword(password, passwordHash);
   if (!valid) throw new Error("Invalid email or password");
-
-  if (user.status === "disabled" || user.status === "inactive") {
+  if (user.status === "disabled" || user.status === "inactive" || user.loginStatus === "disabled") {
     throw new Error("This account has been disabled");
   }
-
   return {
     id: user._id.toString(),
     email: user.email,
-    role: user.role || "employee",
+    role: normalizeRoleStrict(user.role),
     displayName: user.displayName || user.firstName || email,
     mustChangePassword: (user as any).mustChangePassword === true,
   };
 }
-
-// ── Admin Session (unchanged) ─────────────────────────
 
 export async function setAdminSessionCookie(token: string = "authenticated"): Promise<void> {
   const cookieStore = await cookies();
