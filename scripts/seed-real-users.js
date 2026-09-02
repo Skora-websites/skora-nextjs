@@ -102,7 +102,7 @@ const USERS = [
     employeeCode: "CEO-001",
   },
   {
-    email: "hr@skorasoft.com",
+    email: "hr@skorainfotech.com",
     displayName: "Shivangi Gupta",
     firstName: "Shivangi",
     lastName: "Gupta",
