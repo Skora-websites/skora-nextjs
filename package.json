@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "node scripts/test-with-server.js",
+    "test:e2e:watch": "node scripts/test-with-server.js --watch",
     "cap:init": "npx cap init \"Skora HRMS\" com.skora.hrms --web-dir out",
     "cap:add:android": "npx cap add android",
     "cap:add:ios": "npx cap add ios",
