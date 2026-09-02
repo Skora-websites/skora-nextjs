@@ -80,8 +80,6 @@ const clientOptions: MongoClientOptions = {
   serverSelectionTimeoutMS: 15000,
   connectTimeoutMS: 15000,
   tls: true,
-  tlsAllowInvalidCertificates: true,
-  tlsAllowInvalidHostnames: true,
   retryWrites: true,
   w: "majority" as any,
 };
