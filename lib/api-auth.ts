@@ -2,7 +2,8 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getDb } from "@/lib/db/mongo-helper";
-import { normalizeRole, hasPermission, type PermissionKey } from "@/lib/rbac";
+import { hasPermission, type PermissionKey } from "@/lib/rbac";
+import { normalizeRoleStrict } from "@/lib/role-utils";
 import { ObjectId } from "mongodb";
 
 /** getDb with a 5s timeout to prevent hanging when MongoDB is unreachable */
@@ -11,8 +12,6 @@ async function getDbWithTimeout() {
   const dbPromise = getDb();
   return Promise.race([dbPromise, timeout]);
 }
-
-// ── Types ───────────────────────────────────────────────
 
 export interface AuthenticatedRequest {
   userId: string;
@@ -26,16 +25,7 @@ export interface ApiAuthResult {
   tenantId: string;
 }
 
-// ── Session Verification ────────────────────────────────
-
-/**
- * Verify the session cookie by looking up the token in MongoDB.
- * Returns null if not authenticated.
- */
-async function verifySession(): Promise<{
-  userId: string;
-  role: string;
-} | null> {
+async function verifySession(): Promise<{ userId: string; role: string } | null> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
   if (!sessionToken) return null;
@@ -44,47 +34,32 @@ async function verifySession(): Promise<{
     const db = await getDbWithTimeout();
     if (!db) return null;
 
-    // Find session in MongoDB
     const session = await db.collection("sessions").findOne({
       token: sessionToken,
       expiresAt: { $gt: new Date() },
     });
     if (!session) return null;
 
-    // Look up user
     const user = await db.collection("users").findOne({
       _id: new ObjectId(session.userId),
     });
     if (!user) return null;
 
-    const role = normalizeRole(user.role);
+    const role = normalizeRoleStrict(user.role);
     return { userId: user._id.toString(), role };
   } catch {
     return null;
   }
 }
 
-// ── Route Wrappers ──────────────────────────────────────
-
-/**
- * Require authentication for an API route.
- * Returns 401 if not authenticated.
- */
 export async function requireAuth(): Promise<ApiAuthResult | NextResponse> {
   const session = await verifySession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  return {
-    userId: session.userId,
-    role: session.role,
-    tenantId: "default",
-  };
+  return { userId: session.userId, role: session.role, tenantId: "default" };
 }
 
-/**
- * Require authentication AND a specific permission.
- */
 export async function requirePermission(
   permission: PermissionKey | string
 ): Promise<ApiAuthResult | NextResponse> {
@@ -92,56 +67,31 @@ export async function requirePermission(
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   if (!hasPermission(session.role, permission)) {
-    return NextResponse.json(
-      { error: "Forbidden: insufficient permissions" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "Forbidden: insufficient permissions" }, { status: 403 });
   }
-
-  return {
-    userId: session.userId,
-    role: session.role,
-    tenantId: "default",
-  };
+  return { userId: session.userId, role: session.role, tenantId: "default" };
 }
 
-/**
- * Require authentication AND admin-level role.
- */
+/** Require a privileged HR/admin role; managers and employees must use explicit permissions. */
 export async function requireAdmin(): Promise<ApiAuthResult | NextResponse> {
   const auth = await requireAuth();
   if (isErrorResponse(auth)) return auth;
-  if (auth.role === "employee") {
-    return NextResponse.json(
-      { error: "Forbidden: insufficient permissions" },
-      { status: 403 }
-    );
+  if (!["super_admin", "hr_admin", "admin"].includes(auth.role)) {
+    return NextResponse.json({ error: "Forbidden: insufficient permissions" }, { status: 403 });
   }
   return auth;
 }
 
-/**
- * Require authentication AND super_admin role.
- */
 export async function requireSuperAdmin(): Promise<ApiAuthResult | NextResponse> {
   const auth = await requireAuth();
   if (isErrorResponse(auth)) return auth;
   if (auth.role !== "super_admin") {
-    return NextResponse.json(
-      { error: "Forbidden: only Super Admin can perform this action" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "Forbidden: only Super Admin can perform this action" }, { status: 403 });
   }
   return auth;
 }
 
-/**
- * Check if a result from requireAuth is an error response.
- */
-export function isErrorResponse(
-  result: ApiAuthResult | NextResponse
-): result is NextResponse {
+export function isErrorResponse(result: ApiAuthResult | NextResponse): result is NextResponse {
   return result instanceof NextResponse;
 }
