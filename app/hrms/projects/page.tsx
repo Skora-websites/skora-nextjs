@@ -71,6 +71,9 @@ export default function ProjectsPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({ name: "", description: "", status: "planning", priority: "medium", startDate: "", endDate: "" });
+  const [saving, setSaving] = useState(false);
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
@@ -92,6 +95,21 @@ export default function ProjectsPage() {
   }, [fetchDashboard]);
 
   // ── DataTable Columns ────────────────────────────────
+
+  const handleCreate = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    try {
+      await fetch("/api/hrm/v2/projects", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, ownerId: user?.id }),
+      });
+      setShowCreate(false);
+      setForm({ name: "", description: "", status: "planning", priority: "medium", startDate: "", endDate: "" });
+      fetchDashboard();
+    } catch { /* empty */ }
+    setSaving(false);
+  };
 
   const columns: Column<ProjectData>[] = [
     {
@@ -220,8 +238,9 @@ export default function ProjectsPage() {
         title="Projects"
         description="Manage projects, tasks, teams, and milestones."
       >
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-2 h-4 w-4" />Add Project</Button>
         <Link href="/projects/all">
-          <Button><Plus className="mr-2 h-4 w-4" />View All Projects</Button>
+          <Button variant="outline"><Plus className="mr-2 h-4 w-4" />View All</Button>
         </Link>
       </PageHeader>
 
@@ -292,6 +311,35 @@ export default function ProjectsPage() {
           <Milestone className="h-4 w-4" />Milestones
         </Link>
       </div>
+
+      {/* Create Form */}
+      {showCreate && (
+        <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 mb-6">
+          <h3 className="font-bold text-sm mb-4">Create New Project</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input placeholder="Project Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs" />
+            <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs" />
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs">
+              <option value="planning">Planning</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="on_hold">On Hold</option>
+            </select>
+            <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+            <input type="date" placeholder="Start Date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs" />
+            <input type="date" placeholder="End Date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs" />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Button onClick={handleCreate} disabled={saving} className="text-xs">{saving ? "Creating..." : "Create Project"}</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)} className="text-xs">Cancel</Button>
+          </div>
+        </div>
+      )}
 
       {/* DataTable */}
       <DataTable
