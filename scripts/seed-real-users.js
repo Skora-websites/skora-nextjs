@@ -1,17 +1,16 @@
 /**
- * Seed script: Creates 12 real Skora team members in MongoDB.
+ * Seed script for the current Skora HRMS team directory.
  *
- * WARNING: This DELETES ALL existing users before creating new ones.
- * Run only once during initial setup or after a full database reset.
+ * WARNING: This DELETES ALL existing users before recreating them.
+ * Run only once during initial setup or after an intentional database reset.
  *
- * Usage: node scripts/seed-real-users.js [--force]
+ * Usage: node scripts/seed-real-users.js --force
  */
 
 const { MongoClient } = require("mongodb");
 const bcrypt = require("bcryptjs");
 const dns = require("dns").promises;
 
-// Load env
 const fs = require("fs");
 [".env.local", ".env"].forEach((f) => {
   try {
@@ -47,19 +46,15 @@ async function resolveSRV(srvUri) {
       dns.resolveSrv(srvH).catch(() => []),
       dns.resolveTxt(host).catch(() => []),
     ]);
-    if (srvRecs.length === 0) { console.warn("No SRV for", srvH); return srvUri; }
+    if (srvRecs.length === 0) return srvUri;
     const hosts = srvRecs.map(r => r.name + ":" + r.port).join(",");
     const txt = txtRecs[0] && txtRecs[0][0] ? txtRecs[0][0] : "";
     const params = new Map();
     if (txt) txt.split("&").forEach(p => { const i = p.indexOf("="); if (i > 0) params.set(p.substring(0, i), p.substring(i + 1)); });
     if (query) query.split("&").forEach(p => { const i = p.indexOf("="); if (i > 0) params.set(p.substring(0, i), p.substring(i + 1)); else if (p) params.set(p, ""); });
     const pr = Array.from(params.entries()).map(e => e[0] + "=" + e[1]).join("&");
-    var direct = "mongodb://" + cred + "@" + hosts + "/" + dbPath;
-    if (pr) direct += "?" + pr;
-    console.log("SRV resolved to", hosts.split(",").length, "hosts");
-    return direct;
-  } catch (err) {
-    console.warn("SRV failed:", err.message, "- using original URI");
+    return "mongodb://" + cred + "@" + hosts + "/" + dbPath + (pr ? "?" + pr : "");
+  } catch {
     return srvUri;
   }
 }
@@ -70,23 +65,18 @@ async function resolveAndConnect() {
     console.error("MONGODB_URI not found in .env");
     process.exit(1);
   }
-
   const resolvedUri = await resolveSRV(uri);
-  console.log("Connecting to MongoDB...");
   const c = new MongoClient(resolvedUri, {
     serverSelectionTimeoutMS: 30000,
     socketTimeoutMS: 30000,
     connectTimeoutMS: 30000,
     tls: true,
-    tlsAllowInvalidCertificates: true,
-    tlsAllowInvalidHostnames: true,
     retryWrites: true,
     w: "majority",
   });
   await c.connect();
   const dbMatch = uri.match(/\/([^/?]+)(\?|$)/);
   const dbName = dbMatch ? dbMatch[1] : "hrms";
-  console.log("Connected to database: " + dbName);
   return c.db(dbName);
 }
 
@@ -112,16 +102,6 @@ const USERS = [
     employeeCode: "HR-001",
   },
   {
-    email: "nayanskorasoft@gmail.com",
-    displayName: "Nayan Raj",
-    firstName: "Nayan",
-    lastName: "Raj",
-    role: "manager",
-    department: "Marketing",
-    designation: "Marketing Manager",
-    employeeCode: "MGR-MKT-001",
-  },
-  {
     email: "rajat.stf007@gmail.com",
     displayName: "Rajat Kashyap",
     firstName: "Rajat",
@@ -140,6 +120,16 @@ const USERS = [
     department: "Sales",
     designation: "Sales Manager",
     employeeCode: "MGR-SLS-001",
+  },
+  {
+    email: "sg.shivangi@outlook.com",
+    displayName: "Shivangi Gupta",
+    firstName: "Shivangi",
+    lastName: "Gupta",
+    role: "manager",
+    department: "Marketing",
+    designation: "Marketing Manager",
+    employeeCode: "MGR-MKT-001",
   },
   {
     email: "chaudharygoldy08@gmail.com",
@@ -161,17 +151,6 @@ const USERS = [
     designation: "Marketing Executive",
     employeeCode: "EMP-MKT-002",
   },
-
-  {
-    email: "sg.shivangi@outlook.com",
-    displayName: "Shivangi Gupta",
-    firstName: "Shivangi",
-    lastName: "Gupta",
-    role: "employee",
-    department: "Marketing",
-    designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-003",
-  },
   {
     email: "sapnadelhi2004@gmail.com",
     displayName: "Sapna",
@@ -180,7 +159,7 @@ const USERS = [
     role: "employee",
     department: "Marketing",
     designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-004",
+    employeeCode: "EMP-MKT-003",
   },
   {
     email: "sk01506967961@gmail.com",
@@ -190,7 +169,7 @@ const USERS = [
     role: "employee",
     department: "Marketing",
     designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-005",
+    employeeCode: "EMP-MKT-004",
   },
   {
     email: "simarkaurwork15@gmail.com",
@@ -199,8 +178,8 @@ const USERS = [
     lastName: "Kaur",
     role: "employee",
     department: "Marketing",
-    designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-006",
+    designation: "Social Media Designer",
+    employeeCode: "EMP-MKT-005",
   },
   {
     email: "ashish17427@gmail.com",
@@ -209,8 +188,18 @@ const USERS = [
     lastName: "Mishra",
     role: "employee",
     department: "Development",
-    designation: "Software Developer",
+    designation: "Web Developer",
     employeeCode: "EMP-DEV-001",
+  },
+  {
+    email: "spallavivatsa@gmail.com",
+    displayName: "Shubha Pallavi",
+    firstName: "Shubha",
+    lastName: "Pallavi",
+    role: "employee",
+    department: "Development",
+    designation: "Web Developer",
+    employeeCode: "EMP-DEV-002",
   },
   {
     email: "abhishek.skorasoft@gmail.com",
@@ -228,27 +217,18 @@ const TEMP_PASSWORD = "Password@123";
 
 async function seed() {
   const force = process.argv.includes("--force");
-
   if (!force) {
-    console.log("WARNING: This script DELETES all existing users and recreates them.");
-    console.log("Run with --force to confirm:");
-    console.log("  node scripts/seed-real-users.js --force\n");
+    console.log("Run with --force to intentionally recreate the HRMS users.");
     process.exit(0);
   }
 
   const db = await resolveAndConnect();
-
   const now = new Date();
-  const existingCount = await db.collection("users").countDocuments();
-  console.log("Found " + existingCount + " existing users.");
 
   await db.collection("users").deleteMany({});
   await db.collection("sessions").deleteMany({});
-  console.log("Cleared old users and sessions.\n");
 
   const passwordHash = await bcrypt.hash(TEMP_PASSWORD, 12);
-  let empCount = 0;
-
   for (const u of USERS) {
     await db.collection("users").insertOne({
       email: u.email,
@@ -260,39 +240,27 @@ async function seed() {
       status: "active",
       loginStatus: "enabled",
       department: u.department,
+      departmentName: u.department,
       designation: u.designation,
+      designationName: u.designation,
       employeeCode: u.employeeCode,
-      passwordHash: passwordHash,
+      passwordHash,
       tenantId: "default",
       phone: "",
       mustChangePassword: u.role !== "super_admin",
       createdAt: now,
       updatedAt: now,
     });
-
-    var roleLabel = u.role === "super_admin" ? "CEO" : u.role === "hr_admin" ? "HR Admin" : u.role === "manager" ? "Manager" : "Employee";
-    console.log("  " + roleLabel + ": " + u.displayName + " (" + u.email + ") — code: " + u.employeeCode);
-    if (u.role !== "super_admin") empCount++;
   }
 
-  console.log("\n=============================================");
-  console.log("  Created " + USERS.length + " users (" + empCount + " employees + 1 CEO)");
-  console.log("  Temporary password: " + TEMP_PASSWORD);
-  console.log("  All users (except CEO) MUST change password on first login");
-  console.log("=============================================\n");
-
-  console.log("Login Credentials (all use same temp password):");
-  console.log("------------------------------------------------");
-  for (const u of USERS) {
-    var role = u.role === "super_admin" ? "CEO" : u.role === "hr_admin" ? "HR" : u.role === "manager" ? "MGR" : "EMP";
-    console.log("  " + role.padEnd(4) + " " + u.email.padEnd(35) + " " + TEMP_PASSWORD);
-  }
-  console.log("------------------------------------------------");
-
-  process.exit(0);
+  console.log(`Created ${USERS.length} current HRMS users.`);
+  console.log("Nayan Raj removed; Shivangi Gupta is Marketing Manager.");
+  console.log("Shubha Pallavi added to Development as Web Developer.");
+  console.log("Simar Kaur updated to Social Media Designer.");
+  console.log("Ashish Mishra updated to Web Developer.");
 }
 
-seed().catch(function(e) {
-  console.error("Seed failed:", e.message);
+seed().catch((error) => {
+  console.error("Seed failed:", error.message);
   process.exit(1);
 });
