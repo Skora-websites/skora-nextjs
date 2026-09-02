@@ -18,10 +18,19 @@ if (!MONGODB_URI) {
 }
 
 const users = [
-  { name: 'Super Admin', email: 'superadmin@skorabiz.com', password: 'password123', role: 'SUPER_ADMIN', department: 'Executive Board', onboardingStatus: 'VERIFIED', baseSalary: 120000, employeeCode: 'SA-0001' },
-  { name: 'Sarah Connor', email: 'hr@skorabiz.com', password: 'password123', role: 'HR_ADMIN', department: 'Human Resources', onboardingStatus: 'VERIFIED', baseSalary: 95000, employeeCode: 'HR-0001' },
-  { name: 'Marcus Brody', email: 'manager@skorabiz.com', password: 'password123', role: 'MANAGER', department: 'Engineering', onboardingStatus: 'VERIFIED', baseSalary: 110000, employeeCode: 'MGR-0001' },
-  { name: 'Alex Mercer', email: 'employee@skorabiz.com', password: 'password123', role: 'EMPLOYEE', department: 'Engineering', onboardingStatus: 'PENDING_REVIEW', baseSalary: 75000, employeeCode: 'EMP-0001' },
+  { name: 'Vishal Srivastava', email: 'skorainfotech@gmail.com', password: 'Password@123', role: 'SUPER_ADMIN', department: 'Executive', onboardingStatus: 'VERIFIED', baseSalary: 0, employeeCode: 'CEO-001' },
+  { name: 'Vishal Srivastava', email: 'hr@skorainfotech.com', password: 'Password@123', role: 'HR_ADMIN', department: 'Human Resources', onboardingStatus: 'VERIFIED', baseSalary: 95000, employeeCode: 'HR-001' },
+  { name: 'Rajat Kashyap', email: 'rajat.stf007@gmail.com', password: 'Password@123', role: 'MANAGER', department: 'Development', onboardingStatus: 'VERIFIED', baseSalary: 80000, employeeCode: 'MGR-DEV-001' },
+  { name: 'Vipul Singh', email: 'vipul.skorasoft@gmail.com', password: 'Password@123', role: 'MANAGER', department: 'Sales', onboardingStatus: 'VERIFIED', baseSalary: 75000, employeeCode: 'MGR-SLS-001' },
+  { name: 'Shivangi Gupta', email: 'sg.shivangi@outlook.com', password: 'Password@123', role: 'MANAGER', department: 'Marketing', onboardingStatus: 'VERIFIED', baseSalary: 75000, employeeCode: 'MGR-MKT-001' },
+  { name: 'Goldy Chaudhary', email: 'chaudharygoldy08@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Marketing', onboardingStatus: 'PENDING_REVIEW', baseSalary: 50000, employeeCode: 'EMP-MKT-001' },
+  { name: 'Maaz Hasan', email: 'maazhasan024@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Marketing', onboardingStatus: 'PENDING_REVIEW', baseSalary: 50000, employeeCode: 'EMP-MKT-002' },
+  { name: 'Sapna', email: 'sapnadelhi2004@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Marketing', onboardingStatus: 'PENDING_REVIEW', baseSalary: 50000, employeeCode: 'EMP-MKT-003' },
+  { name: 'Sachin', email: 'sk01506967961@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Marketing', onboardingStatus: 'PENDING_REVIEW', baseSalary: 50000, employeeCode: 'EMP-MKT-004' },
+  { name: 'Simar Kaur', email: 'simarkaurwork15@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Marketing', onboardingStatus: 'PENDING_REVIEW', baseSalary: 50000, employeeCode: 'EMP-MKT-005' },
+  { name: 'Ashish Mishra', email: 'ashish17427@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Development', onboardingStatus: 'PENDING_REVIEW', baseSalary: 60000, employeeCode: 'EMP-DEV-001' },
+  { name: 'Shubha Pallavi', email: 'spallavivatsa@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Development', onboardingStatus: 'PENDING_REVIEW', baseSalary: 60000, employeeCode: 'EMP-DEV-002' },
+  { name: 'Abhishek Singh', email: 'abhishek.skorasoft@gmail.com', password: 'Password@123', role: 'EMPLOYEE', department: 'Sales', onboardingStatus: 'PENDING_REVIEW', baseSalary: 55000, employeeCode: 'EMP-SLS-001' },
 ];
 
 async function seed() {
@@ -47,11 +56,7 @@ async function seed() {
     
     const total = await db.collection('users').countDocuments();
     console.log('\nTotal users:', total);
-    console.log('\nLogin credentials:');
-    console.log('  superadmin@skorabiz.com / password123  (SUPER_ADMIN)');
-    console.log('  hr@skorabiz.com / password123          (HR_ADMIN)');
-    console.log('  manager@skorabiz.com / password123     (MANAGER)');
-    console.log('  employee@skorabiz.com / password123    (EMPLOYEE)');
+    console.log('\nAll users: Password@123 (must change on first login except CEO)');
     
     await mongoose.disconnect();
   } catch (err) {

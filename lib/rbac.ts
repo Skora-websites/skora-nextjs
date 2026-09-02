@@ -275,3 +275,45 @@ export function getRoleDisplayName(role: string): string {
 export function isSuperAdminEmail(email: string): boolean {
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase().trim());
 }
+
+// ── Additional RBAC helpers ─────────────────────────────────────
+
+/**
+ * Check if a role can access a given route.
+ */
+export function canAccessRoute(
+  role: string | undefined | null,
+  path: string
+): boolean {
+  if (!role) return false;
+  const normalized = normalizeRole(role);
+  if (normalized === "super_admin") return true;
+
+  const allowedRoles = ROUTE_ACCESS[path];
+  if (allowedRoles?.includes(normalized)) return true;
+
+  for (const [route, roles] of Object.entries(ROUTE_ACCESS)) {
+    if (path.startsWith(route + "/") || path === route) {
+      if (roles.includes(normalized)) return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Get the display label for a role.
+ */
+export function getRoleLabel(role: string): string {
+  const canonical = normalizeRole(role);
+  return ROLE_LABELS[canonical] || canonical;
+}
+
+/**
+ * Check if a role is at least a certain level (hierarchy check).
+ */
+export function hasRoleLevel(role: string, minimumRole: Role): boolean {
+  const userLevel = ROLE_HIERARCHY[normalizeRole(role)] ?? 0;
+  const requiredLevel = ROLE_HIERARCHY[minimumRole] ?? 0;
+  return userLevel >= requiredLevel;
+}

@@ -6,13 +6,13 @@
  *
  * Usage: node scripts/seed-real-users.js --force
  */
-
 const { MongoClient } = require("mongodb");
 const bcrypt = require("bcryptjs");
 const dns = require("dns").promises;
-
 const fs = require("fs");
-[".env.local", ".env"].forEach((f) => {
+
+// Load env — prefer .env over .env.local (skip placeholder values)
+[".env", ".env.local"].forEach((f) => {
   try {
     const lines = fs.readFileSync(f, "utf-8").split("\n");
     lines.forEach((l) => {
@@ -21,6 +21,7 @@ const fs = require("fs");
         const eq = l.indexOf("=");
         const k = l.substring(0, eq).trim();
         const v = l.substring(eq + 1).trim();
+        if (v.includes("<username>") || v.includes("<password>") || v.includes("<cluster>")) return;
         if (!process.env[k]) process.env[k] = v;
       }
     });
@@ -32,7 +33,8 @@ async function resolveSRV(srvUri) {
   try {
     dns.setServers(["8.8.8.8", "1.1.1.1"]);
     const body = srvUri.replace("mongodb+srv://", "");
-    const ai = body.indexOf("@");
+    // Use lastIndexOf to find the @ separator (avoids confusion with @ in passwords)
+    const ai = body.lastIndexOf("@");
     const cred = ai >= 0 ? body.substring(0, ai) : "";
     const after = ai >= 0 ? body.substring(ai + 1) : body;
     const si = after.indexOf("/");
@@ -81,136 +83,19 @@ async function resolveAndConnect() {
 }
 
 const USERS = [
-  {
-    email: "skorainfotech@gmail.com",
-    displayName: "Vishal Srivastava",
-    firstName: "Vishal",
-    lastName: "Srivastava",
-    role: "super_admin",
-    department: "Executive",
-    designation: "CEO",
-    employeeCode: "CEO-001",
-  },
-  {
-    email: "hr@skorainfotech.com",
-    displayName: "Vishal Srivastava",
-    firstName: "Vishal",
-    lastName: "Srivastava",
-    role: "hr_admin",
-    department: "Human Resources",
-    designation: "HR Manager",
-    employeeCode: "HR-001",
-  },
-  {
-    email: "rajat.stf007@gmail.com",
-    displayName: "Rajat Kashyap",
-    firstName: "Rajat",
-    lastName: "Kashyap",
-    role: "manager",
-    department: "Development",
-    designation: "Development Manager",
-    employeeCode: "MGR-DEV-001",
-  },
-  {
-    email: "vipul.skorasoft@gmail.com",
-    displayName: "Vipul Singh",
-    firstName: "Vipul",
-    lastName: "Singh",
-    role: "manager",
-    department: "Sales",
-    designation: "Sales Manager",
-    employeeCode: "MGR-SLS-001",
-  },
-  {
-    email: "sg.shivangi@outlook.com",
-    displayName: "Shivangi Gupta",
-    firstName: "Shivangi",
-    lastName: "Gupta",
-    role: "manager",
-    department: "Marketing",
-    designation: "Marketing Manager",
-    employeeCode: "MGR-MKT-001",
-  },
-  {
-    email: "chaudharygoldy08@gmail.com",
-    displayName: "Goldy Chaudhary",
-    firstName: "Goldy",
-    lastName: "Chaudhary",
-    role: "employee",
-    department: "Marketing",
-    designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-001",
-  },
-  {
-    email: "maazhasan024@gmail.com",
-    displayName: "Maaz Hasan",
-    firstName: "Maaz",
-    lastName: "Hasan",
-    role: "employee",
-    department: "Marketing",
-    designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-002",
-  },
-  {
-    email: "sapnadelhi2004@gmail.com",
-    displayName: "Sapna",
-    firstName: "Sapna",
-    lastName: "",
-    role: "employee",
-    department: "Marketing",
-    designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-003",
-  },
-  {
-    email: "sk01506967961@gmail.com",
-    displayName: "Sachin",
-    firstName: "Sachin",
-    lastName: "",
-    role: "employee",
-    department: "Marketing",
-    designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-004",
-  },
-  {
-    email: "simarkaurwork15@gmail.com",
-    displayName: "Simar Kaur",
-    firstName: "Simar",
-    lastName: "Kaur",
-    role: "employee",
-    department: "Marketing",
-    designation: "Social Media Designer",
-    employeeCode: "EMP-MKT-005",
-  },
-  {
-    email: "ashish17427@gmail.com",
-    displayName: "Ashish Mishra",
-    firstName: "Ashish",
-    lastName: "Mishra",
-    role: "employee",
-    department: "Development",
-    designation: "Web Developer",
-    employeeCode: "EMP-DEV-001",
-  },
-  {
-    email: "spallavivatsa@gmail.com",
-    displayName: "Shubha Pallavi",
-    firstName: "Shubha",
-    lastName: "Pallavi",
-    role: "employee",
-    department: "Development",
-    designation: "Web Developer",
-    employeeCode: "EMP-DEV-002",
-  },
-  {
-    email: "abhishek.skorasoft@gmail.com",
-    displayName: "Abhishek Singh",
-    firstName: "Abhishek",
-    lastName: "Singh",
-    role: "employee",
-    department: "Sales",
-    designation: "Sales Executive",
-    employeeCode: "EMP-SLS-001",
-  },
+  { email: "skorainfotech@gmail.com", displayName: "Vishal Srivastava", firstName: "Vishal", lastName: "Srivastava", role: "super_admin", department: "Executive", designation: "CEO", employeeCode: "CEO-001" },
+  { email: "hr@skorainfotech.com", displayName: "Vishal Srivastava", firstName: "Vishal", lastName: "Srivastava", role: "hr_admin", department: "Human Resources", designation: "HR Manager", employeeCode: "HR-001" },
+  { email: "rajat.stf007@gmail.com", displayName: "Rajat Kashyap", firstName: "Rajat", lastName: "Kashyap", role: "manager", department: "Development", designation: "Development Manager", employeeCode: "MGR-DEV-001" },
+  { email: "vipul.skorasoft@gmail.com", displayName: "Vipul Singh", firstName: "Vipul", lastName: "Singh", role: "manager", department: "Sales", designation: "Sales Manager", employeeCode: "MGR-SLS-001" },
+  { email: "sg.shivangi@outlook.com", displayName: "Shivangi Gupta", firstName: "Shivangi", lastName: "Gupta", role: "manager", department: "Marketing", designation: "Marketing Manager", employeeCode: "MGR-MKT-001" },
+  { email: "chaudharygoldy08@gmail.com", displayName: "Goldy Chaudhary", firstName: "Goldy", lastName: "Chaudhary", role: "employee", department: "Marketing", designation: "Marketing Executive", employeeCode: "EMP-MKT-001" },
+  { email: "maazhasan024@gmail.com", displayName: "Maaz Hasan", firstName: "Maaz", lastName: "Hasan", role: "employee", department: "Marketing", designation: "Marketing Executive", employeeCode: "EMP-MKT-002" },
+  { email: "sapnadelhi2004@gmail.com", displayName: "Sapna", firstName: "Sapna", lastName: "", role: "employee", department: "Marketing", designation: "Marketing Executive", employeeCode: "EMP-MKT-003" },
+  { email: "sk01506967961@gmail.com", displayName: "Sachin", firstName: "Sachin", lastName: "", role: "employee", department: "Marketing", designation: "Marketing Executive", employeeCode: "EMP-MKT-004" },
+  { email: "simarkaurwork15@gmail.com", displayName: "Simar Kaur", firstName: "Simar", lastName: "Kaur", role: "employee", department: "Marketing", designation: "Social Media Designer", employeeCode: "EMP-MKT-005" },
+  { email: "ashish17427@gmail.com", displayName: "Ashish Mishra", firstName: "Ashish", lastName: "Mishra", role: "employee", department: "Development", designation: "Web Developer", employeeCode: "EMP-DEV-001" },
+  { email: "spallavivatsa@gmail.com", displayName: "Shubha Pallavi", firstName: "Shubha", lastName: "Pallavi", role: "employee", department: "Development", designation: "Web Developer", employeeCode: "EMP-DEV-002" },
+  { email: "abhishek.skorasoft@gmail.com", displayName: "Abhishek Singh", firstName: "Abhishek", lastName: "Singh", role: "employee", department: "Sales", designation: "Sales Executive", employeeCode: "EMP-SLS-001" },
 ];
 
 const TEMP_PASSWORD = "Password@123";
@@ -221,13 +106,10 @@ async function seed() {
     console.log("Run with --force to intentionally recreate the HRMS users.");
     process.exit(0);
   }
-
   const db = await resolveAndConnect();
   const now = new Date();
-
   await db.collection("users").deleteMany({});
   await db.collection("sessions").deleteMany({});
-
   const passwordHash = await bcrypt.hash(TEMP_PASSWORD, 12);
   for (const u of USERS) {
     await db.collection("users").insertOne({
@@ -252,14 +134,9 @@ async function seed() {
       updatedAt: now,
     });
   }
-
   console.log(`Created ${USERS.length} current HRMS users.`);
-  console.log("Nayan Raj removed; Shivangi Gupta is Marketing Manager.");
-  console.log("Shubha Pallavi added to Development as Web Developer.");
-  console.log("Simar Kaur updated to Social Media Designer.");
-  console.log("Ashish Mishra updated to Web Developer.");
+  console.log("All passwords: Password@123");
 }
-
 seed().catch((error) => {
   console.error("Seed failed:", error.message);
   process.exit(1);

@@ -168,7 +168,7 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
   if (loginStatus) {
     if (auth.role === "employee") return forbidden("Insufficient permissions");
     if (!["enabled", "disabled"].includes(loginStatus)) return badRequest("Invalid loginStatus");
-    if (auth.role !== "super_admin" && ROLE_HIERARCHY[auth.role] <= ROLE_HIERARCHY[targetRole]) return forbidden("You cannot manage an account at or above your role");
+    if (auth.role !== "super_admin" && ROLE_HIERARCHY[normalizeRole(auth.role)] <= ROLE_HIERARCHY[targetRole]) return forbidden("You cannot manage an account at or above your role");
     if (loginStatus === "disabled") {
       const db = await getDb();
       if (db) await db.collection("sessions").deleteMany({ userId });
