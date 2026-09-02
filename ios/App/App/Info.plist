@@ -22,51 +22,24 @@
     <string>1</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsArbitraryLoads</key>
-        <true/>
-    </dict>
 
-    <!-- ═══ Location Permissions ═══ -->
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Skora HRMS needs your location for attendance tracking. Your location is used to verify you are at the office when you punch in.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Skora HRMS needs background location access to continuously track your attendance location even when the app is not actively in use. This ensures accurate punch-in/punch-out records.</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Skora HRMS needs background location access for attendance tracking.</string>
-    <key>NSLocationTemporaryUsageDescriptionDictionary</key>
-    <dict>
-        <key>AttendanceTracking</key>
-        <string>Skora HRMS needs temporary precise location to verify your office location for attendance.</string>
-    </dict>
+    <string>Skora HRMS uses your location to verify your location for attendance.</string>
 
-    <!-- ═══ Background Modes ═══ -->
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>location</string>
-        <string>fetch</string>
-        <string>remote-notification</string>
-    </array>
-
-    <!-- ═══ Required Device Capabilities ═══ -->
     <key>UIRequiredDeviceCapabilities</key>
     <array>
         <string>armv7</string>
         <string>location-services</string>
     </array>
 
-    <!-- ═══ Status Bar ═══ -->
     <key>UIStatusBarStyle</key>
     <string>UIStatusBarStyleLightContent</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
 
-    <!-- ═══ Launch Screen ═══ -->
     <key>UILaunchStoryboardName</key>
     <string>LaunchScreen</string>
 
-    <!-- ═══ Supported Interface Orientations ═══ -->
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
@@ -81,7 +54,6 @@
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 
-    <!-- ═══ Camera Permission (for document scanning) ═══ -->
     <key>NSCameraUsageDescription</key>
     <string>Skora HRMS needs camera access to scan documents for onboarding.</string>
     <key>NSPhotoLibraryUsageDescription</key>
