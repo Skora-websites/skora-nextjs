@@ -27,6 +27,7 @@ import {
   Search,
   UserCheck,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
@@ -69,6 +70,7 @@ const iconMap: Record<string, React.ElementType> = {
   LogOut,
   Sun,
   UserCheck,
+  CheckCircle2,
 };
 
 const roleSettingsMap: Record<string, string> = {
