@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getAttendanceRecords,
-  getAttendanceById,
-  markAttendance,
-  updateAttendance,
-  deleteAttendance,
-  getAttendanceDashboard,
-  getAttendanceStats,
-  calculateAttendanceStats,
-} from "@/services/hrm/attendance";
+import { getAttendanceRecords, getAttendanceById, markAttendance, updateAttendance, deleteAttendance, getAttendanceDashboard, getAttendanceStats, calculateAttendanceStats } from "@/services/hrm/attendance";
 import { requireAuth, requireAdmin, isErrorResponse } from "@/lib/api-auth";
 import { getDb } from "@/lib/db/mongo-helper";
 
@@ -16,12 +7,11 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
-
-    const tenantId = "default";
-
+    const tenantId = auth.tenantId;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
+    const userId = auth.role === "employee" ? auth.userId : requestedUserId;
     const status = searchParams.get("status");
     const month = searchParams.get("month");
     const year = searchParams.get("year");
@@ -31,79 +21,32 @@ export async function GET(request: NextRequest) {
 
     if (id) {
       const record = await getAttendanceById(id);
-      if (!record) {
-        return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
-      }
+      if (!record || (record.tenantId && record.tenantId !== tenantId)) return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
+      if (auth.role === "employee" && record.userId !== auth.userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       return NextResponse.json({ data: record });
     }
-
     if (dashboard === "true") {
-      // Only admins can view the attendance dashboard
-      if (auth.role === "employee") {
-        return NextResponse.json({ error: "Forbidden: insufficient permissions" }, { status: 403 });
-      }
-      const dashData = await getAttendanceDashboard(tenantId);
-      return NextResponse.json({ data: dashData });
+      if (auth.role === "employee") return NextResponse.json({ error: "Forbidden: insufficient permissions" }, { status: 403 });
+      return NextResponse.json({ data: await getAttendanceDashboard(tenantId) });
     }
-
     if (stats === "true" && userId) {
-      // Employees can only view their own stats
-      if (auth.role === "employee" && userId !== auth.userId) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-      const m = month ? parseInt(month) : new Date().getMonth() + 1;
-      const y = year ? parseInt(year) : new Date().getFullYear();
-      const statData = await getAttendanceStats(tenantId, userId, m, y);
-      return NextResponse.json({ data: statData });
+      if (auth.role === "employee" && userId !== auth.userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      const m = month ? parseInt(month, 10) : new Date().getMonth() + 1;
+      const y = year ? parseInt(year, 10) : new Date().getFullYear();
+      return NextResponse.json({ data: await getAttendanceStats(tenantId, userId, m, y) });
     }
-
-    const records = await getAttendanceRecords(tenantId, {
-      userId: userId || undefined,
-      date: date || undefined,
-      status: status || undefined,
-    });
-
-    // Enrich records: parse distance from location, flatten for dashboard
-    let enriched = records.map((rec: any) => {
+    const records = await getAttendanceRecords(tenantId, { userId: userId || undefined, date: date || undefined, status: status || undefined });
+    const enriched = records.map((rec: any) => {
       let distanceMeters: number | undefined;
       if (rec.location) {
         const pi = rec.location.indexOf("(");
         if (pi >= 0) {
-          const after = rec.location.substring(pi + 1);
-          const nums = after.split(/[^0-9]+/).filter((s: string) => s.length > 0);
-          if (nums.length > 0) distanceMeters = parseInt(nums[0]);
+          const nums = rec.location.substring(pi + 1).split(/[^0-9]+/).filter((s: string) => s.length > 0);
+          if (nums.length > 0) distanceMeters = parseInt(nums[0], 10);
         }
       }
-      const recordDate = rec.date || (rec.punchInTime ? new Date(rec.punchInTime).toISOString().split("T")[0] : "");
-      return {
-        _id: rec._id || rec.id,
-        userId: rec.userId,
-        userName: rec.userName || rec.userDisplayName || "",
-        userEmail: rec.userEmail || "",
-        employeeCode: rec.employeeCode,
-        date: recordDate,
-        punchInTime: rec.punchInTime || rec.checkIn,
-        punchOutTime: rec.punchOutTime || rec.checkOut,
-        location: rec.location,
-        distanceMeters,
-        status: rec.status,
-        workHours: rec.workHours || rec.totalHours,
-        overtimeHours: rec.overtimeHours,
-        regularizationStatus: rec.regularizationStatus,
-        managerId: rec.managerId,
-      };
+      return { _id: rec._id || rec.id, userId: rec.userId, userName: rec.userName || rec.userDisplayName || "", userEmail: rec.userEmail || "", employeeCode: rec.employeeCode, date: rec.date || (rec.punchInTime ? new Date(rec.punchInTime).toISOString().split("T")[0] : ""), punchInTime: rec.punchInTime || rec.checkIn, punchOutTime: rec.punchOutTime || rec.checkOut, location: rec.location, distanceMeters, status: rec.status, workHours: rec.workHours || rec.totalHours, overtimeHours: rec.overtimeHours, regularizationStatus: rec.regularizationStatus, managerId: rec.managerId };
     });
-
-    // If date is requested, ensure strict date matching
-    if (date) {
-      enriched = enriched.filter((r) => r.date === date);
-    }
-
-    // Employees can only view their own records
-    if (auth.role === "employee") {
-      enriched = enriched.filter((r) => r.userId === auth.userId);
-    }
-
     return NextResponse.json({ data: enriched });
   } catch (error: any) {
     console.error("GET /api/hrm/v2/attendance error:", error);
@@ -115,47 +58,23 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireAuth();
     if (isErrorResponse(auth)) return auth;
-
-    const tenantId = "default";
-
     const body = await request.json();
-
-    // Employees can only mark their own attendance
-    if (auth.role === "employee" && body.userId !== auth.userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    // Check if today is a work day
+    if (auth.role === "employee" && body.userId !== auth.userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const tenantId = auth.tenantId;
     let workdayType = body.workdayType || "regular";
     try {
       const db = await getDb();
       if (db) {
         const settingsDoc = await db.collection("settings").findOne({ key: "super_admin_system" });
         const workDays = settingsDoc?.settings?.officeRules?.workDays;
-        if (workDays) {
-          const dayOfWeek = new Date(body.date).getDay();
-          if (!workDays.includes(dayOfWeek)) {
-            workdayType = "weekly_off";
-          }
-        }
+        if (workDays && !workDays.includes(new Date(body.date).getDay())) workdayType = "weekly_off";
       }
-    } catch { /* use default */ }
-
-    const record = await markAttendance(tenantId, {
-      userId: body.userId,
-      date: new Date(body.date),
-      checkIn: body.checkIn ? new Date(body.checkIn) : undefined,
-      checkOut: body.checkOut ? new Date(body.checkOut) : undefined,
-      shiftId: body.shiftId,
-      workdayType,
-      source: body.source || "manual",
-    });
-
+    } catch {}
+    const record = await markAttendance(tenantId, { userId: body.userId, date: new Date(body.date), checkIn: body.checkIn ? new Date(body.checkIn) : undefined, checkOut: body.checkOut ? new Date(body.checkOut) : undefined, shiftId: body.shiftId, workdayType, source: body.source || "manual" });
     if (body.calculateStats && record) {
       const d = new Date(body.date);
       await calculateAttendanceStats(tenantId, body.userId, d.getMonth() + 1, d.getFullYear());
     }
-
     return NextResponse.json({ data: record }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/hrm/v2/attendance error:", error);
@@ -167,19 +86,12 @@ export async function PATCH(request: NextRequest) {
   try {
     const auth = await requireAdmin();
     if (isErrorResponse(auth)) return auth;
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-    if (!id) {
-      return NextResponse.json({ error: "id parameter required" }, { status: 400 });
-    }
-
-    const body = await request.json();
-    const record = await updateAttendance(id, body);
-    if (!record) {
-      return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
-    }
-
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "id parameter required" }, { status: 400 });
+    const existing = await getAttendanceById(id);
+    if (!existing || (existing.tenantId && existing.tenantId !== auth.tenantId)) return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
+    const record = await updateAttendance(id, await request.json());
+    if (!record) return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
     return NextResponse.json({ data: record });
   } catch (error: any) {
     console.error("PATCH /api/hrm/v2/attendance error:", error);
@@ -191,18 +103,11 @@ export async function DELETE(request: NextRequest) {
   try {
     const auth = await requireAdmin();
     if (isErrorResponse(auth)) return auth;
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-    if (!id) {
-      return NextResponse.json({ error: "id parameter required" }, { status: 400 });
-    }
-
-    const deleted = await deleteAttendance(id);
-    if (!deleted) {
-      return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
-    }
-
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "id parameter required" }, { status: 400 });
+    const existing = await getAttendanceById(id);
+    if (!existing || (existing.tenantId && existing.tenantId !== auth.tenantId)) return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
+    if (!(await deleteAttendance(id))) return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("DELETE /api/hrm/v2/attendance error:", error);
