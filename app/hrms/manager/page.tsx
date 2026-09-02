@@ -675,6 +675,8 @@ function AttendanceChip({ status }: { status: string }) {
     PRESENT: { bg: "bg-emerald-500/10 border-emerald-500/20", text: "text-emerald-600 dark:text-emerald-400", label: "PRESENT" },
     LATE: { bg: "bg-yellow-500/10 border-yellow-500/20", text: "text-yellow-600 dark:text-yellow-400", label: "LATE" },
     ABSENT: { bg: "bg-red-500/10 border-red-500/20", text: "text-red-600 dark:text-red-400", label: "ABSENT" },
+    WFH: { bg: "bg-emerald-500/10 border-emerald-500/20", text: "text-emerald-600 dark:text-emerald-400", label: "WFH" },
+    wfh: { bg: "bg-emerald-500/10 border-emerald-500/20", text: "text-emerald-600 dark:text-emerald-400", label: "WFH" },
     HALF_DAY: { bg: "bg-orange-500/10 border-orange-500/20", text: "text-orange-600 dark:text-orange-400", label: "HALF DAY" },
   };
   const s = map[status] || map.ABSENT;

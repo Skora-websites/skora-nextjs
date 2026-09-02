@@ -324,7 +324,7 @@ export default function SuperadminOverviewPage() {
     return punchDate === selectedAttendanceDate;
   });
   const presentCount = todayAttendance.filter(
-    (a) => a.status === "PRESENT" || a.status === "LATE" || a.status === "HALF_DAY" || a.status === "present" || a.status === "half_day"
+    (a) => a.status === "PRESENT" || a.status === "LATE" || a.status === "HALF_DAY" || a.status === "present" || a.status === "half_day" || a.status === "WFH" || a.status === "wfh"
   ).length;
   const absentCount = Math.max(0, totalEmployees - presentCount);
   const pendingLeaves = leaveRequests.filter((l) => l.status === "pending");
