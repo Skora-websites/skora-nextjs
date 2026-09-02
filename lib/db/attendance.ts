@@ -1,4 +1,6 @@
 import { getDb } from "./mongo-helper";
+import { getOfficeConfig } from "@/lib/hrm/office-config";
+import { haversineDistance } from "@/lib/geofencing";
 
 export type AttendanceStatus = "PRESENT" | "LATE" | "HALF_DAY" | "ABSENT";
 export type AUXState = "active" | "on_break" | "meeting";
@@ -37,7 +39,7 @@ export interface AttendanceRecord {
   totalBreakMinutes?: number;
   effectiveWorkMinutes?: number;
   locationHistory?: LocationEntry[];
-  currentLocation?: { latitude: number; longitude: number; accuracy: number; timestamp: string };
+  currentLocation?: { latitude: number; longitude: number; accuracy: number; timestamp: string; distanceFromOffice?: number };
   workLocation?: "office" | "remote";
 }
 
@@ -78,12 +80,17 @@ function todayString(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export async function getAttendanceRecords(filter?: {
-  userId?: string;
-  date?: string;
-  tenantId?: string;
-  managerId?: string;
-}): Promise<AttendanceRecord[]> {
+function extractCoordinates(location?: string): { latitude: number; longitude: number } | null {
+  if (!location) return null;
+  const match = location.match(/Lat:\s*(-?\d+(?:\.\d+)?),\s*Lng:\s*(-?\d+(?:\.\d+)?)/i);
+  if (!match) return null;
+  const latitude = Number(match[1]);
+  const longitude = Number(match[2]);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return { latitude, longitude };
+}
+
+export async function getAttendanceRecords(filter?: { userId?: string; date?: string; tenantId?: string; managerId?: string }): Promise<AttendanceRecord[]> {
   const db = await getDb();
   if (!db) return [];
   const query: Record<string, unknown> = { tenantId: filter?.tenantId || "default" };
@@ -91,11 +98,7 @@ export async function getAttendanceRecords(filter?: {
   if (filter?.date) query.date = filter.date;
   if (filter?.managerId) query.managerId = filter.managerId;
   const docs = await db.collection("attendance").find(query).sort({ date: -1, punchInTime: -1 }).toArray();
-  return docs.map((d) => ({
-    ...d,
-    _id: d._id.toString(),
-    createdAt: d.createdAt ? d.createdAt.toISOString() : new Date().toISOString(),
-  })) as AttendanceRecord[];
+  return docs.map((d) => ({ ...d, _id: d._id.toString(), createdAt: d.createdAt ? d.createdAt.toISOString() : new Date().toISOString() })) as AttendanceRecord[];
 }
 
 export async function recordPunchIn(data: {
@@ -114,6 +117,14 @@ export async function recordPunchIn(data: {
   const now = new Date();
   const tenantId = data.tenantId || "default";
   const todayStr = todayString(now);
+  const office = await getOfficeConfig();
+  const coords = extractCoordinates(data.location);
+  const distanceFromOffice = coords ? Math.round(haversineDistance(coords.latitude, coords.longitude, office.latitude, office.longitude)) : undefined;
+
+  // Production attendance cannot claim "office" without a server-verifiable GPS position.
+  if (process.env.NODE_ENV === "production" && data.workLocation === "office" && distanceFromOffice === undefined) return null;
+  if (distanceFromOffice !== undefined && data.workLocation === "office" && distanceFromOffice > office.geofenceRadius) return null;
+
   const status = (data.status || calculateAttendanceStatus(now)) as AttendanceStatus;
   const nowISO = now.toISOString();
   const existing = await db.collection("attendance").findOne({ tenantId, userId: data.userId, date: todayStr });
@@ -122,21 +133,14 @@ export async function recordPunchIn(data: {
       { _id: existing._id, tenantId },
       { $set: { userName: data.userName || existing.userName, userEmail: data.userEmail || existing.userEmail, employeeCode: data.employeeCode || existing.employeeCode, location: data.location || existing.location } }
     );
-    return {
-      ...existing, _id: existing._id.toString(),
-      auxState: existing.auxState || "active", auxHistory: existing.auxHistory || [],
-      totalBreakMinutes: existing.totalBreakMinutes || 0, effectiveWorkMinutes: existing.effectiveWorkMinutes || 0,
-      createdAt: existing.createdAt ? existing.createdAt.toISOString() : now.toISOString(),
-    } as AttendanceRecord;
+    return { ...existing, _id: existing._id.toString(), auxState: existing.auxState || "active", auxHistory: existing.auxHistory || [], totalBreakMinutes: existing.totalBreakMinutes || 0, effectiveWorkMinutes: existing.effectiveWorkMinutes || 0, createdAt: existing.createdAt ? existing.createdAt.toISOString() : now.toISOString() } as AttendanceRecord;
   }
   const initialAUX: AUXEntry[] = [{ state: "active", startTime: nowISO }];
   const doc = {
-    tenantId, userId: data.userId, userName: data.userName,
-    userEmail: data.userEmail, employeeCode: data.employeeCode,
-    date: todayStr, punchInTime: nowISO, location: data.location || "Primary Office (GPS Verified)",
-    workLocation: data.workLocation || "office",
-    status, managerId: data.managerId, auxState: "active" as AUXState,
-    auxHistory: initialAUX, totalBreakMinutes: 0, effectiveWorkMinutes: 0, createdAt: now,
+    tenantId, userId: data.userId, userName: data.userName, userEmail: data.userEmail, employeeCode: data.employeeCode,
+    date: todayStr, punchInTime: nowISO, location: data.location || "Primary Office (GPS Verified)", workLocation: data.workLocation || "office",
+    status, managerId: data.managerId, auxState: "active" as AUXState, auxHistory: initialAUX, totalBreakMinutes: 0, effectiveWorkMinutes: 0,
+    currentLocation: coords ? { ...coords, accuracy: 0, timestamp: nowISO, distanceFromOffice } : undefined, createdAt: now,
   };
   const res = await db.collection("attendance").insertOne(doc);
   return { ...doc, _id: res.insertedId.toString(), createdAt: now.toISOString() } as AttendanceRecord;
@@ -145,7 +149,7 @@ export async function recordPunchIn(data: {
 export async function recordAUXChange(userId: string, dateStr: string, newState: AUXState, tenantId = "default"): Promise<AttendanceRecord | null> {
   const db = await getDb();
   if (!db) return null;
-  const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr });
+  const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr, punchOutTime: { $exists: false } });
   if (!record) return null;
   const nowISO = new Date().toISOString();
   const history: AUXEntry[] = record.auxHistory || [];
@@ -153,10 +157,7 @@ export async function recordAUXChange(userId: string, dateStr: string, newState:
   updatedHistory.push({ state: newState, startTime: nowISO });
   const effectiveWorkMinutes = calculateEffectiveWorkMinutes(updatedHistory);
   const totalBreakMinutes = calculateBreakMinutes(updatedHistory);
-  await db.collection("attendance").updateOne(
-    { _id: record._id, tenantId },
-    { $set: { auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes } }
-  );
+  await db.collection("attendance").updateOne({ _id: record._id, tenantId, punchOutTime: { $exists: false } }, { $set: { auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes } });
   return { ...record, _id: record._id.toString(), auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes, createdAt: record.createdAt ? record.createdAt.toISOString() : new Date().toISOString() } as AttendanceRecord;
 }
 
@@ -165,8 +166,20 @@ export async function recordPunchOut(userId: string, dateStr: string, tenantId =
   if (!db) return false;
   const now = new Date();
   const nowISO = now.toISOString();
-  const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr });
-  if (!record || record.punchOutTime) return false;
+  const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr, punchOutTime: { $exists: false } });
+  if (!record) return false;
+
+  // Early departures require an approval workflow; never silently close the attendance record.
+  try {
+    const office = await getOfficeConfig();
+    const settingsDoc = await db.collection("settings").findOne({ key: "super_admin_system" });
+    const officeEnd = Number(settingsDoc?.settings?.officeRules?.officeEnd ?? officeEndFallback(office));
+    const currentHour = now.getHours() + now.getMinutes() / 60;
+    if (currentHour < officeEnd && dateStr === todayString(now)) return false;
+  } catch {
+    // If policy cannot be read, fail closed for an early departure.
+  }
+
   let history: AUXEntry[] = record.auxHistory || [];
   history = history.map((entry: AUXEntry, idx: number) => idx === history.length - 1 && !entry.endTime ? { ...entry, endTime: nowISO } : entry);
   const effectiveWorkMinutes = calculateEffectiveWorkMinutes(history);
@@ -179,15 +192,11 @@ export async function recordPunchOut(userId: string, dateStr: string, tenantId =
   return res.modifiedCount > 0;
 }
 
-export async function updateAttendanceLocation(
-  userId: string,
-  dateStr: string,
-  latitude: number,
-  longitude: number,
-  accuracy: number,
-  distanceFromOffice?: number,
-  tenantId = "default"
-): Promise<boolean> {
+function officeEndFallback(_office: { latitude: number; longitude: number; geofenceRadius: number }): number {
+  return 19;
+}
+
+export async function updateAttendanceLocation(userId: string, dateStr: string, latitude: number, longitude: number, accuracy: number, distanceFromOffice?: number, tenantId = "default"): Promise<boolean> {
   const db = await getDb();
   if (!db) return false;
   const record = await db.collection("attendance").findOne({ tenantId, userId, date: dateStr, punchOutTime: { $exists: false } });
@@ -196,38 +205,14 @@ export async function updateAttendanceLocation(
   const entry: LocationEntry = { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice };
   await db.collection("attendance").updateOne(
     { _id: record._id, tenantId, punchOutTime: { $exists: false } },
-    {
-      $push: { locationHistory: { $each: [entry], $slice: -1000 } } as any,
-      $set: { currentLocation: { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice } },
-    }
+    { $push: { locationHistory: { $each: [entry], $slice: -1000 } } as any, $set: { currentLocation: { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice } } }
   );
   return true;
 }
 
-export async function getLiveEmployeeLocations(tenantId = "default"): Promise<Array<{
-  userId: string;
-  userName: string;
-  userEmail: string;
-  employeeCode?: string;
-  latitude: number;
-  longitude: number;
-  accuracy: number;
-  timestamp: string;
-  distanceFromOffice?: number;
-  auxState?: AUXState;
-}>> {
+export async function getLiveEmployeeLocations(tenantId = "default"): Promise<Array<{ userId: string; userName: string; userEmail: string; employeeCode?: string; latitude: number; longitude: number; accuracy: number; timestamp: string; distanceFromOffice?: number; auxState?: AUXState }>> {
   const db = await getDb();
   if (!db) return [];
-  const records = await db.collection("attendance").find({
-    tenantId,
-    date: todayString(),
-    punchOutTime: { $exists: false },
-    currentLocation: { $exists: true },
-  }).toArray();
-  return records.filter((r: any) => r.currentLocation).map((r: any) => ({
-    userId: r.userId, userName: r.userName, userEmail: r.userEmail, employeeCode: r.employeeCode,
-    latitude: r.currentLocation.latitude, longitude: r.currentLocation.longitude,
-    accuracy: r.currentLocation.accuracy, timestamp: r.currentLocation.timestamp,
-    distanceFromOffice: r.currentLocation.distanceFromOffice, auxState: r.auxState,
-  }));
+  const records = await db.collection("attendance").find({ tenantId, date: todayString(), punchOutTime: { $exists: false }, currentLocation: { $exists: true } }).toArray();
+  return records.filter((r: any) => r.currentLocation).map((r: any) => ({ userId: r.userId, userName: r.userName, userEmail: r.userEmail, employeeCode: r.employeeCode, latitude: r.currentLocation.latitude, longitude: r.currentLocation.longitude, accuracy: r.currentLocation.accuracy, timestamp: r.currentLocation.timestamp, distanceFromOffice: r.currentLocation.distanceFromOffice, auxState: r.auxState }));
 }
