@@ -39,12 +39,23 @@ function serializeId(doc: any): any {
 /**
  * Creates a typed MongoDB service for a given collection.
  * Drop-in replacement for createFirestoreService — same API, MongoDB backend.
+ *
+ * IMPORTANT: tenant-scoped methods must enforce tenantId at the database query
+ * boundary. Previously these methods ignored tenantId, which made every caller
+ * that believed it was tenant-isolated read across the whole collection.
  */
 export function createMongoService<T extends { id?: string; tenantId?: string }>(collectionName: string) {
   async function col() {
     const db = await getDb();
     if (!db) throw new Error("MongoDB not connected");
     return db.collection(collectionName);
+  }
+
+  function tenantWhere(tenantId: string, options: QueryOptions = {}): WhereClause[] {
+    return [
+      ...(options.where || []),
+      { field: "tenantId", op: "==", value: tenantId },
+    ];
   }
 
   return {
@@ -59,12 +70,19 @@ export function createMongoService<T extends { id?: string; tenantId?: string }>
       }
     },
 
-    async findManyInTenant(_tenantId: string, options: QueryOptions = {}): Promise<T[]> {
-      return this.findMany(options);
+    async findManyInTenant(tenantId: string, options: QueryOptions = {}): Promise<T[]> {
+      return this.findMany({ ...options, where: tenantWhere(tenantId, options) });
     },
 
-    async findOneInTenant(_tenantId: string, field: string, value: unknown): Promise<T | null> {
-      return this.findOne(field, value);
+    async findOneInTenant(tenantId: string, field: string, value: unknown): Promise<T | null> {
+      const c = await col();
+      const doc = await c.findOne({
+        $and: [
+          { [field]: value },
+          { tenantId },
+        ],
+      });
+      return doc ? serializeId(doc) as T : null;
     },
 
     async findOne(field: string, value: unknown): Promise<T | null> {
@@ -123,8 +141,9 @@ export function createMongoService<T extends { id?: string; tenantId?: string }>
       }
     },
 
-    async countInTenant(_tenantId: string, options: { where?: WhereClause[] } = {}): Promise<number> {
-      return this.count(options);
+    async countInTenant(tenantId: string, options: { where?: WhereClause[] } = {}): Promise<number> {
+      const c = await col();
+      return c.countDocuments(buildFilter(tenantWhere(tenantId, options)));
     },
 
     async count(options: { where?: WhereClause[] } = {}): Promise<number> {
