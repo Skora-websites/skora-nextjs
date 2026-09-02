@@ -102,6 +102,16 @@ const USERS = [
     employeeCode: "CEO-001",
   },
   {
+    email: "hr@skorasoft.com",
+    displayName: "Shivangi Gupta",
+    firstName: "Shivangi",
+    lastName: "Gupta",
+    role: "hr_admin",
+    department: "Human Resources",
+    designation: "HR Manager",
+    employeeCode: "HR-001",
+  },
+  {
     email: "nayanskorasoft@gmail.com",
     displayName: "Nayan Raj",
     firstName: "Nayan",
@@ -151,16 +161,7 @@ const USERS = [
     designation: "Marketing Executive",
     employeeCode: "EMP-MKT-002",
   },
-  {
-    email: "sg.shivangi@outlook.com",
-    displayName: "Shivangi Gupta",
-    firstName: "Shivangi",
-    lastName: "Gupta",
-    role: "employee",
-    department: "Marketing",
-    designation: "Marketing Executive",
-    employeeCode: "EMP-MKT-003",
-  },
+
   {
     email: "sapnadelhi2004@gmail.com",
     displayName: "Sapna",
