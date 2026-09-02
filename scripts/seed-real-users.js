@@ -260,7 +260,7 @@ async function seed() {
       updatedAt: now,
     });
 
-    var roleLabel = u.role === "super_admin" ? "CEO" : u.role === "manager" ? "Manager" : "Employee";
+    var roleLabel = u.role === "super_admin" ? "CEO" : u.role === "hr_admin" ? "HR Admin" : u.role === "manager" ? "Manager" : "Employee";
     console.log("  " + roleLabel + ": " + u.displayName + " (" + u.email + ") — code: " + u.employeeCode);
     if (u.role !== "super_admin") empCount++;
   }
@@ -274,7 +274,7 @@ async function seed() {
   console.log("Login Credentials (all use same temp password):");
   console.log("------------------------------------------------");
   for (const u of USERS) {
-    var role = u.role === "super_admin" ? "CEO" : u.role === "manager" ? "MGR" : "EMP";
+    var role = u.role === "super_admin" ? "CEO" : u.role === "hr_admin" ? "HR" : u.role === "manager" ? "MGR" : "EMP";
     console.log("  " + role.padEnd(4) + " " + u.email.padEnd(35) + " " + TEMP_PASSWORD);
   }
   console.log("------------------------------------------------");
