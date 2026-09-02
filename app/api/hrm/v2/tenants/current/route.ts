@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { tenantsService } from "@/lib/hrm/firestore";
 import { getDb } from "@/lib/db/mongo-helper";
 import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 import { withErrorHandler } from "@/lib/api-handler";
+import { getOfficeConfig } from "@/lib/hrm/office-config";
 
 const DEFAULT_RULES = {
   officeStart: 10,
@@ -19,21 +19,8 @@ export const GET = withErrorHandler(async () => {
   const auth = await requireAuth();
   if (isErrorResponse(auth)) return auth;
 
-  let latitude = 28.6007594;
-  let longitude = 77.4319307;
-  let geofenceRadius = 100;
+  const office = await getOfficeConfig();
   let officeRules = { ...DEFAULT_RULES };
-
-  try {
-    const tenants = await tenantsService.findMany({ limitCount: 1 });
-    if (tenants && tenants.length > 0) {
-      const tenant = tenants[0] as any;
-      if (tenant.officeLatitude) latitude = tenant.officeLatitude;
-      if (tenant.officeLongitude) longitude = tenant.officeLongitude;
-      if (tenant.geofenceRadius) geofenceRadius = tenant.geofenceRadius;
-      if (tenant.officeRules) officeRules = { ...DEFAULT_RULES, ...tenant.officeRules };
-    }
-  } catch { /* use defaults */ }
 
   try {
     const db = await getDb();
@@ -45,5 +32,10 @@ export const GET = withErrorHandler(async () => {
     }
   } catch { /* use defaults */ }
 
-  return NextResponse.json({ latitude, longitude, geofenceRadius, officeRules });
+  return NextResponse.json({
+    latitude: office.latitude,
+    longitude: office.longitude,
+    geofenceRadius: office.geofenceRadius,
+    officeRules,
+  });
 }, { label: "Tenant Current" });
