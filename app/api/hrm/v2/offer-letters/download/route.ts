@@ -7,7 +7,7 @@ import crypto from "crypto";
  * GET /api/hrm/v2/offer-letters/download?id=xxx
  * Downloads a password-protected PDF offer letter.
  * Employee can only download their own released offer letters.
- * Password is displayed on the page after download.
+ * Loads company branding from offer_letter_config settings.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -35,80 +35,162 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Offer letter has not been released yet" }, { status: 400 });
     }
 
-    // Generate a simple text-based offer letter as PDF (since we don't have a PDF library)
-    // For production, you'd use pdfkit or similar
+    // Load offer letter settings for branding
+    const settingsDoc = await db.collection("settings").findOne({ key: "offer_letter_config" });
+    const cfg = settingsDoc?.settings || {};
+
+    const companyName = cfg.companyName || "SKORA";
+    const companyTagline = cfg.companyTagline || "Innovation · Excellence · Growth";
+    const companyAddress = cfg.companyAddress || "";
+    const companyPhone = cfg.companyPhone || "";
+    const companyEmail = cfg.companyEmail || "";
+    const signatoryName = cfg.signatoryName || "Vishal Srivastava";
+    const signatoryTitle = cfg.signatoryTitle || "CEO, Skora";
+    const templateBody = cfg.templateBody || "We are delighted to extend this offer of employment to you. After careful consideration of your qualifications and experience, we believe you will be a valuable addition to our team.";
+    const templateFooter = cfg.templateFooter || "We look forward to welcoming you to the team.\n\nPlease confirm your acceptance of this offer by signing and returning this letter.";
+    const watermark = cfg.pdfWatermark || "";
     const password = letter.password || "offer2026";
 
-    // Create an HTML-based offer letter
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Offer Letter - ${letter.employeeName}</title>
-  <style>
-    body { font-family: 'Georgia', serif; max-width: 700px; margin: 40px auto; padding: 20px; color: #333; }
-    .header { text-align: center; border-bottom: 3px double #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
-    .company-name { font-size: 28px; font-weight: bold; color: #2563eb; letter-spacing: 2px; }
-    .tagline { font-size: 12px; color: #666; margin-top: 5px; }
-    .date { text-align: right; margin-bottom: 20px; color: #666; }
-    .subject { font-weight: bold; font-size: 16px; margin: 20px 0; }
-    .content { line-height: 1.8; font-size: 14px; }
-    .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    .details-table td { padding: 8px 12px; border: 1px solid #ddd; font-size: 13px; }
-    .details-table td:first-child { font-weight: bold; background: #f8f9fa; width: 40%; }
-    .salary { font-size: 18px; font-weight: bold; color: #059669; }
-    .footer { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; font-size: 12px; color: #999; text-align: center; }
-    .password-notice { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 12px; margin: 20px 0; font-size: 12px; color: #92400e; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="company-name">SKORA</div>
-    <div class="tagline">Innovation \u00B7 Excellence \u00B7 Growth</div>
-  </div>
+    // Generate PDF using pdfkit (dynamic import for serverless)
+    const PDFDocument = (await import("pdfkit")).default;
 
-  <div class="date">${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</div>
+    const buffers: Buffer[] = [];
+    const doc = new PDFDocument({
+      size: "A4",
+      margin: 50,
+      bufferPages: true,
+      info: {
+        Title: `Offer Letter - ${letter.employeeName}`,
+        Author: companyName,
+        Subject: "Offer of Employment",
+      },
+    });
 
-  <p>Dear <strong>${letter.employeeName}</strong>,</p>
+    // Collect PDF data
+    const stream = doc as unknown as NodeJS.ReadableStream;
+    stream.on("data", (chunk: Buffer) => buffers.push(chunk));
 
-  <div class="subject">Subject: Offer of Employment</div>
+    const pdfReady = new Promise<Buffer>((resolve) => {
+      stream.on("end", () => resolve(Buffer.concat(buffers)));
+    });
 
-  <div class="content">
-    <p>We are delighted to extend this offer of employment to you. After careful consideration of your qualifications and experience, we believe you will be a valuable addition to our team.</p>
+    // ── Header ──
+    doc.fontSize(22).font("Helvetica-Bold").fillColor("#2563eb").text(companyName, { align: "center" });
+    doc.moveDown(0.2);
+    doc.fontSize(10).font("Helvetica").fillColor("#666666").text(companyTagline, { align: "center" });
+    if (companyAddress) {
+      doc.moveDown(0.1);
+      doc.fontSize(8).fillColor("#999999").text(companyAddress, { align: "center" });
+    }
+    if (companyPhone || companyEmail) {
+      doc.fontSize(8).fillColor("#999999").text(
+        [companyPhone, companyEmail].filter(Boolean).join(" | "),
+        { align: "center" }
+      );
+    }
 
-    <table class="details-table">
-      <tr><td>Employee Name</td><td>${letter.employeeName}</td></tr>
-      <tr><td>Email</td><td>${letter.employeeEmail}</td></tr>
-      <tr><td>Department</td><td>${letter.department}</td></tr>
-      <tr><td>Designation</td><td>${letter.designation}</td></tr>
-      ${letter.salary ? `<tr><td>Annual Salary</td><td class="salary">\u20B9 ${letter.salary.toLocaleString("en-IN")}</td></tr>` : ""}
-      ${letter.joiningDate ? `<tr><td>Joining Date</td><td>${letter.joiningDate}</td></tr>` : ""}
-    </table>
+    // Line separator
+    doc.moveDown(0.5);
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor("#2563eb").lineWidth(2).stroke();
+    doc.moveDown(1);
 
-    ${letter.offerContent ? `<div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #2563eb;"><p>${letter.offerContent.replace(/\n/g, "<br>")}</p></div>` : ""}
+    // ── Date ──
+    doc.fontSize(10).font("Helvetica").fillColor("#666666").text(
+      new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }),
+      { align: "right" }
+    );
+    doc.moveDown(1);
 
-    <p>We look forward to welcoming you to the team and are confident that your contributions will be instrumental in driving our success.</p>
+    // ── Salutation ──
+    doc.fontSize(11).font("Helvetica").fillColor("#333333").text(`Dear ${letter.employeeName},`);
+    doc.moveDown(0.5);
+    doc.fontSize(13).font("Helvetica-Bold").text("Subject: Offer of Employment");
+    doc.moveDown(0.5);
 
-    <p>Please confirm your acceptance of this offer by signing and returning this letter.</p>
+    // ── Template Body ──
+    doc.fontSize(11).font("Helvetica").fillColor("#333333").text(templateBody, { lineGap: 4 });
+    doc.moveDown(0.5);
 
-    <p>Warm regards,<br><strong>Vishal Srivastava</strong><br>CEO, Skora</p>
-  </div>
+    // ── Employee Details Table ──
+    const tableTop = doc.y;
+    const col1 = 55;
+    const col2 = 200;
+    const rowH = 22;
 
-  <div class="footer">
-    <p>This is a confidential document. Unauthorized distribution is prohibited.</p>
-    <p>Offer Letter ID: ${letter.id} | Generated: ${new Date().toISOString()}</p>
-  </div>
-</body>
-</html>`;
+    const details: [string, string][] = [
+      ["Employee Name", letter.employeeName],
+      ["Email", letter.employeeEmail],
+      ["Department", letter.department || "N/A"],
+      ["Designation", letter.designation || "N/A"],
+    ];
+    if (letter.salary) details.push(["Annual Salary", `₹ ${letter.salary.toLocaleString("en-IN")}`]);
+    if (letter.joiningDate) details.push(["Joining Date", letter.joiningDate]);
 
-    // Return HTML that the browser can print as PDF
-    // For true PDF protection, you'd use a server-side PDF library with encryption
-    return new NextResponse(html, {
+    details.forEach(([label, value], i) => {
+      const y = tableTop + i * rowH;
+      // Row background
+      if (i % 2 === 0) {
+        doc.rect(col1 - 5, y - 2, 490, rowH).fill("#f8f9fa");
+      }
+      doc.fontSize(10).font("Helvetica-Bold").fillColor("#555555").text(label, col1, y + 4, { width: 140 });
+      if (label === "Annual Salary") {
+        doc.font("Helvetica-Bold").fillColor("#059669").fontSize(11).text(value, col2, y + 3);
+      } else {
+        doc.font("Helvetica").fillColor("#333333").text(value, col2, y + 4);
+      }
+    });
+    doc.y = tableTop + details.length * rowH + 10;
+
+    // ── Custom Content (if CEO added notes) ──
+    if (letter.offerContent) {
+      doc.moveDown(0.5);
+      doc.save();
+      doc.rect(col1 - 5, doc.y - 3, 490, 4).fill("#2563eb");
+      doc.restore();
+      doc.moveDown(0.3);
+      doc.fontSize(10).font("Helvetica-Oblique").fillColor("#333333").text(letter.offerContent, { lineGap: 3, indent: 10 });
+      doc.moveDown(0.5);
+    }
+
+    // ── Template Footer ──
+    doc.moveDown(0.5);
+    doc.fontSize(11).font("Helvetica").fillColor("#333333").text(templateFooter, { lineGap: 4 });
+    doc.moveDown(1.5);
+
+    // ── Signatory ──
+    doc.fontSize(11).font("Helvetica").fillColor("#333333").text("Warm regards,");
+    doc.moveDown(0.3);
+    doc.fontSize(12).font("Helvetica-Bold").fillColor("#1a1a1a").text(signatoryName);
+    doc.fontSize(10).font("Helvetica").fillColor("#666666").text(signatoryTitle);
+    if (companyName) doc.text(companyName);
+
+    // ── Watermark ──
+    const pageRange = doc.bufferedPageRange();
+    if (watermark) {
+      for (let i = pageRange.start; i < pageRange.start + pageRange.count; i++) {
+        doc.switchToPage(i);
+        doc.save();
+        doc.fontSize(60).font("Helvetica-Bold").fillColor("#f0f0f0").rotate(45, { origin: [300, 400] });
+        doc.text(watermark, 100, 350, { align: "center", width: 400 });
+        doc.restore();
+      }
+    }
+
+    // ── Footer ──
+    const lastPage = pageRange.start + pageRange.count - 1;
+    doc.switchToPage(lastPage);
+    doc.fontSize(8).font("Helvetica").fillColor("#999999");
+    doc.text("This is a confidential document. Unauthorized distribution is prohibited.", 50, doc.page.height - 60, { align: "center", width: 495 });
+    doc.text(`Offer Letter ID: ${letter._id.toString()} | Generated: ${new Date().toISOString()}`, 50, doc.page.height - 48, { align: "center", width: 495 });
+
+    doc.end();
+    const pdfBuffer = await pdfReady;
+
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `inline; filename="offer-letter-${letter.employeeName.replace(/\s+/g, "-")}.html"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="offer-letter-${letter.employeeName.replace(/\s+/g, "-")}.pdf"`,
         "X-Offer-Letter-Password": password,
       },
     });

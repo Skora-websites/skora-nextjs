@@ -66,6 +66,8 @@ export const NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
     { title: "Projects", href: "/hrms/hr-admin/projects", icon: "ClipboardList", group: "operations" },
     { title: "Leave Policies", href: "/hrms/hr-admin/leave-policies", icon: "CalendarDays", group: "hrm" },
     { title: "Audit Logs", href: "/hrms/superadmin/audit-logs", icon: "FileText", group: "system" },
+    { title: "Offer Letters", href: "/hrms/superadmin/offer-letters", icon: "FileText", group: "lifecycle" },
+    { title: "Offer Letter Settings", href: "/hrms/superadmin/offer-letter-settings", icon: "Settings", group: "lifecycle" },
     { title: "Settings", href: "/hrms/superadmin/settings", icon: "Settings", group: "system" },
   ],
   hr_admin: [
@@ -100,6 +102,7 @@ export const NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
     { title: "Leave Requests", href: "/hrms/employee/leaves", icon: "CalendarDays", group: "hrm" },
     { title: "Payslips", href: "/hrms/employee/payslips", icon: "DollarSign", group: "hrm" },
     { title: "My Performance", href: "/hrms/employee/performance", icon: "TrendingUp", group: "hrm" },
+    { title: "Offer Letters", href: "/hrms/employee/offer-letters", icon: "FileText", group: "lifecycle" },
     { title: "Settings", href: "/hrms/employee/settings", icon: "Settings", group: "system" },
   ],
 };
