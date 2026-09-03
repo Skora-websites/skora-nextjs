@@ -41,7 +41,9 @@ export default function SuperAdminSettingsPage() {
   const [lateAfter, setLateAfter] = useState(10.5);
   const [requiredHours, setRequiredHours] = useState(8.5);
   const [breakAllowance, setBreakAllowance] = useState(30);
-  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
+  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [officeLat, setOfficeLat] = useState("");
+  const [officeLng, setOfficeLng] = useState(""); // Mon-Fri
 
   const toggleWorkDay = (day: number) => {
     setWorkDays((prev) =>
@@ -100,6 +102,7 @@ export default function SuperAdminSettingsPage() {
           userId: "system",
           settings: {
             officeRules: { officeStart, officeEnd, lateAfter, workDays, requiredHours, breakAllowance, meetingCountsAsWork: true },
+            geofence: { latitude: officeLat, longitude: officeLng },
             sessionTimeout,
             enforce2FA,
             passwordMinLength,
@@ -331,6 +334,25 @@ export default function SuperAdminSettingsPage() {
               <p className="text-[10px] text-slate-400 mt-2">
                 Non-work days are marked as WEEK_OFF. Employees cannot punch in on off days.
               </p>
+            </div>
+          </div>
+        </SettingsSection>
+
+        
+        {/* ═══ Office Geofence Coordinates ═══ */}
+        <SettingsSection
+          title="Office Geofence Coordinates"
+          icon={<Globe className="h-5 w-5 text-red-500" />}
+          description="Set office location for 100-meter geofenced punch validation"
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Latitude</label>
+              <input type="text" value={officeLat} onChange={(e) => setOfficeLat(e.target.value)} placeholder="28.6007594" className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Longitude</label>
+              <input type="text" value={officeLng} onChange={(e) => setOfficeLng(e.target.value)} placeholder="77.4319307" className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-sm focus:outline-none focus:border-primary" />
             </div>
           </div>
         </SettingsSection>

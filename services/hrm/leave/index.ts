@@ -242,11 +242,38 @@ export async function approveLeave(
   id: string,
   approvedById: string
 ): Promise<LeaveRequest | null> {
-  return leaveRequestsService.update(id, {
+  const request = await leaveRequestsService.findById(id);
+  if (!request) return null;
+
+  const approved = await leaveRequestsService.update(id, {
     status: "approved",
     approvedById,
     approvedAt: new Date(),
   } as any);
+
+  // Move from pending to used in leave balance
+  const currentYear = new Date(request.fromDate).getFullYear();
+  const balance = await getLeaveBalance(request.tenantId, request.userId, request.leaveTypeId, currentYear);
+  if (balance) {
+    const days = (request as any).totalDays || 1;
+    await leaveBalancesService.update(balance.id, {
+      pending: Math.max(0, balance.pending - days),
+      used: balance.used + days,
+    } as any);
+
+    await leaveBalanceHistoryService.create({
+      userId: request.userId,
+      leaveTypeId: request.leaveTypeId,
+      changeType: "used",
+      amount: days,
+      previousBalance: balance.remaining,
+      newBalance: balance.remaining,
+      referenceId: id,
+      notes: "Leave approved",
+    } as any);
+  }
+
+  return approved;
 }
 
 export async function rejectLeave(

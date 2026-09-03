@@ -31,9 +31,10 @@ export async function getOfficeConfig(): Promise<OfficeConfig> {
     const settings = settingsDoc?.settings || {};
     const office = settings.office || settings.officeLocation || {};
 
-    const latitude = office.latitude ?? settings.officeLatitude;
-    const longitude = office.longitude ?? settings.officeLongitude;
-    const radius = office.geofenceRadius ?? settings.geofenceRadius ?? settings.officeRules?.geofenceRadius;
+    const geofence = settings.geofence || {};
+    const latitude = office.latitude ?? settings.officeLatitude ?? geofence.latitude;
+    const longitude = office.longitude ?? settings.officeLongitude ?? geofence.longitude;
+    const radius = office.geofenceRadius ?? settings.geofenceRadius ?? settings.officeRules?.geofenceRadius ?? geofence.radius;
 
     if (typeof latitude === "number" && Number.isFinite(latitude)) {
       config.latitude = latitude;
