@@ -42,6 +42,8 @@ export default function HrAdminSettingsPage() {
   const [officeLng, setOfficeLng] = useState("");
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   // Load existing settings on mount
   useEffect(() => {
@@ -80,8 +82,10 @@ export default function HrAdminSettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setError("");
     try {
-      await fetch("/api/hrm/v2/settings", {
+      const apiRes = await fetch("/api/hrm/v2/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,7 +98,16 @@ export default function HrAdminSettingsPage() {
           },
         }),
       });
-    } catch { /* ignore */ }
+      if (!apiRes.ok) {
+        const err = await apiRes.json().catch(() => ({ error: "Save failed" }));
+        setError(err.error || "Save failed - are you logged in?");
+        return;
+      }
+    } catch {
+      setError("Network error - could not reach server");
+    } finally {
+      setSaving(false);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -218,8 +231,13 @@ export default function HrAdminSettingsPage() {
           </div>
         </SettingsSection>
 
-        <Button type="submit" className="bg-primary text-white font-bold px-6 py-2.5 shadow-md">
-          Save All Settings
+        {error && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400">
+            <span>{error}</span>
+          </div>
+        )}
+        <Button type="submit" disabled={saving} className="bg-primary text-white font-bold px-6 py-2.5 shadow-md disabled:opacity-50">
+          {saving ? "Saving..." : "Save All Settings"}
         </Button>
       </form>
     </AppShell>

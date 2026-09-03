@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,9 @@ import { useAuth } from "@/components/providers/auth-provider";
 export default function EmployeeSettingsPage() {
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   // Profile
   const [name, setName] = useState(user?.name || "");
@@ -33,10 +36,36 @@ export default function EmployeeSettingsPage() {
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [compactMode, setCompactMode] = useState(false);
 
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await fetch("/api/hrm/v2/settings?role=employee&userId=" + (user?.id || ""));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data) {
+            const s = data.data;
+            if (s.name) setName(s.name);
+            if (s.phone) setPhone(s.phone);
+            if (s.alternateEmail) setAlternateEmail(s.alternateEmail);
+            if (s.emergencyName) setEmergencyName(s.emergencyName);
+            if (s.emergencyPhone) setEmergencyPhone(s.emergencyPhone);
+            if (s.emergencyRelation) setEmergencyRelation(s.emergencyRelation);
+            if (s.theme) setTheme(s.theme);
+            if (s.compactMode !== undefined) setCompactMode(s.compactMode);
+          }
+        }
+      } catch { /* use defaults */ }
+      setLoading(false);
+    };
+    loadSettings();
+  }, [user?.id]);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setError("");
     try {
-      await fetch("/api/hrm/v2/settings", {
+      const apiRes = await fetch("/api/hrm/v2/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,7 +83,16 @@ export default function EmployeeSettingsPage() {
           },
         }),
       });
-    } catch { /* empty */ }
+      if (!apiRes.ok) {
+        const err = await apiRes.json().catch(() => ({ error: "Save failed" }));
+        setError(err.error || "Save failed - are you logged in?");
+        return;
+      }
+        } catch {
+      setError("Network error");
+    } finally {
+      setSaving(false);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -68,6 +106,11 @@ export default function EmployeeSettingsPage() {
         </p>
       </div>
 
+      {loading ? (
+        <div className="flex items-center justify-center p-12 text-slate-500">
+          Loading settings...
+        </div>
+      ) : (
       <form onSubmit={handleSave} className="max-w-3xl space-y-6">
         {saved && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400">
@@ -166,10 +209,16 @@ export default function EmployeeSettingsPage() {
           </div>
         </SettingsSection>
 
-        <Button type="submit" className="bg-primary text-white font-bold px-6 py-2.5 shadow-md">
-          Save Settings
+        {error && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400">
+            <span>{error}</span>
+          </div>
+        )}
+        <Button type="submit" disabled={saving} className="bg-primary text-white font-bold px-6 py-2.5 shadow-md disabled:opacity-50">
+          {saving ? "Saving..." : "Save Settings"}
         </Button>
       </form>
+      )}
     </AppShell>
   );
 }

@@ -5,11 +5,14 @@ import { AppShell } from "@/components/layout/app-shell";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { Settings, Shield, Clock, Bell, User, CheckCircle2, Moon, Sun, Lock } from "lucide-react";
+import { Settings, Shield, Clock, Bell, User, CheckCircle2, Moon, Sun, Lock, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   // Office timing settings (Admin / HR)
   const [officeStartTime, setOfficeStartTime] = useState("10:00");
@@ -22,10 +25,59 @@ export default function SettingsPage() {
 
   const isAdmin = user?.role === "super_admin" || user?.role === "hr_admin";
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await fetch("/api/hrm/v2/settings?role=" + (user?.role || "employee"));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data) {
+            const s = data.data;
+            if (s.officeStartTime) setOfficeStartTime(s.officeStartTime);
+            if (s.officeEndTime) setOfficeEndTime(s.officeEndTime);
+            if (s.gracePeriodMins !== undefined) setGracePeriodMins(s.gracePeriodMins);
+            if (s.emailNotifs !== undefined) setEmailNotifs(s.emailNotifs);
+            if (s.attendanceNotifs !== undefined) setAttendanceNotifs(s.attendanceNotifs);
+          }
+        }
+      } catch { /* use defaults */ }
+      setLoading(false);
+    };
+    if (user?.role) loadSettings();
+    else setLoading(false);
+  }, [user?.role]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/hrm/v2/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: user?.role || "employee",
+          settings: {
+            officeStartTime,
+            officeEndTime,
+            gracePeriodMins,
+            emailNotifs,
+            attendanceNotifs,
+          },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Save failed" }));
+        setError(err.error || "Save failed - are you logged in?");
+        return;
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError("Network error - could not reach server");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -38,6 +90,11 @@ export default function SettingsPage() {
       </div>
 
       <div className="max-w-3xl space-y-6">
+          {loading ? (
+            <div className="flex items-center justify-center p-12 text-slate-500">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading settings...
+            </div>
+          ) : (
         <form onSubmit={handleSave} className="space-y-6">
           {saved && (
             <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400">
@@ -145,12 +202,19 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div>
-            <Button type="submit" className="bg-primary text-white font-bold px-6 py-2.5 shadow-md">
-              Save All Settings
-            </Button>
-          </div>
-        </form>
+          {error && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400">
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div>
+              <Button type="submit" disabled={saving} className="bg-primary text-white font-bold px-6 py-2.5 shadow-md disabled:opacity-50">
+                {saving ? (<span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Saving...</span>) : "Save All Settings"}
+              </Button>
+            </div>
+          </form>
+          )}
       </div>
     </AppShell>
   );

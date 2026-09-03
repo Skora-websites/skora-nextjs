@@ -15,6 +15,8 @@ import {
 
 export default function ManagerSettingsPage() {
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   // Notification preferences
   const [notifyOvertime, setNotifyOvertime] = useState(true);
@@ -63,8 +65,10 @@ export default function ManagerSettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setError("");
     try {
-      await fetch("/api/hrm/v2/settings", {
+      const apiRes = await fetch("/api/hrm/v2/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,7 +80,16 @@ export default function ManagerSettingsPage() {
           },
         }),
       });
-    } catch { /* ignore */ }
+      if (!apiRes.ok) {
+        const err = await apiRes.json().catch(() => ({ error: "Save failed" }));
+        setError(err.error || "Save failed - are you logged in?");
+        return;
+      }
+        } catch {
+      setError("Network error");
+    } finally {
+      setSaving(false);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -161,8 +174,13 @@ export default function ManagerSettingsPage() {
           </div>
         </SettingsSection>
 
-        <Button type="submit" className="bg-primary text-white font-bold px-6 py-2.5 shadow-md">
-          Save Settings
+        {error && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400">
+            <span>{error}</span>
+          </div>
+        )}
+        <Button type="submit" disabled={saving} className="bg-primary text-white font-bold px-6 py-2.5 shadow-md disabled:opacity-50">
+          {saving ? "Saving..." : "Save Settings"}
         </Button>
       </form>
     </AppShell>
