@@ -444,9 +444,11 @@ export default function HrAdminDashboardPage() {
           <Briefcase className="h-8 w-8 mx-auto mb-2 text-slate-300" />
           <p className="font-semibold mb-1">Project & Budget Management</p>
           <p>Create projects with client budgets and assign Project Managers.</p>
-          <Button size="sm" className="mt-3 bg-primary text-white font-bold text-xs">
-            Create First Project
-          </Button>
+          <a href="/hrms/projects/all">
+            <Button size="sm" className="mt-3 bg-primary text-white font-bold text-xs">
+              Create First Project
+            </Button>
+          </a>
         </div>
       </DashboardSection>
 

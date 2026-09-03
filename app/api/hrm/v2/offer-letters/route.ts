@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 import { getDb } from "@/lib/db/mongo-helper";
 import crypto from "crypto";
+import { sendOfferLetterEmail } from "@/lib/email";
 
 /**
  * GET /api/hrm/v2/offer-letters
@@ -174,6 +175,26 @@ export async function PATCH(request: NextRequest) {
           referenceId: id,
           createdAt: new Date(),
         });
+
+        // Send email if auto-email is enabled in settings
+        try {
+          const settingsDoc = await db.collection("settings").findOne({ key: "offer_letter_config" });
+          const cfg = settingsDoc?.settings || {};
+          if (cfg.autoEmailOnRelease && letter.employeeEmail) {
+            const origin = request.headers.get("origin") || "https://skora-nextjs.vercel.app";
+            await sendOfferLetterEmail({
+              to: letter.employeeEmail,
+              employeeName: letter.employeeName,
+              salary: letter.salary,
+              joiningDate: letter.joiningDate,
+              companyName: cfg.companyName || "SKORA",
+              signatoryName: cfg.signatoryName || "Vishal Srivastava",
+              downloadUrl: origin + "/hrms/employee/offer-letters",
+            });
+          }
+        } catch (emailErr) {
+          console.warn("Offer letter email failed:", emailErr);
+        }
       }
     }
 
