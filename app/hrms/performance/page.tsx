@@ -296,7 +296,7 @@ export default function PerformancePage() {
   const subNav = (
     <div className="flex items-center gap-2 flex-wrap">
       <Link
-        href="/performance/goals"
+        href="/hrms/performance/goals"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <Target className="h-4 w-4" />
@@ -304,7 +304,7 @@ export default function PerformancePage() {
       </Link>
       <span className="text-muted">|</span>
       <Link
-        href="/performance/reviews"
+        href="/hrms/performance/reviews"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <Star className="h-4 w-4" />
@@ -312,7 +312,7 @@ export default function PerformancePage() {
       </Link>
       <span className="text-muted">|</span>
       <Link
-        href="/performance/feedback"
+        href="/hrms/performance/feedback"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <MessageSquare className="h-4 w-4" />
@@ -320,7 +320,7 @@ export default function PerformancePage() {
       </Link>
       <span className="text-muted">|</span>
       <Link
-        href="/performance/kpis"
+        href="/hrms/performance/kpis"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <BarChart3 className="h-4 w-4" />

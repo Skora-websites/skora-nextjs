@@ -239,7 +239,7 @@ export default function ProjectsPage() {
         description="Manage projects, tasks, teams, and milestones."
       >
         <Button onClick={() => setShowCreate(true)}><Plus className="mr-2 h-4 w-4" />Add Project</Button>
-        <Link href="/projects/all">
+        <Link href="/hrms/projects/all">
           <Button variant="outline"><Plus className="mr-2 h-4 w-4" />View All</Button>
         </Link>
       </PageHeader>
@@ -298,16 +298,16 @@ export default function ProjectsPage() {
 
       {/* Sub-navigation links */}
       <div className="flex flex-wrap items-center gap-2 mb-6">
-        <Link href="/projects/all" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+        <Link href="/hrms/projects/all" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
           <ListTodo className="h-4 w-4" />All Projects
         </Link>
-        <Link href="/projects/tasks" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-card border border-border text-muted hover:text-dark dark:hover:text-white hover:border-primary/30 transition-colors">
+        <Link href="/hrms/projects/tasks" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-card border border-border text-muted hover:text-dark dark:hover:text-white hover:border-primary/30 transition-colors">
           <LayoutDashboard className="h-4 w-4" />Kanban Board
         </Link>
-        <Link href="/projects/teams" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-card border border-border text-muted hover:text-dark dark:hover:text-white hover:border-primary/30 transition-colors">
+        <Link href="/hrms/projects/teams" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-card border border-border text-muted hover:text-dark dark:hover:text-white hover:border-primary/30 transition-colors">
           <Users className="h-4 w-4" />Teams
         </Link>
-        <Link href="/projects/milestones" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-card border border-border text-muted hover:text-dark dark:hover:text-white hover:border-primary/30 transition-colors">
+        <Link href="/hrms/projects/milestones" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-card border border-border text-muted hover:text-dark dark:hover:text-white hover:border-primary/30 transition-colors">
           <Milestone className="h-4 w-4" />Milestones
         </Link>
       </div>

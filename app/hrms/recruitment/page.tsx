@@ -260,7 +260,7 @@ export default function RecruitmentPage() {
   const subNav = (
     <div className="flex items-center gap-2">
       <Link
-        href="/recruitment/jobs"
+        href="/hrms/recruitment/jobs"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <Briefcase className="h-4 w-4" />
@@ -268,7 +268,7 @@ export default function RecruitmentPage() {
       </Link>
       <span className="text-muted">|</span>
       <Link
-        href="/recruitment/candidates"
+        href="/hrms/recruitment/candidates"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <Users className="h-4 w-4" />
@@ -276,7 +276,7 @@ export default function RecruitmentPage() {
       </Link>
       <span className="text-muted">|</span>
       <Link
-        href="/recruitment/applications"
+        href="/hrms/recruitment/applications"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <FileCheck className="h-4 w-4" />
