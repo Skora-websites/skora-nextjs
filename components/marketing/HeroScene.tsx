@@ -7,6 +7,7 @@ import * as THREE from "three";
  * Hero centerpiece scene: rotating wireframe icosahedron + orbiting cyan
  * satellite ring behind the headline, with a glowing halo core.
  * Lazily mounted (ssr: false) and gracefully absent when WebGL fails.
+ * Perf guards: dpr cap, 30fps cap, pauses when tab hidden or hero offscreen.
  */
 export default function HeroScene() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,21 +16,21 @@ export default function HeroScene() {
     const container = containerRef.current;
     if (!container) return;
 
+    const isMobile = window.innerWidth < 768;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !isMobile, powerPreference: "low-power" });
     } catch {
       return;
     }
-
-    const isMobile = window.innerWidth < 768;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
     camera.position.set(0, 0.6, 17);
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.25 : 1.5));
     container.appendChild(renderer.domElement);
 
     // Core icosahedron — double-layer wireframe for glow depth
@@ -102,23 +103,26 @@ export default function HeroScene() {
 
     let mouseX = 0;
     let mouseY = 0;
-    let tabVisible = true;
     const handleMouseMove = (e: MouseEvent) => {
       mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
       mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
     };
-    const handleVisibility = () => {
-      tabVisible = document.visibilityState === "visible";
-      if (tabVisible) animate();
-    };
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    document.addEventListener("visibilitychange", handleVisibility);
 
-    let animationFrameId: number;
+    // Animation loop — 30fps cap, pauses when tab hidden / hero offscreen
+    const FRAME_INTERVAL = 1000 / 30;
+    let animationFrameId = 0;
+    let running = false;
+    let lastFrameTime = 0;
     let elapsed = 0;
+    let ioVisible = true;
 
-    const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
+    const tick = (time: number) => {
+      if (!running) return;
+      animationFrameId = requestAnimationFrame(tick);
+      if (time - lastFrameTime < FRAME_INTERVAL) return;
+      lastFrameTime = time;
+
       const motionScale = reduceMotion ? 0.3 : 1;
       elapsed += 0.008 * motionScale;
 
@@ -149,9 +153,41 @@ export default function HeroScene() {
       renderer.render(scene, camera);
     };
 
-    animate();
+    const startLoop = () => {
+      if (running) return;
+      running = true;
+      lastFrameTime = 0;
+      animationFrameId = requestAnimationFrame(tick);
+    };
+
+    const stopLoop = () => {
+      running = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+
+    const syncLoop = () => {
+      const pageVisible = document.visibilityState === "visible";
+      if (ioVisible && pageVisible) startLoop();
+      else stopLoop();
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        ioVisible = entries[0]?.isIntersecting ?? true;
+        syncLoop();
+      },
+      { threshold: 0 }
+    );
+    io.observe(container);
+
+    const handleVisibility = () => syncLoop();
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    startLoop();
 
     return () => {
+      stopLoop();
+      io.disconnect();
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("visibilitychange", handleVisibility);
       resizeObserver.disconnect();

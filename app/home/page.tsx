@@ -396,6 +396,8 @@ export default function HomePage() {
   useEffect(() => {
     if (typeof window === "undefined" || !containerRef.current) return;
 
+    let rafId = 0;
+
     const ctx = gsap.context(() => {
       ScrollTrigger.refresh();
 
@@ -447,24 +449,31 @@ export default function HomePage() {
       });
     }, containerRef);
 
-    // Interactive Mouse Movement Parallax
+    // Interactive Mouse Movement Parallax (rAF-throttled, overwrite: kills
+    // the previous tween instead of stacking a new one on every mousemove)
     const handleMouseMove = (e: MouseEvent) => {
-      const { innerWidth, innerHeight } = window;
-      const moveX = (e.clientX / innerWidth - 0.5) * 25;
-      const moveY = (e.clientY / innerHeight - 0.5) * 25;
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        const { innerWidth, innerHeight } = window;
+        const moveX = (e.clientX / innerWidth - 0.5) * 25;
+        const moveY = (e.clientY / innerHeight - 0.5) * 25;
 
-      gsap.to(".gsap-mouse-parallax", {
-        x: moveX,
-        y: moveY,
-        duration: 0.8,
-        ease: "power2.out",
+        gsap.to(".gsap-mouse-parallax", {
+          x: moveX,
+          y: moveY,
+          duration: 0.8,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
       });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
     return () => {
       ctx.revert();
+      cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);

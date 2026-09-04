@@ -7,7 +7,8 @@ import * as THREE from "three";
  * Global shared WebGL canvas for the marketing site (Deep Space Neon).
  * - Richer particle starfield + glowing wireframe geometry + horizon floor
  * - Mouse parallax + scroll-reactive camera
- * - Perf guards: dpr cap, mobile particle reduction, tab-hidden pause, WebGL fallback
+ * - Perf guards: dpr cap, 30fps cap, mobile particle reduction,
+ *   pauses when tab hidden, offscreen, or hidden by the light theme.
  */
 export default function ThreeBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -16,16 +17,16 @@ export default function ThreeBackground() {
     const container = containerRef.current;
     if (!container) return;
 
+    const isMobile = window.innerWidth < 768;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !isMobile, powerPreference: "low-power" });
     } catch {
       // WebGL unavailable — leave container empty (static CSS gradient fallback shows through)
       return;
     }
-
-    const isMobile = window.innerWidth < 768;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -37,7 +38,7 @@ export default function ThreeBackground() {
     camera.position.z = 30;
 
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.25 : 1.5));
     container.appendChild(renderer.domElement);
 
     // 1. Deep-space particle constellation
@@ -45,7 +46,6 @@ export default function ThreeBackground() {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
-    const sizes = new Float32Array(particleCount);
 
     const blueColor = new THREE.Color("#2563EB");
     const cyanColor = new THREE.Color("#38BDF8");
@@ -62,8 +62,6 @@ export default function ThreeBackground() {
       colors[i * 3] = mixedColor.r;
       colors[i * 3 + 1] = mixedColor.g;
       colors[i * 3 + 2] = mixedColor.b;
-
-      sizes[i] = Math.random() * 0.5 + 0.15;
     }
 
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -127,7 +125,6 @@ export default function ThreeBackground() {
     let mouseX = 0;
     let mouseY = 0;
     let targetScrollY = 0;
-    let tabVisible = true;
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -138,20 +135,22 @@ export default function ThreeBackground() {
       targetScrollY = window.scrollY;
     };
 
-    const handleVisibility = () => {
-      tabVisible = document.visibilityState === "visible";
-      if (tabVisible) animate();
-    };
-
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("scroll", handleScroll, { passive: true });
-    document.addEventListener("visibilitychange", handleVisibility);
 
-    // 5. Animation loop with on-scroll camera reaction
-    let animationFrameId: number;
+    // 5. Animation loop — 30fps cap, pauses when tab hidden / canvas offscreen
+    //    (offscreen covers scroll + the light theme's display:none)
+    const FRAME_INTERVAL = 1000 / 30;
+    let animationFrameId = 0;
+    let running = false;
+    let lastFrameTime = 0;
+    let ioVisible = true;
 
-    const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
+    const tick = (time: number) => {
+      if (!running) return;
+      animationFrameId = requestAnimationFrame(tick);
+      if (time - lastFrameTime < FRAME_INTERVAL) return;
+      lastFrameTime = time;
 
       const scrollFactor = targetScrollY * 0.001;
       const motionScale = reduceMotion ? 0.25 : 1;
@@ -174,7 +173,37 @@ export default function ThreeBackground() {
       renderer.render(scene, camera);
     };
 
-    animate();
+    const startLoop = () => {
+      if (running) return;
+      running = true;
+      lastFrameTime = 0;
+      animationFrameId = requestAnimationFrame(tick);
+    };
+
+    const stopLoop = () => {
+      running = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+
+    const syncLoop = () => {
+      const pageVisible = document.visibilityState === "visible";
+      if (ioVisible && pageVisible) startLoop();
+      else stopLoop();
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        ioVisible = entries[0]?.isIntersecting ?? true;
+        syncLoop();
+      },
+      { threshold: 0 }
+    );
+    io.observe(container);
+
+    const handleVisibility = () => syncLoop();
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    startLoop();
 
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -185,11 +214,12 @@ export default function ThreeBackground() {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      stopLoop();
+      io.disconnect();
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
       document.removeEventListener("visibilitychange", handleVisibility);
-      cancelAnimationFrame(animationFrameId);
       geometry.dispose();
       particleMaterial.dispose();
       icoGeo.dispose();

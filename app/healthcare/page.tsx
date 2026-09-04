@@ -196,19 +196,35 @@ const EkgHeartbeatWave = () => {
 // PREMIUM LIGHT GSAP ANIMATED BACKGROUND — MORPHING BLOBS + FLOATING PARTICLES + GRID
 const OralCareGsapBackground = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const parallaxRef = useRef<HTMLDivElement>(null);
 
+  // rAF-throttled, ref-driven parallax — no React re-renders on mousemove
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let rafId = 0;
+    let queued = false;
+    let tx = 0;
+    let ty = 0;
+
+    const apply = () => {
+      queued = false;
+      const el = parallaxRef.current;
+      if (el) el.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
+    };
     const handleMouseMove = (e: MouseEvent) => {
-      if (typeof window === "undefined") return;
-      const { innerWidth, innerHeight } = window;
-      setMousePos({
-        x: (e.clientX / innerWidth - 0.5) * 40,
-        y: (e.clientY / innerHeight - 0.5) * 40,
-      });
+      tx = (e.clientX / window.innerWidth - 0.5) * 40;
+      ty = (e.clientY / window.innerHeight - 0.5) * 40;
+      if (!queued) {
+        queued = true;
+        rafId = requestAnimationFrame(apply);
+      }
     };
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   useEffect(() => {
@@ -280,16 +296,12 @@ const OralCareGsapBackground = () => {
     <div ref={containerRef} className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
 
       {/* ── LAYER 1: Parallax ambient light orbs (dark emerald) ── */}
-      <motion.div
-        animate={{ x: mousePos.x, y: mousePos.y }}
-        transition={{ type: "spring", stiffness: 40, damping: 30 }}
-        className="absolute inset-0"
-      >
+      <div ref={parallaxRef} className="absolute inset-0 will-change-transform">
         <div className="bg-blob-1 absolute top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-br from-emerald-600/15 via-emerald-900/20 to-transparent rounded-[60%] blur-[120px]" />
         <div className="bg-blob-2 absolute top-[30%] -right-40 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[130px]" />
         <div className="bg-blob-3 absolute top-[55%] -left-40 w-[600px] h-[500px] bg-teal-500/[0.08] rounded-full blur-[130px]" />
         <div className="bg-blob-4 absolute bottom-[-5%] right-1/3 w-[450px] h-[450px] bg-emerald-700/10 rounded-full blur-[120px]" />
-      </motion.div>
+      </div>
 
       {/* ── LAYER 2: Clinical dot grid ── */}
       <div
