@@ -105,28 +105,28 @@ export default function ContactModal({
       {/* Backdrop Click to Close */}
       <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
 
-      {/* Modal Content Box */}
-      <div className="relative my-auto w-full max-w-xl bg-white border border-[#E1E6DF] rounded-3xl p-6 sm:p-8 shadow-2xl text-[#0B1310] max-h-[85vh] sm:max-h-[88vh] overflow-y-auto z-[100000]">
+      {/* Modal Content Box — dark glass */}
+      <div className="glass-card relative my-auto w-full max-w-xl rounded-3xl p-6 sm:p-8 text-white shadow-[0_30px_90px_rgba(2,6,23,0.9)] max-h-[85vh] sm:max-h-[88vh] overflow-y-auto z-[100000]">
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Close Modal"
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-[#F4F6F1] hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer z-20 shadow-sm"
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-colors cursor-pointer z-20 border border-white/10"
         >
           <X className="w-5 h-5" />
         </button>
 
         {submitted ? (
           <div className="py-12 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center mx-auto shadow-md border border-[#2563EB]/20">
+            <div className="w-16 h-16 rounded-full bg-sky-500/10 text-sky-300 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(56,189,248,0.35)] border border-sky-400/40">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h3 className="text-2xl font-black text-[#0B1310] uppercase">
+            <h3 className="text-2xl font-black text-white uppercase">
               Consultation Dispatched!
             </h3>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
-              Thank you, <strong className="text-[#0B1310]">{fullName}</strong>. Our senior strategy consultant will reach out to <strong className="text-[#0B1310]">{email}</strong> within 4 business hours with your custom proposal.
+            <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto font-medium leading-relaxed">
+              Thank you, <strong className="text-white">{fullName}</strong>. Our senior strategy consultant will reach out to <strong className="text-white">{email}</strong> within 4 business hours with your custom proposal.
             </p>
 
             <button
@@ -134,7 +134,7 @@ export default function ContactModal({
                 setSubmitted(false);
                 onClose();
               }}
-              className="px-8 py-3 rounded-xl bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-sm transition-all cursor-pointer shadow-lg"
+              className="btn-primary px-8 py-3 text-sm cursor-pointer"
             >
               Return to Website
             </button>
@@ -142,11 +142,11 @@ export default function ContactModal({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EFF6FF] text-[11px] font-bold text-[#2563EB] border border-[#2563EB]/30">
-                <Sparkles className="w-3.5 h-3.5 text-[#2563EB]" />
+              <div className="glass-pill inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-sky-300" />
                 <span>Initialize Your Project</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-[#0B1310] tracking-tight uppercase">
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
                 Schedule Strategy Consultation
               </h2>
               <p className="text-xs text-slate-500 font-medium">
@@ -169,8 +169,8 @@ export default function ContactModal({
                       onClick={() => toggleService(svc)}
                       className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
-                          ? "bg-[#2563EB] text-white border-blue-700 shadow-md"
-                          : "bg-[#F8F9F6] text-slate-600 border-[#E2E8F0] hover:border-[#2563EB] hover:text-[#0B1310]"
+                          ? "bg-gradient-to-r from-blue-600 to-sky-500 text-white border-sky-400 shadow-[0_0_18px_rgba(37,99,235,0.5)]"
+                          : "bg-white/5 text-slate-300 border-white/10 hover:border-sky-400/60 hover:text-white"
                       }`}
                     >
                       {svc}
@@ -187,14 +187,14 @@ export default function ContactModal({
                   Full Name *
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/10 focus:ring-1 focus:ring-sky-400/60 transition-colors font-medium"
                   />
                 </div>
               </div>
@@ -204,14 +204,14 @@ export default function ContactModal({
                   Work Email *
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="john@company.com"
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/10 focus:ring-1 focus:ring-sky-400/60 transition-colors font-medium"
                   />
                 </div>
               </div>
@@ -221,13 +221,13 @@ export default function ContactModal({
                   Company / Organization
                 </label>
                 <div className="relative">
-                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     placeholder="Acme Corp"
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/10 focus:ring-1 focus:ring-sky-400/60 transition-colors font-medium"
                   />
                 </div>
               </div>
@@ -237,11 +237,11 @@ export default function ContactModal({
                   Estimated Budget
                 </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <select
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
-                    className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] appearance-none focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors cursor-pointer font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white appearance-none focus:outline-none focus:border-sky-400 focus:bg-white/10 transition-colors cursor-pointer font-medium [&>option]:bg-[#0B0F19]"
                   >
                     <option value="< ₹25,000">Under ₹25,000</option>
                     <option value="₹25,000 - ₹50,000">₹25,000 - ₹50,000</option>
@@ -261,14 +261,14 @@ export default function ContactModal({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tell us about your goals, timelines, and technical requirements..."
-                className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl p-3 text-xs text-[#0B1310] placeholder-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors resize-none font-medium"
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:bg-white/10 focus:ring-1 focus:ring-sky-400/60 transition-colors resize-none font-medium"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-[#0B1310] hover:bg-[#2563EB] text-white font-extrabold text-xs rounded-xl transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+              className="btn-primary w-full py-4 text-xs cursor-pointer"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

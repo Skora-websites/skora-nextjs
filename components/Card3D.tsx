@@ -7,6 +7,7 @@ interface Card3DProps {
   className?: string;
   maxTilt?: number; // Maximum tilt angle in degrees (default 12)
   glareOpacity?: number;
+  neonEdge?: boolean; // Adds the dark-neon animated edge glow (marketing dark theme)
 }
 
 export default function Card3D({
@@ -14,6 +15,7 @@ export default function Card3D({
   className = "",
   maxTilt = 12,
   glareOpacity = 0.25,
+  neonEdge = false,
 }: Card3DProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<React.CSSProperties>({
@@ -60,7 +62,7 @@ export default function Card3D({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={style}
-      className={`relative overflow-hidden rounded-2xl cursor-pointer ${className}`}
+      className={`relative overflow-hidden rounded-2xl cursor-pointer ${neonEdge ? "neon-border" : ""} ${className}`}
     >
       {/* Dynamic 3D Glare Light Reflection Spot */}
       <div

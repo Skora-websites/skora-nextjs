@@ -223,3 +223,114 @@
 .animate-pulse-glow {
   animation: pulseGlow 4s ease-in-out infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DEEP SPACE NEON — Additive marketing design tokens
+   (HRMS pages are unaffected: app/hrms/globals.css overrides these
+   variables inside its own scoped layout.)
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --accent-cyan: #38BDF8;
+  --font-mono-accent: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.font-mono-accent {
+  font-family: var(--font-mono-accent);
+}
+
+/* Perspective neon grid floor */
+.grid-floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  perspective: 340px;
+  perspective-origin: 50% 0%;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 38%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 38%, black 100%);
+}
+
+.grid-floor::before {
+  content: "";
+  position: absolute;
+  inset: -60% -50% 0 -50%;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.16) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: rotateX(62deg);
+  transform-origin: 50% 100%;
+  animation: gridSweep 7s linear infinite;
+}
+
+@keyframes gridSweep {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 64px;
+  }
+}
+
+/* Neon edge border card */
+.neon-border {
+  position: relative;
+}
+
+.neon-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.7), rgba(37, 99, 235, 0.25) 40%, rgba(56, 189, 248, 0.55));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.neon-border:hover::before {
+  opacity: 1;
+}
+
+/* Laser beam sweep (intro + section dividers) */
+@keyframes beamSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.animate-beam-sweep {
+  animation: beamSweep 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* Soft text glow */
+.text-glow-cyan {
+  text-shadow: 0 0 28px rgba(56, 189, 248, 0.55), 0 0 60px rgba(37, 99, 235, 0.35);
+}
+
+/* Reduced motion: disable decorative loops */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-left,
+  .animate-marquee-right,
+  .animate-scroll-marquee,
+  .animate-float-slow,
+  .animate-float-reverse,
+  .animate-pulse-glow,
+  .animate-beam-sweep,
+  .grid-floor::before {
+    animation: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

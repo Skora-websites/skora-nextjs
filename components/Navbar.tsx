@@ -90,8 +90,8 @@ const services = [
 ];
 
 const inputClass =
-  "mt-1.5 w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600";
-const labelClass = "ml-1 text-xs font-bold uppercase tracking-wide text-gray-700";
+  "mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400 focus:bg-white/10 focus:ring-1 focus:ring-sky-400/60";
+const labelClass = "ml-1 text-xs font-bold uppercase tracking-wide text-slate-400 font-mono-accent";
 
 interface NavbarProps {
   onOpenConsultation?: (topic?: string) => void;
@@ -112,11 +112,11 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
 
   const textClass = isTransparentNav
     ? "text-white hover:text-sky-300"
-    : "text-gray-800 hover:text-blue-600";
-  const logoTextClass = isTransparentNav ? "text-white" : "text-gray-900";
+    : "text-slate-200 hover:text-sky-300";
+  const logoTextClass = "text-white";
   const headerBgClass = isTransparentNav
     ? "bg-transparent border-transparent"
-    : "bg-white/90 border-b border-gray-200/80 shadow-sm backdrop-blur-xl";
+    : "bg-[#05070E]/85 border-b border-white/10 shadow-[0_8px_30px_rgba(2,6,23,0.6)] backdrop-blur-xl";
 
   const siteContent = useSiteContent();
   const whatsappNumber = (siteContent.phone || "+919217375835").replace(/[^0-9]/g, "");
@@ -159,7 +159,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               Skora{" "}
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
-                  isTransparentNav ? "bg-sky-400 shadow-[0_0_8px_#38bdf8]" : "bg-blue-600"
+                  isTransparentNav ? "bg-sky-400 shadow-[0_0_8px_#38bdf8]" : "bg-sky-400 shadow-[0_0_10px_#38bdf8]"
                 }`}
               />
             </Link>
@@ -169,15 +169,15 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <Link
                 href="/home"
                 className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${
-                  isHomePage ? "text-blue-600 font-extrabold" : textClass
+                  isHomePage ? "text-sky-300 font-extrabold" : textClass
                 }`}
               >
                 <span>Home</span>
                 {isHomePage && (
-                  <span className="ml-1.5 w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                  <span className="ml-1.5 h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8] animate-pulse" />
                 )}
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-blue-600 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-gradient-to-r from-sky-400 to-blue-600 shadow-[0_0_12px_rgba(56,189,248,0.7)] transition-transform duration-300 ease-out ${
                     isHomePage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -188,7 +188,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 type="button"
                 onClick={() => setIsServicesOpen(true)}
                 className={`group relative flex h-full cursor-pointer items-center text-[15px] font-semibold transition-colors duration-300 gap-1 ${
-                  isServicesPage ? "text-blue-600 font-extrabold" : textClass
+                  isServicesPage ? "text-sky-300 font-extrabold" : textClass
                 }`}
               >
                 <span>Services</span>
@@ -199,7 +199,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   }`}
                 />
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-blue-600 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-gradient-to-r from-sky-400 to-blue-600 shadow-[0_0_12px_rgba(56,189,248,0.7)] transition-transform duration-300 ease-out ${
                     isServicesPage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -210,24 +210,24 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 href="/healthcare"
                 className={`group relative flex h-full items-center gap-1.5 text-[15px] font-semibold transition-colors duration-300 ${
                   isHealthcarePage
-                    ? "text-emerald-600 font-extrabold"
+                    ? "text-emerald-400 font-extrabold"
                     : isTransparentNav
                     ? "text-emerald-300 hover:text-emerald-200"
-                    : "text-emerald-600 hover:text-emerald-500"
+                    : "text-emerald-400 hover:text-emerald-300"
                 }`}
               >
                 <Activity
                   size={16}
-                  className={isHealthcarePage ? "animate-spin text-emerald-500" : ""}
+                  className={isHealthcarePage ? "animate-spin text-emerald-400" : ""}
                 />
                 <span>Healthcare IT</span>
                 {isHealthcarePage && (
-                  <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">
+                  <span className="ml-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 font-mono-accent text-[10px] font-bold text-emerald-300">
                     ACTIVE
                   </span>
                 )}
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-emerald-500 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.7)] transition-transform duration-300 ease-out ${
                     isHealthcarePage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -236,12 +236,12 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <Link
                 href="/contact"
                 className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${
-                  pathname === "/contact" ? "text-blue-600 font-extrabold" : textClass
+                  pathname === "/contact" ? "text-sky-300 font-extrabold" : textClass
                 }`}
               >
                 <span>Contact</span>
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-blue-600 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-gradient-to-r from-sky-400 to-blue-600 shadow-[0_0_12px_rgba(56,189,248,0.7)] transition-transform duration-300 ease-out ${
                     pathname === "/contact" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -252,11 +252,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setIsAuditOpen(true)}
-                className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-bold transition-all cursor-pointer ${
-                  isTransparentNav
-                    ? "border border-white/30 text-white hover:bg-white/10"
-                    : "border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 hover:text-blue-600 shadow-sm"
-                }`}
+                className="glass-pill flex cursor-pointer items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-bold transition-all hover:border-sky-400/60 hover:text-sky-200"
               >
                 <ShieldCheck size={16} /> Free SKORA Audit
               </button>
@@ -264,11 +260,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => onOpenConsultation?.()}
-                className={`group flex items-center gap-2 rounded-xl px-6 py-2.5 text-[14px] font-bold shadow-md transition-all cursor-pointer ${
-                  isTransparentNav
-                    ? "bg-white text-gray-900 hover:bg-gray-100"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
+                className="group flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-6 py-2.5 text-[14px] font-bold text-white shadow-[0_0_25px_rgba(37,99,235,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_35px_rgba(56,189,248,0.65)]"
               >
                 <span>Start Project</span>
                 <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
@@ -277,10 +269,10 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
 
             <button
               type="button"
-              className={`relative z-50 rounded-xl p-2 transition cursor-pointer lg:hidden border ${
+              className={`relative z-50 cursor-pointer rounded-xl border p-2 transition ${
                 isTransparentNav
-                  ? "border-white/30 text-white hover:bg-white/10"
-                  : "border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                  ? "border-white/25 text-white hover:bg-white/10"
+                  : "border-white/15 bg-white/5 text-slate-100 hover:bg-white/10"
               }`}
               onClick={() => setMobileMenuOpen((current) => !current)}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -291,7 +283,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
         </div>
       </header>
 
-      {/* FULL-SCREEN SERVICES MODAL */}
+      {/* FULL-SCREEN SERVICES MODAL — dark glass */}
       <AnimatePresence>
         {isServicesOpen && (
           <motion.div
@@ -299,39 +291,45 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-[1000] flex flex-col overflow-y-auto bg-[#F4F6F1]/98 backdrop-blur-2xl px-4 py-6 sm:p-8 text-[#0B1310]"
+            className="fixed inset-0 z-[1000] flex flex-col overflow-y-auto bg-[#05070E]/98 px-4 py-6 text-white backdrop-blur-2xl sm:p-8"
           >
-            <div className="flex w-full items-center justify-between mx-auto max-w-[90rem]">
+            {/* Ambient orbs */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+              <div className="bg-radial-halo absolute -top-48 left-1/2 h-[34rem] w-[60rem] -translate-x-1/2 rounded-full blur-[130px]" />
+              <div className="grid-floor opacity-60" />
+            </div>
+
+            <div className="relative flex w-full items-center justify-between mx-auto max-w-[90rem]">
               <button
                 onClick={closeServices}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-[#EFF6FF] text-[#0B1310] text-xs font-bold transition-all border border-[#E2E8F0] shadow-sm cursor-pointer"
+                className="glass-pill inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all hover:border-sky-400/60"
               >
-                <ArrowLeft size={16} className="text-[#2563EB]" />
+                <ArrowLeft size={16} className="text-sky-300" />
                 <span>Return to Previous Page</span>
               </button>
 
               <button
                 onClick={closeServices}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#0B1310] border border-[#E2E8F0] shadow-sm transition hover:bg-slate-200 hover:rotate-90 cursor-pointer"
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:rotate-90 hover:bg-white/10"
               >
                 <X size={22} />
               </button>
             </div>
 
-            <div className="flex-grow flex flex-col justify-center mx-auto w-full max-w-[90rem] py-12">
+            <div className="relative flex-grow flex flex-col justify-center mx-auto w-full max-w-[90rem] py-12">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="mb-10 lg:mb-16 text-center lg:text-left"
               >
-                <h2 className="text-4xl font-black tracking-tight text-[#0B1310] md:text-5xl lg:text-6xl uppercase">
+                <h2 className="text-4xl font-black uppercase tracking-tight text-white md:text-5xl lg:text-6xl">
                   Our{" "}
-                  <span className="text-[#2563EB]">
+                  <span className="text-gradient-cyan">
                     Expertise
                   </span>
                 </h2>
-                <p className="mt-4 text-lg text-slate-600 font-medium">
+                <p className="mt-4 text-lg font-medium text-slate-400">
                   Select a division to explore our capabilities.
                 </p>
               </motion.div>
@@ -347,21 +345,21 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     <Link
                       href={item.link}
                       onClick={closeServices}
-                      className="group relative flex h-[350px] lg:h-[420px] w-full flex-col justify-end overflow-hidden rounded-[2.2rem] border border-[#E2E8F0] bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-[#2563EB] cursor-pointer"
+                      className="group neon-border relative flex h-[350px] lg:h-[420px] w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[2.2rem] border border-white/10 bg-[#0B0F19]/70 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:border-sky-400/60 hover:shadow-[0_20px_60px_rgba(37,99,235,0.35)]"
                     >
                       <img
                         src={item.img}
                         alt={item.name}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="absolute inset-0 h-full w-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/85 to-transparent opacity-95 transition-opacity group-hover:opacity-90"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#05070E] via-[#05070E]/80 to-transparent transition-opacity group-hover:opacity-90"></div>
                       <div className="relative z-10 p-8">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#2563EB] border border-[#2563EB]/30 backdrop-blur-md transition-colors group-hover:bg-[#2563EB] group-hover:text-white">
+                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-400/40 bg-sky-500/10 text-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.35)] backdrop-blur-md transition-colors group-hover:bg-sky-500 group-hover:text-white">
                           <item.icon size={28} />
                         </div>
-                        <h3 className="text-2xl font-extrabold text-[#0B1310] mb-2">{item.name}</h3>
-                        <p className="text-slate-600 font-medium mb-6 text-sm leading-relaxed">{item.desc}</p>
-                        <div className="flex items-center gap-2 text-sm font-bold text-[#2563EB]">
+                        <h3 className="mb-2 text-2xl font-extrabold text-white">{item.name}</h3>
+                        <p className="mb-6 text-sm font-medium leading-relaxed text-slate-400">{item.desc}</p>
+                        <div className="flex items-center gap-2 text-sm font-bold text-sky-300">
                           <span>Explore Division</span>
                           <ArrowRight
                             size={16}
@@ -378,7 +376,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
         )}
       </AnimatePresence>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU — dark glass */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -386,14 +384,17 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-white overflow-y-auto lg:hidden"
+            className="fixed inset-0 z-40 overflow-y-auto bg-[#05070E] lg:hidden"
           >
-            <div className="flex flex-col pt-24 px-6 pb-12 min-h-screen">
-              <div className="flex flex-col gap-6 flex-grow">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+              <div className="bg-radial-halo absolute -top-32 left-1/2 h-[28rem] w-[36rem] -translate-x-1/2 rounded-full blur-[120px]" />
+            </div>
+            <div className="relative flex min-h-screen flex-col px-6 pb-12 pt-24">
+              <div className="flex flex-grow flex-col gap-6">
                 <Link
                   href="/home"
-                  className={`border-b border-gray-100 pb-4 text-xl font-bold ${
-                    isHomePage ? "text-blue-600 font-extrabold" : "text-gray-900"
+                  className={`border-b border-white/10 pb-4 text-xl font-bold ${
+                    isHomePage ? "text-sky-300 font-extrabold" : "text-white"
                   }`}
                 >
                   Home {isHomePage && "●"}
@@ -403,24 +404,24 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     setMobileMenuOpen(false);
                     setIsServicesOpen(true);
                   }}
-                  className="flex w-full justify-between items-center border-b border-gray-100 pb-4 text-xl font-bold text-gray-900 cursor-pointer"
+                  className="flex w-full cursor-pointer items-center justify-between border-b border-white/10 pb-4 text-xl font-bold text-white"
                 >
-                  Services <ArrowRight size={20} className="text-blue-600" />
+                  Services <ArrowRight size={20} className="text-sky-300" />
                 </button>
                 <Link
                   href="/healthcare"
                   className={`flex items-center gap-3 text-lg font-bold ${
-                    isHealthcarePage ? "text-emerald-600 font-extrabold" : "text-emerald-600"
+                    isHealthcarePage ? "text-emerald-400 font-extrabold" : "text-emerald-400"
                   }`}
                 >
-                  <div className="p-2 bg-emerald-50 rounded">
+                  <div className="rounded border border-emerald-400/30 bg-emerald-500/10 p-2">
                     <Activity size={20} />
                   </div>{" "}
                   Healthcare IT {isHealthcarePage && "●"}
                 </Link>
                 <button
                   onClick={() => onOpenConsultation?.()}
-                  className="border-b border-gray-100 pb-4 text-xl font-bold text-gray-900 text-left mt-2"
+                  className="cursor-pointer border-b border-white/10 pb-4 text-left text-xl font-bold text-white"
                 >
                   Contact
                 </button>
@@ -432,13 +433,13 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     setIsAuditOpen(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="flex items-center justify-center gap-2 rounded bg-gray-50 border border-gray-200 py-4 font-bold text-blue-600 cursor-pointer"
+                  className="glass-pill flex cursor-pointer items-center justify-center gap-2 rounded py-4 font-bold"
                 >
                   <ShieldCheck size={18} /> Request Free Audit
                 </button>
                 <button
                   onClick={() => onOpenConsultation?.()}
-                  className="flex items-center justify-center gap-2 rounded bg-blue-600 py-4 font-bold text-white shadow-md cursor-pointer"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded bg-gradient-to-r from-blue-600 to-sky-500 py-4 font-bold text-white shadow-[0_0_25px_rgba(37,99,235,0.5)]"
                 >
                   <span>Start Project</span>
                   <ArrowRight size={18} />
@@ -449,52 +450,52 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
         )}
       </AnimatePresence>
 
-      {/* FREE AUDIT MODAL */}
+      {/* FREE AUDIT MODAL — dark glass */}
       <AnimatePresence>
         {isAuditOpen && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-y-auto p-4 sm:p-6">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeAudit}
-              className="absolute inset-0 cursor-pointer bg-gray-900/80 backdrop-blur-md"
+              className="absolute inset-0 cursor-pointer bg-[#020409]/85 backdrop-blur-md"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.98, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="relative z-10 my-auto flex max-h-[85vh] sm:max-h-[88vh] w-full max-w-2xl flex-col overflow-y-auto rounded-3xl shadow-2xl bg-white"
+              className="glass-card relative z-10 my-auto flex max-h-[85vh] sm:max-h-[88vh] w-full max-w-2xl flex-col overflow-y-auto rounded-3xl shadow-[0_30px_90px_rgba(2,6,23,0.9)]"
             >
               {/* Top Navigation Bar inside Modal */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-6 py-4">
                 <button
                   type="button"
                   onClick={closeAudit}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white hover:bg-gray-100 text-xs font-bold text-gray-700 border border-gray-200 shadow-sm transition-all cursor-pointer"
+                  className="glass-pill inline-flex cursor-pointer items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all"
                 >
-                  <ArrowLeft size={16} className="text-blue-600" />
+                  <ArrowLeft size={16} className="text-sky-300" />
                   <span>Return to Previous Page</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={closeAudit}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-200/80 text-gray-600 transition-colors hover:bg-gray-300 hover:text-gray-900 cursor-pointer"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="border-b border-gray-200 bg-white px-7 py-6 sm:px-9">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] text-blue-800">
-                  <CalendarClock size={14} /> 30-minute consultation
+              <div className="border-b border-white/10 px-7 py-6 sm:px-9">
+                <div className="glass-pill mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.1em]">
+                  <CalendarClock size={14} className="text-sky-300" /> 30-minute consultation
                 </div>
-                <h2 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">
+                <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
                   Get Your Free Skora Audit
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600 font-medium">
+                <p className="mt-2 text-sm font-medium leading-relaxed text-slate-400">
                   Our Analytics Team will review your digital presence, technology stack, performance, security, and scalability priorities.
                 </p>
               </div>
@@ -542,7 +543,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     <div className="relative">
                       <Phone
                         size={16}
-                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="pointer-events-none absolute left-4 top-1/2 mt-1.5 -translate-y-1/2 text-slate-500"
                       />
                       <input
                         id="audit-phone"
@@ -556,17 +557,17 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   </div>
                   <div>
                     <label htmlFor="audit-service" className={labelClass}>
-                      Service Needed <span className="normal-case text-gray-400">(Optional)</span>
+                      Service Needed <span className="normal-case text-slate-600">(Optional)</span>
                     </label>
                     <div className="relative">
                       <BriefcaseBusiness
                         size={16}
-                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="pointer-events-none absolute left-4 top-1/2 mt-1.5 -translate-y-1/2 text-slate-500"
                       />
                       <select
                         id="audit-service"
                         name="service"
-                        className={`${inputClass} appearance-none pl-10`}
+                        className={`${inputClass} appearance-none pl-10 [&>option]:bg-[#0B0F19]`}
                         defaultValue=""
                       >
                         <option value="" disabled>
@@ -586,12 +587,12 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 </div>
                 <div>
                   <label htmlFor="audit-website" className={labelClass}>
-                    Company Website <span className="normal-case text-gray-400">(Optional)</span>
+                    Company Website <span className="normal-case text-slate-600">(Optional)</span>
                   </label>
                   <div className="relative">
                     <Globe2
                       size={16}
-                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="pointer-events-none absolute left-4 top-1/2 mt-1.5 -translate-y-1/2 text-slate-500"
                     />
                     <input
                       id="audit-website"
@@ -604,18 +605,18 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 </div>
                 <button
                   type="submit"
-                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-[15px] font-bold text-white shadow-md transition-colors hover:bg-blue-700 cursor-pointer"
+                  className="btn-primary group flex w-full cursor-pointer items-center justify-center gap-2 py-4 text-[15px]"
                 >
                   Request My Free Skora Audit{" "}
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </button>
-                <div className="flex flex-col items-center gap-2 border-t border-gray-100 pt-6 text-center sm:flex-row sm:justify-center">
-                  <span className="text-sm text-gray-500">Prefer WhatsApp?</span>
+                <div className="flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center sm:flex-row sm:justify-center">
+                  <span className="text-sm text-slate-500">Prefer WhatsApp?</span>
                   <a
                     href={whatsappHref}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 transition hover:text-emerald-700 cursor-pointer"
+                    className="inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-emerald-400 transition hover:text-emerald-300"
                   >
                     <MessageCircle size={17} /> Chat with our Analytics Team now
                   </a>

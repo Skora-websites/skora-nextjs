@@ -20,14 +20,18 @@ const TechCyberParticles = () => {
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
-  const particles = Array.from({ length: 20 });
+  const particles = Array.from({ length: 24 });
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
       {particles.map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-2 h-2 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-sky-300 opacity-60 shadow-[0_0_15px_rgba(56,189,248,0.8)]"
+          className="absolute rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-sky-300 opacity-60 shadow-[0_0_20px_rgba(56,189,248,0.9)]"
+          style={{
+            width: i % 4 === 0 ? "3px" : "8px",
+            height: i % 4 === 0 ? "3px" : "8px",
+          }}
           initial={{
             x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1200),
             y: Math.random() * 800,
@@ -169,8 +173,14 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
   return (
     <footer
       ref={footerRef}
-      className="relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden border-t border-white/10 selection:bg-[#2563EB] selection:text-white"
+      className="relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden selection:bg-[#2563EB] selection:text-white"
     >
+      {/* Neon divider beam along the top edge */}
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-sky-400/80 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 z-20 h-px overflow-hidden">
+        <div className="animate-beam-sweep h-px w-1/4 bg-gradient-to-r from-transparent via-white to-transparent" />
+      </div>
+
       {/* 3D Cyber Tech Network Floating Particles */}
       <TechCyberParticles />
 
@@ -374,7 +384,9 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
         {/* =========================================================================
             BOTTOM FOOTER ROW: KEEP IN TOUCH, FIND US, CONTACT US (SOCIAL ICONS) & POLICIES
             ========================================================================= */}
-        <div className="pt-12 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 text-xs text-slate-400 font-medium">
+        <div className="pt-12 border-t border-white/10 relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 text-xs text-slate-400 font-medium">
+          {/* Neon divider beam above the bottom row */}
+          <div aria-hidden="true" className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent" />
           {/* Column 1: Keep in touch */}
           <div className="space-y-3 gsap-footer-row">
             <h4 className="text-sm font-bold text-white tracking-wide">

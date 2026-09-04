@@ -77,7 +77,7 @@ const HeroRightDoctorSlider = () => {
   }, [doctorImages.length]);
 
   return (
-    <div className="relative h-[420px] sm:h-[500px] lg:h-[580px] w-full rounded-[2rem] overflow-hidden shadow-xl bg-[#E8F2EC]">
+    <div className="relative h-[420px] sm:h-[500px] lg:h-[580px] w-full rounded-[2rem] overflow-hidden shadow-xl bg-[#06180F] border border-emerald-500/20">
       {/* Prerender ALL images stacked; only show current — eliminates black flash entirely */}
       {doctorImages.map((img, i) => (
         <motion.div
@@ -95,7 +95,7 @@ const HeroRightDoctorSlider = () => {
             className="w-full h-full object-cover"
             loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#11261D]/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#04120B]/85 via-transparent to-transparent" />
         </motion.div>
       ))}
 
@@ -107,7 +107,7 @@ const HeroRightDoctorSlider = () => {
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === currentIndex ? "w-6 bg-[#2A8C57]" : "w-1.5 bg-white/50"
+                i === currentIndex ? "w-6 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "w-1.5 bg-white/40"
               }`}
             />
           ))}
@@ -148,8 +148,8 @@ const EkgHeartbeatWave = () => {
   }, []);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-[#0C1F16] p-4 sm:p-6 border border-[#1F6B43]/40 shadow-[0_0_30px_rgba(31,107,67,0.25)]">
-      <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20 text-xs font-mono font-bold text-[#2A8C57]">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-[#04120B] p-4 sm:p-6 border border-emerald-500/40 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
+      <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20 text-xs font-mono font-bold text-emerald-400">
         <div className="flex items-center gap-2">
           <Heart size={16} className="text-red-500 animate-pulse fill-red-500" />
           <span>EKG CLINICAL TELEMETRY</span>
@@ -176,7 +176,7 @@ const EkgHeartbeatWave = () => {
             ref={pathRef}
             d="M 0 60 L 150 60 L 170 60 L 180 20 L 195 100 L 210 10 L 225 110 L 240 60 L 260 60 L 350 60 L 370 60 L 380 15 L 395 105 L 410 5 L 425 115 L 440 60 L 460 60 L 550 60 L 570 60 L 580 25 L 595 95 L 610 12 L 625 108 L 640 60 L 800 60"
             fill="none"
-            stroke="#2A8C57"
+            stroke="#34d399"
             strokeWidth="4"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -279,33 +279,33 @@ const OralCareGsapBackground = () => {
   return (
     <div ref={containerRef} className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
 
-      {/* ── LAYER 1: Parallax ambient light orbs ── */}
+      {/* ── LAYER 1: Parallax ambient light orbs (dark emerald) ── */}
       <motion.div
         animate={{ x: mousePos.x, y: mousePos.y }}
         transition={{ type: "spring", stiffness: 40, damping: 30 }}
         className="absolute inset-0"
       >
-        <div className="bg-blob-1 absolute top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-br from-[#1F6B43]/18 via-emerald-100/30 to-transparent rounded-[60%] blur-[120px]" />
-        <div className="bg-blob-2 absolute top-[30%] -right-40 w-[500px] h-[500px] bg-[#D4EDE0]/70 rounded-full blur-[130px]" />
-        <div className="bg-blob-3 absolute top-[55%] -left-40 w-[600px] h-[500px] bg-[#E8F2EC]/80 rounded-full blur-[130px]" />
-        <div className="bg-blob-4 absolute bottom-[-5%] right-1/3 w-[450px] h-[450px] bg-emerald-50 rounded-full blur-[120px]" />
+        <div className="bg-blob-1 absolute top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-br from-emerald-600/15 via-emerald-900/20 to-transparent rounded-[60%] blur-[120px]" />
+        <div className="bg-blob-2 absolute top-[30%] -right-40 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[130px]" />
+        <div className="bg-blob-3 absolute top-[55%] -left-40 w-[600px] h-[500px] bg-teal-500/[0.08] rounded-full blur-[130px]" />
+        <div className="bg-blob-4 absolute bottom-[-5%] right-1/3 w-[450px] h-[450px] bg-emerald-700/10 rounded-full blur-[120px]" />
       </motion.div>
 
       {/* ── LAYER 2: Clinical dot grid ── */}
       <div
-        className="absolute inset-0 opacity-[0.055]"
+        className="absolute inset-0 opacity-[0.12]"
         style={{
-          backgroundImage: "radial-gradient(circle, #1f6b43 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, rgba(52,211,153,0.5) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }}
       />
 
       {/* ── LAYER 3: Drifting EKG waveform ── */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.18]" preserveAspectRatio="none">
+      <svg className="absolute inset-0 w-full h-full opacity-[0.14]" preserveAspectRatio="none">
         <path
           className="bg-ekg-drift"
           d="M -80 320 L 180 320 L 210 280 L 230 200 L 255 380 L 275 150 L 300 380 L 325 300 L 360 320 L 520 320 L 550 280 L 570 200 L 595 380 L 615 150 L 640 380 L 665 300 L 700 320 L 900 320 L 930 280 L 950 200 L 975 380 L 995 150 L 1020 380 L 1045 300 L 1080 320 L 1400 320"
-          fill="none" stroke="#1F6B43" strokeWidth="2" strokeDasharray="22 10"
+          fill="none" stroke="#34d399" strokeWidth="2" strokeDasharray="22 10"
         />
       </svg>
 
@@ -313,7 +313,7 @@ const OralCareGsapBackground = () => {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className={`bg-ring absolute bottom-[12%] left-[8%] rounded-full border border-[#1F6B43]/25`}
+          className={`bg-ring absolute bottom-[12%] left-[8%] rounded-full border border-emerald-400/20`}
           style={{ width: 60 + i * 50, height: 60 + i * 50, marginLeft: -(i * 25), marginBottom: -(i * 25) }}
         />
       ))}
@@ -326,7 +326,7 @@ const OralCareGsapBackground = () => {
       ].map((p, i) => (
         <div
           key={i}
-          className="bg-particle absolute w-2 h-2 rounded-full bg-[#1F6B43]/30"
+          className="bg-particle absolute w-2 h-2 rounded-full bg-emerald-400/25 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
           style={{ top: p.top, left: p.left }}
         />
       ))}
@@ -340,7 +340,7 @@ const OralCareGsapBackground = () => {
       ].map((c, i) => (
         <div
           key={i}
-          className={`bg-cross absolute ${c.opacity} text-[#1F6B43]`}
+          className={`bg-cross absolute ${c.opacity} text-emerald-400`}
           style={{ top: c.top, left: c.left }}
         >
           <svg width={c.size} height={c.size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -350,11 +350,11 @@ const OralCareGsapBackground = () => {
         </div>
       ))}
 
-      {/* ── LAYER 7: Scroll-driven fade band — gets more opaque as user scrolls down ── */}
+      {/* ── LAYER 7: Bottom fade band into deep space ── */}
       <div
         className="absolute inset-x-0 bottom-0 h-64 pointer-events-none"
         style={{
-          background: "linear-gradient(to top, rgba(253,251,247,0.9) 0%, transparent 100%)",
+          background: "linear-gradient(to top, rgba(5,7,14,0.9) 0%, transparent 100%)",
         }}
       />
     </div>
@@ -674,7 +674,7 @@ export default function HealthcarePortal() {
         <span key={i} className="hero-word inline-block overflow-hidden align-bottom mr-[0.25em] last:mr-0">
           <span
             className={`hero-word-inner inline-block${
-              accent ? " text-transparent bg-clip-text bg-gradient-to-r from-[#1F6B43] via-[#2A8C57] to-emerald-600" : ""
+              accent ? " text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400" : ""
             }`}
           >
             {word}
@@ -697,7 +697,7 @@ export default function HealthcarePortal() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-[#11261D] selection:bg-[#1F6B43] selection:text-white font-sans flex flex-col relative">
+    <main className="min-h-screen bg-[#05070E] text-slate-100 selection:bg-emerald-500 selection:text-white font-sans flex flex-col relative">
       <ScrollProgressBar />
       <OralCareGsapBackground />
       <HealthcareNavbar onOpenConsultation={handleOpenConsultation} />
@@ -718,26 +718,26 @@ export default function HealthcarePortal() {
             <div className="space-y-8">
 
               {/* Eyebrow pill */}
-              <div className="hero-pill inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#E8F2EC] border border-[#B8D9C6] text-[11px] font-mono font-bold text-[#1F6B43] shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[#2A8C57] animate-pulse" />
+              <div className="hero-pill inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-[11px] font-mono font-bold text-emerald-300 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
                 Premier Healthcare Digital Growth Agency · India
               </div>
 
               {/* OVERSIZED SPLIT-WORD HEADLINE — each word clips upward */}
-              <h1 className="text-[clamp(2.8rem,7.5vw,6.5rem)] font-black tracking-[-0.025em] leading-[1.0] text-[#11261D]">
+              <h1 className="text-[clamp(2.8rem,7.5vw,6.5rem)] font-black tracking-[-0.025em] leading-[1.0] text-white">
                 <SplitHeadline text="Elevate Your" />
                 <br />
                 <SplitHeadline text="Clinical Practice" />
                 <br />
                 <span className="hero-word inline-block overflow-hidden align-bottom">
-                  <span className="hero-word-inner inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#1F6B43] via-[#2A8C57] to-emerald-600">
+                  <span className="hero-word-inner inline-block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400 drop-shadow-[0_0_25px_rgba(52,211,153,0.45)]">
                     With SKORA
                   </span>
                 </span>
               </h1>
 
               {/* Subheading */}
-              <p className="hero-fade-up text-[#4A6358] text-lg sm:text-xl font-medium leading-relaxed max-w-xl">
+              <p className="hero-fade-up text-slate-400 text-lg sm:text-xl font-medium leading-relaxed max-w-xl">
                 We help doctors, clinics &amp; multi-specialty centers dominate Google Maps,
                 get more patient appointments, and build a high-converting digital presence.
               </p>
@@ -746,14 +746,14 @@ export default function HealthcarePortal() {
               <div className="hero-fade-up flex flex-wrap items-center gap-4">
                 <button
                   onClick={() => handleOpenConsultation("Doctor Growth Blueprint")}
-                  className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-[#11261D] hover:bg-[#1F6B43] text-white font-extrabold text-sm shadow-xl shadow-[#11261D]/20 hover:shadow-[#1F6B43]/30 transition-all duration-300 cursor-pointer"
+                  className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-sm shadow-[0_0_30px_rgba(52,211,153,0.35)] hover:shadow-[0_0_45px_rgba(52,211,153,0.55)] transition-all duration-300 cursor-pointer"
                 >
                   Book Free Clinic Audit
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 <a
                   href="#services"
-                  className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl border-2 border-[#11261D]/15 hover:border-[#1F6B43]/40 text-[#11261D] font-bold text-sm hover:text-[#1F6B43] transition-all duration-300"
+                  className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-white/15 bg-white/5 hover:border-emerald-400/50 text-white font-bold text-sm hover:text-emerald-300 transition-all duration-300"
                 >
                   Explore Services
                   <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -761,15 +761,15 @@ export default function HealthcarePortal() {
               </div>
 
               {/* Stats strip */}
-              <div className="hero-fade-up flex flex-wrap items-center gap-x-10 gap-y-4 pt-4 border-t border-[#DCE8E0]">
+              <div className="hero-fade-up flex flex-wrap items-center gap-x-10 gap-y-4 pt-4 border-t border-white/10">
                 {[
                   { val: "+320%", label: "Avg. Patient Lead Growth" },
                   { val: "350+", label: "Clinics Partnered", green: true },
                   { val: "99.4%", label: "Client Retention Rate" },
                 ].map((s, i) => (
                   <div key={i}>
-                    <div className={`text-3xl font-black ${s.green ? "text-[#1F6B43]" : "text-[#11261D]"}`}>{s.val}</div>
-                    <div className="text-xs text-[#6B8C7D] font-semibold mt-0.5">{s.label}</div>
+                    <div className={`text-3xl font-black ${s.green ? "text-emerald-400" : "text-white"}`}>{s.val}</div>
+                    <div className="text-xs text-slate-500 font-semibold mt-0.5">{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -779,7 +779,7 @@ export default function HealthcarePortal() {
                 {trustPills.map((p, i) => (
                   <span
                     key={i}
-                    className="hero-pill inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-[#DCE8E0] text-[12px] font-semibold text-[#11261D] shadow-sm"
+                    className="hero-pill inline-flex items-center gap-1.5 px-4 py-2 rounded-full glass-pill text-[12px] font-semibold text-slate-200"
                   >
                     <span>{p.icon}</span> {p.label}
                   </span>
@@ -789,7 +789,7 @@ export default function HealthcarePortal() {
 
             {/* RIGHT: Doctor image slider — scale-in from right */}
             <div className="relative space-y-5">
-              <div className="hero-image-card relative rounded-[2.5rem] overflow-hidden shadow-[0_32px_80px_rgba(17,38,29,0.18)] border border-[#DCE8E0]">
+              <div className="hero-image-card relative rounded-[2.5rem] overflow-hidden shadow-[0_32px_80px_rgba(2,20,12,0.8)] border border-emerald-500/25">
                 <HeroRightDoctorSlider />
               </div>
               <div className="hero-ekg-section">
@@ -804,13 +804,13 @@ export default function HealthcarePortal() {
       {/* WHAT WE DO FOR DOCTORS */}
       <section id="services" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#1F6B43] block mb-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Complete Digital Stack For Clinicians /
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-[#11261D] tracking-tight uppercase">
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
             WHAT WE DO FOR DOCTORS
           </h2>
-          <p className="mt-4 text-slate-600 text-base font-medium">
+          <p className="mt-4 text-slate-400 text-base font-medium">
             Everything your medical practice needs to acquire patients, boost reputation, and automate bookings. Click any card to inspect full strategy & deliverables.
           </p>
         </AnimatedSection>
@@ -822,45 +822,45 @@ export default function HealthcarePortal() {
                 onClick={() => setActiveCardModal(service)}
                 className="cursor-pointer group h-full"
               >
-                <Card3D maxTilt={10} className="h-full p-6 rounded-[2.2rem] bg-white border border-[#DCE8E0] shadow-xl hover:shadow-2xl hover:border-[#1F6B43] transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
+                <Card3D maxTilt={10} className="glass-card neon-border h-full p-6 rounded-[2.2rem] hover:border-emerald-400/50 transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
                   <div className="space-y-4">
                     <div className="relative h-44 w-full rounded-2xl overflow-hidden shadow-inner">
                       <img
                         src={service.image}
                         alt={service.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#11261D]/80 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#04120B]/85 via-transparent to-transparent" />
                       <div className="absolute top-3 left-3">
-                        <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[10px] font-mono font-bold text-[#1F6B43] border border-[#DCE8E0] shadow-md">
+                        <span className="px-3 py-1 rounded-full bg-[#04120B]/90 backdrop-blur-md text-[10px] font-mono font-bold text-emerald-300 border border-emerald-400/30 shadow-md">
                           {service.badge}
                         </span>
                       </div>
                       <div className="absolute bottom-3 right-3">
-                        <span className="px-2.5 py-1 rounded-full bg-[#1F6B43] text-[11px] font-bold text-white shadow-md">
+                        <span className="px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-[11px] font-bold text-white shadow-[0_0_14px_rgba(52,211,153,0.4)]">
                           {service.stats}
                         </span>
                       </div>
                     </div>
 
-                    <h3 className="text-xl font-extrabold text-[#11261D] group-hover:text-[#1F6B43] transition-colors leading-snug">
+                    <h3 className="text-xl font-extrabold text-white group-hover:text-emerald-300 transition-colors leading-snug">
                       {service.title}
                     </h3>
-                    <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                    <p className="text-xs text-slate-400 font-medium leading-relaxed">
                       {service.shortDesc}
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+                  <div className="pt-4 border-t border-white/10 mt-4 space-y-3">
                     <div className="flex flex-wrap gap-1.5">
                       {service.features.map((feat, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-lg bg-[#E8F2EC] text-[10px] font-bold text-[#11261D] border border-[#DCE8E0]">
+                        <span key={idx} className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-[10px] font-bold text-emerald-300 border border-emerald-400/25">
                           ✓ {feat}
                         </span>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs font-bold text-[#1F6B43] group-hover:translate-x-1 transition-transform pt-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-emerald-400 group-hover:translate-x-1 transition-transform pt-1">
                       <span>View Strategy & Deliverables</span>
                       <ArrowRight size={14} />
                     </div>
@@ -873,15 +873,15 @@ export default function HealthcarePortal() {
       </section>
 
       {/* WHY DOCTORS CHOOSE SKORA */}
-      <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10 bg-white rounded-[3rem] border border-[#DCE8E0] my-8 shadow-sm">
+      <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10 glass-card rounded-[3rem] my-8">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#1F6B43] block mb-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Why Doctors Trust SKORA /
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-[#11261D] tracking-tight uppercase">
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
             BUILT EXCLUSIVELY FOR CLINICIANS
           </h2>
-          <p className="mt-4 text-slate-600 text-base font-medium">
+          <p className="mt-4 text-slate-400 text-base font-medium">
             Unlike generic agencies, we specialize strictly in medical marketing, HIPAA standards, and patient lead generation workflows.
           </p>
         </AnimatedSection>
@@ -910,12 +910,12 @@ export default function HealthcarePortal() {
             },
           ].map((item, idx) => (
             <AnimatedSection key={idx}>
-              <Card3D maxTilt={6} className="h-full p-8 rounded-[2rem] bg-white border border-[#DCE8E0] shadow-md hover:shadow-xl transition-all space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-[#1F6B43] to-emerald-700 flex items-center justify-center text-white shadow-md">
+              <Card3D maxTilt={6} className="glass-card h-full p-8 rounded-[2rem] hover:border-emerald-400/40 transition-all space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(52,211,153,0.35)]">
                   <item.icon size={24} />
                 </div>
-                <h3 className="text-lg font-extrabold text-[#11261D]">{item.title}</h3>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">{item.desc}</p>
+                <h3 className="text-lg font-extrabold text-white">{item.title}</h3>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">{item.desc}</p>
               </Card3D>
             </AnimatedSection>
           ))}
@@ -925,13 +925,13 @@ export default function HealthcarePortal() {
       {/* PACKAGES FOR DOCTORS */}
       <section id="packages" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#1F6B43] block mb-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Transparent Pricing Packages /
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-[#11261D] tracking-tight uppercase">
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
             DOCTOR GROWTH PACKAGES
           </h2>
-          <p className="mt-4 text-slate-600 text-base font-medium">
+          <p className="mt-4 text-slate-400 text-base font-medium">
             Select the growth tier that fits your practice scale—no hidden fees or long-term lock-in.
           </p>
         </AnimatedSection>
@@ -941,20 +941,20 @@ export default function HealthcarePortal() {
             <AnimatedSection key={idx}>
               <Card3D maxTilt={8} className={`relative p-8 sm:p-10 rounded-[2.5rem] h-full transition-all duration-300 flex flex-col justify-between border ${
                 pkg.popular
-                  ? "bg-[#11261D] text-white border-[#1F6B43] shadow-2xl scale-105"
-                  : "bg-white text-[#11261D] border-[#DCE8E0] shadow-xl hover:shadow-2xl"
+                  ? "bg-gradient-to-b from-[#07260F] to-[#04120B] text-white border-emerald-400/60 shadow-[0_0_50px_rgba(52,211,153,0.25)] scale-105"
+                  : "glass-card text-slate-100 hover:border-emerald-400/40"
               }`}>
                 <div className="space-y-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h3 className="text-2xl font-black">{pkg.name}</h3>
-                      <p className={`text-xs mt-1 font-medium ${pkg.popular ? "text-slate-300" : "text-slate-500"}`}>
+                      <p className={`text-xs mt-1 font-medium ${pkg.popular ? "text-emerald-200/80" : "text-slate-500"}`}>
                         {pkg.subtitle}
                       </p>
                     </div>
 
                     {pkg.popular && (
-                      <span className="shrink-0 px-3 py-1 rounded-full bg-[#1F6B43] text-white text-[10px] font-mono font-bold uppercase tracking-wider shadow-md">
+                      <span className="shrink-0 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-[10px] font-mono font-bold uppercase tracking-wider shadow-[0_0_14px_rgba(52,211,153,0.4)]">
                         ★ POPULAR ★
                       </span>
                     )}
@@ -962,15 +962,15 @@ export default function HealthcarePortal() {
 
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black tracking-tight">{pkg.price}</span>
-                    <span className={`text-xs font-semibold ${pkg.popular ? "text-slate-400" : "text-slate-500"}`}>
+                    <span className={`text-xs font-semibold ${pkg.popular ? "text-emerald-200/70" : "text-slate-500"}`}>
                       {pkg.period}
                     </span>
                   </div>
 
-                  <ul className="space-y-3 pt-4 border-t border-slate-200/30 text-xs font-semibold">
+                  <ul className="space-y-3 pt-4 border-t border-white/10 text-xs font-semibold">
                     {pkg.features.map((feat, fIdx) => (
                       <li key={fIdx} className="flex items-center gap-2.5">
-                        <CheckCircle2 size={16} className={pkg.popular ? "text-[#2A8C57]" : "text-emerald-600"} />
+                        <CheckCircle2 size={16} className="text-emerald-400" />
                         <span>{feat}</span>
                       </li>
                     ))}
@@ -982,8 +982,8 @@ export default function HealthcarePortal() {
                     onClick={() => setPackageModalOpen(pkg)}
                     className={`w-full py-4 rounded-2xl font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
                       pkg.popular
-                        ? "bg-[#1F6B43] hover:bg-emerald-700 text-white shadow-[#1F6B43]/30"
-                        : "bg-[#11261D] hover:bg-slate-900 text-white"
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-teal-600 hover:to-emerald-500 text-white shadow-[0_0_25px_rgba(52,211,153,0.4)]"
+                        : "glass-pill hover:border-emerald-400/50"
                     }`}
                   >
                     <span>BOOK GROWTH PLAN NOW</span>
@@ -996,16 +996,16 @@ export default function HealthcarePortal() {
         </div>
       </section>
 
-      {/* FRAMER ORAL CARE STYLE LIGHT DOCTOR REVIEWS MARQUEE CAROUSEL */}
-      <section id="testimonials" className="py-20 bg-[#F5F2EA] text-[#11261D] border-y border-[#DCE8E0] my-8 overflow-hidden w-full relative z-10">
+      {/* DARK DOCTOR REVIEWS MARQUEE CAROUSEL */}
+      <section id="testimonials" className="py-20 bg-[#04120B] text-white border-y border-emerald-500/20 my-8 overflow-hidden w-full relative z-10">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-14 px-4">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#1F6B43] block mb-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Verified Doctor Testimonials /
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight uppercase text-[#11261D]">
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight uppercase text-white">
             WHAT DOCTORS SAY ABOUT US
           </h2>
-          <p className="mt-4 text-slate-600 text-base font-medium">
+          <p className="mt-4 text-slate-400 text-base font-medium">
             Hear from clinic directors and specialists across India who scaled their practices with SKORA.
           </p>
         </AnimatedSection>
@@ -1016,7 +1016,7 @@ export default function HealthcarePortal() {
             {[...doctorReviews, ...doctorReviews].map((rev, idx) => (
               <div
                 key={idx}
-                className="w-[360px] sm:w-[420px] p-8 rounded-[2rem] bg-white border border-[#DCE8E0] shadow-xl flex flex-col justify-between shrink-0 space-y-6 hover:shadow-2xl hover:border-[#1F6B43] transition-all"
+                className="w-[360px] sm:w-[420px] p-8 rounded-[2rem] glass-card flex flex-col justify-between shrink-0 space-y-6 hover:border-emerald-400/50 transition-all"
               >
                 <div className="space-y-4">
                   <div className="flex items-center gap-1 text-amber-400">
@@ -1024,23 +1024,25 @@ export default function HealthcarePortal() {
                       <Star key={s} size={16} fill="currentColor" />
                     ))}
                   </div>
-                  <p className="text-slate-700 text-sm font-medium leading-relaxed italic">
+                  <p className="text-slate-300 text-sm font-medium leading-relaxed italic">
                     "{rev.quote}"
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
-                  <img
-                    src={rev.avatar}
-                    alt={rev.doctor}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80";
-                    }}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-[#1F6B43] shadow-sm"
-                  />
+                <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+                  <span className="relative inline-flex shrink-0 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-600 p-[2px] shadow-[0_0_16px_rgba(52,211,153,0.45)]">
+                    <img
+                      src={rev.avatar}
+                      alt={rev.doctor}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80";
+                      }}
+                      className="w-12 h-12 rounded-full border-2 border-[#04120B] object-cover"
+                    />
+                  </span>
                   <div>
-                    <h4 className="text-base font-extrabold text-[#11261D]">{rev.doctor}</h4>
-                    <p className="text-xs text-[#1F6B43] font-semibold">{rev.specialty} • {rev.city}</p>
+                    <h4 className="text-base font-extrabold text-white">{rev.doctor}</h4>
+                    <p className="text-xs text-emerald-400 font-semibold">{rev.specialty} • {rev.city}</p>
                   </div>
                 </div>
               </div>
@@ -1052,13 +1054,13 @@ export default function HealthcarePortal() {
       {/* HEALTHCARE NEWS & INSIGHTS */}
       <section id="news" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#1F6B43] block mb-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Healthcare Digital News /
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-[#11261D] tracking-tight uppercase">
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
             LATEST HEALTHCARE INSIGHTS
           </h2>
-          <p className="mt-4 text-slate-600 text-base font-medium">
+          <p className="mt-4 text-slate-400 text-base font-medium">
             Stay updated with medical digital trends, SEO strategies, and patient acquisition blueprints.
           </p>
         </AnimatedSection>
@@ -1070,17 +1072,17 @@ export default function HealthcarePortal() {
                 onClick={() => setActiveNewsModal(news)}
                 className="cursor-pointer group h-full"
               >
-                <Card3D maxTilt={8} className="p-6 rounded-[2rem] bg-white border border-[#DCE8E0] shadow-lg hover:shadow-xl transition-all space-y-4 h-full flex flex-col justify-between">
+                <Card3D maxTilt={8} className="glass-card p-6 rounded-[2rem] hover:border-emerald-400/40 transition-all space-y-4 h-full flex flex-col justify-between">
                   <div className="space-y-3">
-                    <span className="text-[11px] font-mono text-slate-400">{news.date}</span>
-                    <h3 className="text-lg font-extrabold text-[#11261D] group-hover:text-[#1F6B43] transition-colors leading-snug">
+                    <span className="text-[11px] font-mono text-slate-500">{news.date}</span>
+                    <h3 className="text-lg font-extrabold text-white group-hover:text-emerald-300 transition-colors leading-snug">
                       {news.title}
                     </h3>
-                    <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                    <p className="text-xs text-slate-400 font-medium leading-relaxed">
                       {news.summary}
                     </p>
                   </div>
-                  <div className="pt-2 flex items-center gap-1.5 text-xs font-bold text-[#1F6B43] group-hover:translate-x-1 transition-transform">
+                  <div className="pt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-400 group-hover:translate-x-1 transition-transform">
                     <span>Read Article</span>
                     <ArrowRight size={14} />
                   </div>
@@ -1103,19 +1105,19 @@ export default function HealthcarePortal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.25 }}
-              className="relative z-10 my-auto w-full max-w-2xl rounded-3xl bg-white border border-[#DCE8E0] shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto text-[#11261D]"
+              className="relative z-10 my-auto w-full max-w-2xl rounded-3xl glass-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto text-white"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
                 <button
                   onClick={() => setActiveCardModal(null)}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-all border border-slate-200 cursor-pointer"
+                  className="glass-pill inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
-                  <ArrowLeft size={16} className="text-[#1F6B43]" />
+                  <ArrowLeft size={16} className="text-emerald-400" />
                   <span>Return to Previous Page</span>
                 </button>
                 <button
                   onClick={() => setActiveCardModal(null)}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1123,35 +1125,35 @@ export default function HealthcarePortal() {
 
               <div className="space-y-6">
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-[#E8F2EC] text-[11px] font-mono font-bold text-[#1F6B43] border border-[#DCE8E0]">
+                  <span className="px-3 py-1 rounded-full glass-pill text-[11px] font-mono font-bold">
                     {activeCardModal.badge}
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-[#1F6B43] text-[11px] font-bold text-white">
+                  <span className="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-[11px] font-bold text-white">
                     {activeCardModal.stats}
                   </span>
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl font-black text-[#11261D]">
+                <h2 className="text-2xl sm:text-3xl font-black text-white">
                   {activeCardModal.title}
                 </h2>
 
-                <div className="p-4 rounded-2xl bg-[#F5F2EA] border border-[#DCE8E0]">
-                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#1F6B43] mb-2">
+                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10">
+                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 mb-2">
                     Clinical Strategy Overview
                   </h4>
-                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
                     {activeCardModal.fullStrategy}
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#11261D]">
+                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
                     Key Deliverables Included
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {activeCardModal.deliverables.map((del, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs font-bold text-slate-800 p-2.5 rounded-xl bg-[#FDFBF7] border border-[#DCE8E0]">
-                        <CheckCircle2 size={16} className="text-[#1F6B43] shrink-0" />
+                      <div key={i} className="flex items-center gap-2 text-xs font-bold text-slate-200 p-2.5 rounded-xl bg-white/[0.03] border border-white/10">
+                        <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
                         <span>{del}</span>
                       </div>
                     ))}
@@ -1165,7 +1167,7 @@ export default function HealthcarePortal() {
                       setActiveCardModal(null);
                       handleOpenConsultation(topic);
                     }}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#1F6B43] to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-xs shadow-[0_0_25px_rgba(52,211,153,0.35)] flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>REQUEST THIS SERVICE FOR MY CLINIC</span>
                     <ArrowRight size={14} />
@@ -1186,35 +1188,35 @@ export default function HealthcarePortal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.25 }}
-              className="relative z-10 my-auto w-full max-w-xl rounded-3xl bg-white border border-[#DCE8E0] shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto text-[#11261D]"
+              className="relative z-10 my-auto w-full max-w-xl rounded-3xl glass-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto text-white"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
                 <button
                   onClick={() => setPackageModalOpen(null)}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-all border border-slate-200 cursor-pointer"
+                  className="glass-pill inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
-                  <ArrowLeft size={16} className="text-[#1F6B43]" />
+                  <ArrowLeft size={16} className="text-emerald-400" />
                   <span>Return to Previous Page</span>
                 </button>
                 <button
                   onClick={() => setPackageModalOpen(null)}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F2EC] text-[11px] font-mono font-bold text-[#1F6B43] border border-[#DCE8E0]">
-                  <Stethoscope size={14} />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-pill text-[11px] font-mono font-bold">
+                  <Stethoscope size={14} className="text-emerald-400" />
                   <span>SELECTED PACKAGE: {packageModalOpen.name}</span>
                 </div>
 
-                <h2 className="text-2xl font-black text-[#11261D]">
+                <h2 className="text-2xl font-black text-white">
                   Book {packageModalOpen.name} ({packageModalOpen.price}/mo)
                 </h2>
 
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">
                   Our doctor onboarding manager will set up your clinic dashboard and initiate your GMB & website audit within 24 hours.
                 </p>
 
@@ -1227,20 +1229,20 @@ export default function HealthcarePortal() {
                   className="space-y-4 pt-2"
                 >
                   <div>
-                    <label className="text-xs font-mono font-bold uppercase text-slate-700">Doctor / Practice Name *</label>
-                    <input type="text" required placeholder="Dr. John Smith / Smith Dental Clinic" className="w-full mt-1.5 bg-[#FDFBF7] border border-[#DCE8E0] rounded-xl px-3.5 py-2.5 text-xs text-[#11261D] focus:outline-none focus:border-[#1F6B43]" />
+                    <label className="text-xs font-mono font-bold uppercase text-slate-400">Doctor / Practice Name *</label>
+                    <input type="text" required placeholder="Dr. John Smith / Smith Dental Clinic" className="w-full mt-1.5 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/50" />
                   </div>
                   <div>
-                    <label className="text-xs font-mono font-bold uppercase text-slate-700">Work Email *</label>
-                    <input type="email" required placeholder="doctor@clinic.com" className="w-full mt-1.5 bg-[#FDFBF7] border border-[#DCE8E0] rounded-xl px-3.5 py-2.5 text-xs text-[#11261D] focus:outline-none focus:border-[#1F6B43]" />
+                    <label className="text-xs font-mono font-bold uppercase text-slate-400">Work Email *</label>
+                    <input type="email" required placeholder="doctor@clinic.com" className="w-full mt-1.5 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/50" />
                   </div>
                   <div>
-                    <label className="text-xs font-mono font-bold uppercase text-slate-700">WhatsApp / Phone *</label>
-                    <input type="tel" required placeholder="+91 98765 43210" className="w-full mt-1.5 bg-[#FDFBF7] border border-[#DCE8E0] rounded-xl px-3.5 py-2.5 text-xs text-[#11261D] focus:outline-none focus:border-[#1F6B43]" />
+                    <label className="text-xs font-mono font-bold uppercase text-slate-400">WhatsApp / Phone *</label>
+                    <input type="tel" required placeholder="+91 98765 43210" className="w-full mt-1.5 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/50" />
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#1F6B43] to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-xs shadow-[0_0_25px_rgba(52,211,153,0.35)] flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>CONFIRM PACKAGE REGISTRATION</span>
                     <ArrowRight size={14} />
@@ -1261,39 +1263,39 @@ export default function HealthcarePortal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.25 }}
-              className="relative z-10 my-auto w-full max-w-2xl rounded-3xl bg-white border border-[#DCE8E0] shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto text-[#11261D]"
+              className="relative z-10 my-auto w-full max-w-2xl rounded-3xl glass-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto text-white"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
                 <button
                   onClick={() => setActiveNewsModal(null)}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-all border border-slate-200 cursor-pointer"
+                  className="glass-pill inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
-                  <ArrowLeft size={16} className="text-[#1F6B43]" />
+                  <ArrowLeft size={16} className="text-emerald-400" />
                   <span>Return to Previous Page</span>
                 </button>
                 <button
                   onClick={() => setActiveNewsModal(null)}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#1F6B43]">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold text-emerald-400">
                   <BookOpen size={14} />
                   <span>HEALTHCARE INSIGHTS DISPATCH • {activeNewsModal.date}</span>
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl font-black text-[#11261D]">
+                <h2 className="text-2xl sm:text-3xl font-black text-white">
                   {activeNewsModal.title}
                 </h2>
 
-                <div className="p-5 rounded-2xl bg-[#F5F2EA] border border-[#DCE8E0] space-y-3">
-                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#1F6B43]">
+                <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
                     Article Analysis & Action Plan
                   </h4>
-                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
                     {activeNewsModal.fullContent}
                   </p>
                 </div>
@@ -1301,7 +1303,7 @@ export default function HealthcarePortal() {
                 <div className="pt-4 flex justify-end">
                   <button
                     onClick={() => setActiveNewsModal(null)}
-                    className="px-6 py-2.5 rounded-xl bg-[#11261D] hover:bg-slate-900 text-white font-extrabold text-xs shadow-md cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-xs shadow-[0_0_20px_rgba(52,211,153,0.3)] cursor-pointer"
                   >
                     Close Article
                   </button>
