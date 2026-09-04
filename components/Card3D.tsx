@@ -66,7 +66,7 @@ export default function Card3D({
     >
       {/* Dynamic 3D Glare Light Reflection Spot */}
       <div
-        className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-300"
+        className="card3d-glare pointer-events-none absolute inset-0 z-30 transition-opacity duration-300"
         style={{
           background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255, 255, 255, 0.35) 0%, rgba(59, 130, 246, 0.15) 40%, transparent 80%)`,
           opacity: glarePos.opacity,

@@ -168,7 +168,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
   return (
     <footer
       ref={footerRef}
-      className="relative overflow-hidden bg-[#04120B] pt-24 pb-12 text-white selection:bg-emerald-500 selection:text-white"
+      className="media-dark relative overflow-hidden bg-[#04120B] pt-24 pb-12 text-white selection:bg-emerald-500 selection:text-white"
     >
       {/* Neon divider beam along the top edge */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-emerald-400/80 to-transparent" />

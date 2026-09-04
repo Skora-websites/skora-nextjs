@@ -77,7 +77,7 @@ const HeroRightDoctorSlider = () => {
   }, [doctorImages.length]);
 
   return (
-    <div className="relative h-[420px] sm:h-[500px] lg:h-[580px] w-full rounded-[2rem] overflow-hidden shadow-xl bg-[#06180F] border border-emerald-500/20">
+    <div className="media-dark relative h-[420px] sm:h-[500px] lg:h-[580px] w-full rounded-[2rem] overflow-hidden shadow-xl bg-[#06180F] border border-emerald-500/20">
       {/* Prerender ALL images stacked; only show current — eliminates black flash entirely */}
       {doctorImages.map((img, i) => (
         <motion.div
@@ -148,7 +148,7 @@ const EkgHeartbeatWave = () => {
   }, []);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-[#04120B] p-4 sm:p-6 border border-emerald-500/40 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
+    <div className="media-dark relative w-full overflow-hidden rounded-2xl bg-[#04120B] p-4 sm:p-6 border border-emerald-500/40 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
       <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20 text-xs font-mono font-bold text-emerald-400">
         <div className="flex items-center gap-2">
           <Heart size={16} className="text-red-500 animate-pulse fill-red-500" />
@@ -350,9 +350,9 @@ const OralCareGsapBackground = () => {
         </div>
       ))}
 
-      {/* ── LAYER 7: Bottom fade band into deep space ── */}
+      {/* ── LAYER 7: Bottom fade band into deep space (theme-aware) ── */}
       <div
-        className="absolute inset-x-0 bottom-0 h-64 pointer-events-none"
+        className="bg-fade-band absolute inset-x-0 bottom-0 h-64 pointer-events-none"
         style={{
           background: "linear-gradient(to top, rgba(5,7,14,0.9) 0%, transparent 100%)",
         }}
@@ -697,7 +697,7 @@ export default function HealthcarePortal() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#05070E] text-slate-100 selection:bg-emerald-500 selection:text-white font-sans flex flex-col relative">
+    <main className="min-h-screen bg-[#05070E] text-slate-100 selection:bg-emerald-500 selection:text-white font-sans flex flex-col relative transition-colors duration-300">
       <ScrollProgressBar />
       <OralCareGsapBackground />
       <HealthcareNavbar onOpenConsultation={handleOpenConsultation} />
@@ -730,7 +730,7 @@ export default function HealthcarePortal() {
                 <SplitHeadline text="Clinical Practice" />
                 <br />
                 <span className="hero-word inline-block overflow-hidden align-bottom">
-                  <span className="hero-word-inner inline-block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400 drop-shadow-[0_0_25px_rgba(52,211,153,0.45)]">
+                  <span className="hero-word-inner inline-block text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 drop-shadow-[0_0_25px_rgba(52,211,153,0.45)]">
                     With SKORA
                   </span>
                 </span>
@@ -822,7 +822,7 @@ export default function HealthcarePortal() {
                 onClick={() => setActiveCardModal(service)}
                 className="cursor-pointer group h-full"
               >
-                <Card3D maxTilt={10} className="glass-card neon-border h-full p-6 rounded-[2.2rem] hover:border-emerald-400/50 transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
+                <Card3D maxTilt={10} className="media-dark glass-card neon-border h-full p-6 rounded-[2.2rem] hover:border-emerald-400/50 transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
                   <div className="space-y-4">
                     <div className="relative h-44 w-full rounded-2xl overflow-hidden shadow-inner">
                       <img
@@ -873,7 +873,7 @@ export default function HealthcarePortal() {
       </section>
 
       {/* WHY DOCTORS CHOOSE SKORA */}
-      <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10 glass-card rounded-[3rem] my-8">
+      <section id="why-us" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10 glass-card rounded-[3rem] my-8 transition-colors duration-300">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Why Doctors Trust SKORA /
@@ -941,7 +941,7 @@ export default function HealthcarePortal() {
             <AnimatedSection key={idx}>
               <Card3D maxTilt={8} className={`relative p-8 sm:p-10 rounded-[2.5rem] h-full transition-all duration-300 flex flex-col justify-between border ${
                 pkg.popular
-                  ? "bg-gradient-to-b from-[#07260F] to-[#04120B] text-white border-emerald-400/60 shadow-[0_0_50px_rgba(52,211,153,0.25)] scale-105"
+                  ? "media-dark bg-gradient-to-b from-[#07260F] to-[#04120B] text-white border-emerald-400/60 shadow-[0_0_50px_rgba(52,211,153,0.25)] scale-105"
                   : "glass-card text-slate-100 hover:border-emerald-400/40"
               }`}>
                 <div className="space-y-6">
@@ -997,7 +997,7 @@ export default function HealthcarePortal() {
       </section>
 
       {/* DARK DOCTOR REVIEWS MARQUEE CAROUSEL */}
-      <section id="testimonials" className="py-20 bg-[#04120B] text-white border-y border-emerald-500/20 my-8 overflow-hidden w-full relative z-10">
+      <section id="testimonials" className="media-dark py-20 bg-[#04120B] text-white border-y border-emerald-500/20 my-8 overflow-hidden w-full relative z-10">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-14 px-4">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Verified Doctor Testimonials /

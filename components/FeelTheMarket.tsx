@@ -115,7 +115,7 @@ export default function FeelTheMarket() {
   }, []);
 
   return (
-    <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-[#05070E] via-[#081226] to-[#05070E] flex items-center justify-center border-t border-blue-900/30">
+    <section className="media-dark relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-[#05070E] via-[#081226] to-[#05070E] flex items-center justify-center border-t border-blue-900/30">
       {/* Subtle WebGL-free starfield */}
       <div
         aria-hidden="true"

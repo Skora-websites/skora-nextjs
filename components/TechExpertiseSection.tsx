@@ -69,8 +69,8 @@ export default function TechExpertiseSection() {
 
       {/* Marquee Row 1 - Left */}
       <div className="marquee-container relative flex overflow-hidden py-3">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-[#05070E] to-transparent md:w-48" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-[#05070E] to-transparent md:w-48" />
+        <div className="edge-fade-l pointer-events-none absolute inset-y-0 left-0 z-10 w-24 md:w-48" />
+        <div className="edge-fade-r pointer-events-none absolute inset-y-0 right-0 z-10 w-24 md:w-48" />
 
         <div className="animate-marquee-left flex gap-5 px-4 py-2">
           {[...expertiseRow1, ...expertiseRow1, ...expertiseRow1].map((item, index) => (
@@ -104,8 +104,8 @@ export default function TechExpertiseSection() {
 
       {/* Marquee Row 2 - Right */}
       <div className="marquee-container relative mt-4 flex overflow-hidden py-3">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-[#05070E] to-transparent md:w-48" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-[#05070E] to-transparent md:w-48" />
+        <div className="edge-fade-l pointer-events-none absolute inset-y-0 left-0 z-10 w-24 md:w-48" />
+        <div className="edge-fade-r pointer-events-none absolute inset-y-0 right-0 z-10 w-24 md:w-48" />
 
         <div className="animate-marquee-right flex gap-5 px-4 py-2">
           {[...expertiseRow2, ...expertiseRow2, ...expertiseRow2].map((item, index) => (

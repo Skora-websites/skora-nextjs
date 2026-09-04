@@ -210,7 +210,7 @@ export default function ThreeBackground() {
     <div
       ref={containerRef}
       aria-hidden="true"
-      className="fixed inset-0 z-0 pointer-events-none opacity-60 bg-[radial-gradient(ellipse_at_top,rgba(11,18,36,0.9)_0%,#05070E_70%)]"
+      className="three-bg fixed inset-0 z-0 pointer-events-none opacity-60 bg-[radial-gradient(ellipse_at_top,rgba(11,18,36,0.9)_0%,#05070E_70%)]"
     />
   );
 }

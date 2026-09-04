@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSiteContent } from "@/context/SiteContentContext";
+import { useTheme } from "@/context/ThemeContext";
+import ThemeToggle from "@/components/ThemeToggle";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -104,6 +106,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
   const [isServicesOpen, setIsServicesOpen] = useState(false);
 
   const pathname = usePathname();
+  const { theme } = useTheme();
   const isLandingPage = pathname === "/";
   const isHomePage = pathname === "/home";
   const isHealthcarePage = pathname === "/healthcare";
@@ -142,7 +145,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
     if (isServicesOpen || mobileMenuOpen || isAuditOpen) {
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
     }
   }, [isServicesOpen, mobileMenuOpen, isAuditOpen]);
 
@@ -249,6 +252,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             </nav>
 
             <div className="hidden items-center gap-4 lg:flex">
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={() => setIsAuditOpen(true)}
@@ -345,7 +349,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     <Link
                       href={item.link}
                       onClick={closeServices}
-                      className="group neon-border relative flex h-[350px] lg:h-[420px] w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[2.2rem] border border-white/10 bg-[#0B0F19]/70 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:border-sky-400/60 hover:shadow-[0_20px_60px_rgba(37,99,235,0.35)]"
+                      className="media-dark group neon-border relative flex h-[350px] lg:h-[420px] w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[2.2rem] border border-white/10 bg-[#0B0F19]/70 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:border-sky-400/60 hover:shadow-[0_20px_60px_rgba(37,99,235,0.35)]"
                     >
                       <img
                         src={item.img}
@@ -427,6 +431,12 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 </button>
               </div>
               <div className="mt-8 flex flex-col gap-3">
+                <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                    {theme === "light" ? "Daylight" : "Deep Space"} Theme
+                  </span>
+                  <ThemeToggle />
+                </div>
                 <button
                   type="button"
                   onClick={() => {

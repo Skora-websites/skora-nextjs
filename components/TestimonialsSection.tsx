@@ -33,8 +33,8 @@ export default function TestimonialsSection() {
       </div>
 
       <div className="marquee-track relative flex overflow-hidden py-4">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#05070E] to-transparent md:w-48" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#05070E] to-transparent md:w-48" />
+        <div className="edge-fade-l pointer-events-none absolute inset-y-0 left-0 z-10 w-20 md:w-48" />
+        <div className="edge-fade-r pointer-events-none absolute inset-y-0 right-0 z-10 w-20 md:w-48" />
 
         <div className="animate-scroll-marquee gap-6 px-3">
           {[...testimonials, ...testimonials].map((item, index) => (

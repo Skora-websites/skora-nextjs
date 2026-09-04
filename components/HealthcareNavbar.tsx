@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface HealthcareNavbarProps {
   onOpenConsultation?: (topic?: string) => void;
@@ -40,7 +41,7 @@ export default function HealthcareNavbar({ onOpenConsultation }: HealthcareNavba
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center p-3 sm:p-5 transition-all duration-300 pointer-events-none">
+    <header className="media-dark fixed top-0 left-0 right-0 z-50 flex items-center justify-center p-3 sm:p-5 transition-all duration-300 pointer-events-none">
       <div className={`w-full max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5 rounded-full border shadow-[0_10px_40px_rgba(2,20,12,0.6)] pointer-events-auto transition-all ${
         scrolled
           ? "bg-[#04120B]/90 border-emerald-500/30 backdrop-blur-xl"
@@ -119,6 +120,7 @@ export default function HealthcareNavbar({ onOpenConsultation }: HealthcareNavba
 
         {/* Right CTA Action Button */}
         <div className="hidden sm:flex items-center gap-3">
+          <ThemeToggle />
           <button
             onClick={() => onOpenConsultation?.("Doctor Growth Audit")}
             className="flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3 text-xs font-extrabold text-white shadow-[0_0_25px_rgba(52,211,153,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_35px_rgba(52,211,153,0.5)]"

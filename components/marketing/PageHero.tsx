@@ -136,7 +136,7 @@ export function PageHero({ icon: Icon, badge, title, description, ctaLabel, onCt
             alt={imageAlt}
             className="h-[400px] w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105 sm:h-[500px]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#05070E] via-[#05070E]/25 to-transparent" />
+          <div className="media-dark absolute inset-0 bg-gradient-to-t from-[#05070E] via-[#05070E]/25 to-transparent" />
         </motion.div>
       </div>
     </section>
@@ -153,7 +153,7 @@ interface CtaBannerProps {
 /** Liquid neon gradient CTA banner (shared by all sub-pages). */
 export function CtaBanner({ title, subtitle, buttonLabel = "Book Free Consultation", onCta }: CtaBannerProps) {
   return (
-    <div className="relative mt-24 overflow-hidden rounded-[3rem] border border-sky-500/25 bg-gradient-to-br from-[#0B1B45] via-[#0A2A66] to-[#062A4D] p-10 text-center shadow-[0_0_60px_rgba(37,99,235,0.25)] sm:p-16">
+    <div className="media-dark relative mt-24 overflow-hidden rounded-[3rem] border border-sky-500/25 bg-gradient-to-br from-[#0B1B45] via-[#0A2A66] to-[#062A4D] p-10 text-center shadow-[0_0_60px_rgba(37,99,235,0.25)] sm:p-16">
       {/* Liquid glow layers */}
       <motion.div
         aria-hidden="true"

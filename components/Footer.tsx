@@ -173,7 +173,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
   return (
     <footer
       ref={footerRef}
-      className="relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden selection:bg-[#2563EB] selection:text-white"
+      className="media-dark relative bg-[#05060A] text-white pt-24 pb-12 overflow-hidden selection:bg-[#2563EB] selection:text-white"
     >
       {/* Neon divider beam along the top edge */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-sky-400/80 to-transparent" />

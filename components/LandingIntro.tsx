@@ -216,7 +216,7 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
     >
       <div
         ref={curtainRef}
-        className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#03050B] p-6 text-center"
+        className="media-dark absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#03050B] p-6 text-center"
       >
         {/* Ambient deep-space bloom */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[750px] w-[750px] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-gradient-to-tr from-blue-600/30 via-sky-500/20 to-transparent blur-[160px]" />

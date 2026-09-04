@@ -177,7 +177,7 @@ export default function HeroScene() {
     <div
       ref={containerRef}
       aria-hidden="true"
-      className="absolute inset-0 pointer-events-none opacity-80 [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_78%)]"
+      className="hero-scene absolute inset-0 pointer-events-none opacity-80 [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_78%)]"
     />
   );
 }
