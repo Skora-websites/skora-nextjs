@@ -36,6 +36,7 @@ const TenantSchema = new Schema<ITenant>({
   },
   createdAt: { type: Date, default: Date.now }
 });
+TenantSchema.index({ hrAdminId: 1 }, { sparse: true });
 
 // 2. User
 export interface IUser extends Document {
@@ -50,27 +51,45 @@ export interface IUser extends Document {
   onboardingStatus: 'PENDING_UPLOAD' | 'PENDING_REVIEW' | 'REJECTED' | 'VERIFIED' | 'ESCALATED_SUPERADMIN';
   onboardingDeadline?: Date;
   baseSalary: number;
+  mustChangePassword?: boolean;
   createdAt: Date;
 }
 
 const UserSchema = new Schema<IUser>({
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  email: { type: String, required: true, lowercase: true, trim: true },
+  // SECURITY: password is never returned by default queries. Callers that
+  // need it must `.select('+password')` and must NOT return it to the client.
+  password: { type: String, required: true, select: false },
   role: { type: String, enum: ['SUPER_ADMIN', 'HR_ADMIN', 'MANAGER', 'EMPLOYEE'], required: true },
-  employeeCode: { type: String, sparse: true },
+  employeeCode: { type: String },
   department: { type: String, default: 'General' },
   reportingManagerId: { type: Schema.Types.ObjectId, ref: 'User' },
-  onboardingStatus: { 
-    type: String, 
-    enum: ['PENDING_UPLOAD', 'PENDING_REVIEW', 'REJECTED', 'VERIFIED', 'ESCALATED_SUPERADMIN'], 
-    default: 'PENDING_UPLOAD' 
+  onboardingStatus: {
+    type: String,
+    enum: ['PENDING_UPLOAD', 'PENDING_REVIEW', 'REJECTED', 'VERIFIED', 'ESCALATED_SUPERADMIN'],
+    default: 'PENDING_UPLOAD'
   },
   onboardingDeadline: { type: Date },
-  baseSalary: { type: Number, default: 50000 },
+  baseSalary: { type: Number, default: 0, min: 0 },
+  mustChangePassword: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
+// H1: email is unique per tenant (null tenantId = global SUPER_ADMIN).
+// Drop the old global unique index on `email` via migration script (see
+// scripts/test-schema-integrity.ts for the helper). Compound partial unique
+// keeps uniqueness inside each tenant and across global super admins.
+UserSchema.index(
+  { tenantId: 1, email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: 'string' } } }
+);
+UserSchema.index({ employeeCode: 1 }, { unique: true, partialFilterExpression: { employeeCode: { $type: 'string' } } });
+// M1: tenant-scoped query hot paths.
+UserSchema.index({ tenantId: 1, role: 1 });
+UserSchema.index({ tenantId: 1, onboardingStatus: 1 });
+UserSchema.index({ tenantId: 1, reportingManagerId: 1 });
+UserSchema.index({ reportingManagerId: 1 }, { sparse: true });
 
 // 3. User Document
 export interface IUserDocument extends Document {
@@ -90,7 +109,17 @@ const UserDocumentSchema = new Schema<IUserDocument>({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
   docType: { type: String, enum: ['AADHAAR', 'PAN', 'RESUME', 'CERTIFICATE'], required: true },
-  fileUrl: { type: String, required: true },
+  // M2: enforce the upload-path prefix at the schema layer. Direct DB writes
+  // and legacy rows that don't match are rejected. Use `tenants/<tid>/` so
+  // ownership is unambiguous.
+  fileUrl: {
+    type: String,
+    required: true,
+    validate: {
+      validator: (v: string) => /^tenants\/[a-f0-9]{24}\/(documents|onboarding)\//i.test(v),
+      message: 'fileUrl must be a server-issued storage path under tenants/<id>/...',
+    },
+  },
   fileName: { type: String, default: 'document.pdf' },
   uploadedAt: { type: Date, default: Date.now },
   status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' },
@@ -98,6 +127,8 @@ const UserDocumentSchema = new Schema<IUserDocument>({
   verifiedAt: { type: Date },
   verifiedBy: { type: Schema.Types.ObjectId, ref: 'User' }
 });
+UserDocumentSchema.index({ tenantId: 1, status: 1 });
+UserDocumentSchema.index({ userId: 1, uploadedAt: -1 });
 
 // 4. Attendance
 export interface IAttendance extends Document {
@@ -120,7 +151,7 @@ export interface IAttendance extends Document {
 const AttendanceSchema = new Schema<IAttendance>({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
-  date: { type: String, required: true },
+  date: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
   punchIn: { type: Date },
   punchOut: { type: Date },
   punchInLocation: { latitude: Number, longitude: Number, distanceMeters: Number },
@@ -128,11 +159,19 @@ const AttendanceSchema = new Schema<IAttendance>({
   status: { type: String, enum: ['PRESENT', 'LATE', 'HALF_DAY', 'ABSENT'], default: 'ABSENT' },
   regularizationStatus: { type: String, enum: ['NONE', 'PENDING', 'APPROVED', 'REJECTED'], default: 'NONE' },
   regularizationReason: { type: String },
-  escalationTargetRole: { type: String, enum: ['MANAGER', 'SUPER_ADMIN'], required: true },
-  overtimeHours: { type: Number, default: 0 },
+  // M6: default to MANAGER so legacy call sites that omit this still validate.
+  escalationTargetRole: { type: String, enum: ['MANAGER', 'SUPER_ADMIN'], required: true, default: 'MANAGER' },
+  overtimeHours: { type: Number, default: 0, min: 0 },
   overtimeStatus: { type: String, enum: ['NONE', 'PENDING', 'APPROVED', 'REJECTED'], default: 'NONE' },
-  effectiveHours: { type: Number, default: 0 }
+  effectiveHours: { type: Number, default: 0, min: 0 }
 });
+// H2: one row per (user, day). Punch-in code must catch dup-key and treat as
+// already-punched instead of crashing.
+AttendanceSchema.index({ userId: 1, date: 1 }, { unique: true });
+// M7: tenant-scoped hot paths.
+AttendanceSchema.index({ tenantId: 1, date: 1 });
+AttendanceSchema.index({ tenantId: 1, status: 1 });
+AttendanceSchema.index({ userId: 1, overtimeStatus: 1 });
 
 // 5. Leave Request
 export interface ILeaveRequest extends Document {
@@ -147,6 +186,7 @@ export interface ILeaveRequest extends Document {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   approverRole: 'MANAGER' | 'HR_ADMIN' | 'SUPER_ADMIN';
   approvedBy?: mongoose.Types.ObjectId;
+  approvedAt?: Date;
   createdAt: Date;
 }
 
@@ -154,16 +194,25 @@ const LeaveRequestSchema = new Schema<ILeaveRequest>({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
   leaveType: { type: String, enum: ['CASUAL', 'SICK', 'EARNED'], required: true },
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true },
+  startDate: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
+  endDate: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
   isHalfDay: { type: Boolean, default: false },
   halfDaySession: { type: String, enum: ['MORNING', 'AFTERNOON'] },
   reason: { type: String, required: true },
   status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' },
   approverRole: { type: String, enum: ['MANAGER', 'HR_ADMIN', 'SUPER_ADMIN'], required: true },
   approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  approvedAt: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
+// H3: prevent two open leaves for the same user+window. PENDING/APPROVED
+// rows are constrained; REJECTED rows are not (so a user can re-apply).
+LeaveRequestSchema.index(
+  { userId: 1, startDate: 1, endDate: 1 },
+  { unique: true, partialFilterExpression: { status: { $in: ['PENDING', 'APPROVED'] } } }
+);
+LeaveRequestSchema.index({ tenantId: 1, status: 1, startDate: -1 });
+LeaveRequestSchema.index({ userId: 1, status: 1 });
 
 // 6. Project & Task
 export interface IProject extends Document {
@@ -180,11 +229,14 @@ const ProjectSchema = new Schema<IProject>({
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
   name: { type: String, required: true },
   description: { type: String },
-  clientBudget: { type: Number, default: 0 },
+  // L2: budgets cannot be negative.
+  clientBudget: { type: Number, default: 0, min: 0 },
   managerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['PLANNING', 'ACTIVE', 'COMPLETED'], default: 'ACTIVE' },
   createdAt: { type: Date, default: Date.now }
 });
+ProjectSchema.index({ tenantId: 1, status: 1 });
+ProjectSchema.index({ managerId: 1 });
 
 export interface ITask extends Document {
   projectId: mongoose.Types.ObjectId;
@@ -206,11 +258,20 @@ const TaskSchema = new Schema<ITask>({
   description: { type: String },
   assigneeId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'], default: 'TODO' },
-  estimatedHours: { type: Number, default: 0 },
-  loggedHours: { type: Number, default: 0 },
+  estimatedHours: { type: Number, default: 0, min: 0 },
+  loggedHours: { type: Number, default: 0, min: 0 },
   timerActive: { type: Boolean, default: false },
   timerStartedAt: { type: Date }
 });
+// H4: compound hot paths.
+TaskSchema.index({ projectId: 1, assigneeId: 1 });
+TaskSchema.index({ assigneeId: 1, status: 1 });
+TaskSchema.index({ tenantId: 1, status: 1 });
+// M9: partial index helps the timer-sweep job find orphan running timers fast.
+TaskSchema.index(
+  { timerStartedAt: 1 },
+  { partialFilterExpression: { timerActive: true } }
+);
 
 // 7. Timesheet
 export interface ITimesheet extends Document {
@@ -221,7 +282,7 @@ export interface ITimesheet extends Document {
   date: string;
   hours: number;
   description?: string;
-  isLocked: boolean;
+  // M8: `status` is the only lock state. `isLocked` removed.
   status: 'SUBMITTED' | 'LOCKED_BY_MANAGER' | 'APPROVED_BY_HR';
 }
 
@@ -230,12 +291,18 @@ const TimesheetSchema = new Schema<ITimesheet>({
   projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
   taskId: { type: Schema.Types.ObjectId, ref: 'Task', required: true },
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
-  date: { type: String, required: true },
-  hours: { type: Number, required: true },
+  date: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
+  hours: { type: Number, required: true, min: 0, max: 24 },
   description: { type: String },
-  isLocked: { type: Boolean, default: false },
+  // M8: `status` is the single source of truth. `isLocked` is removed to
+  // prevent the two fields from drifting. Treat LOCKED_BY_MANAGER +
+  // APPROVED_BY_HR as locked reads.
   status: { type: String, enum: ['SUBMITTED', 'LOCKED_BY_MANAGER', 'APPROVED_BY_HR'], default: 'SUBMITTED' }
 });
+// M4: one log per (user, task, day). Manager HR approvals update the same row.
+TimesheetSchema.index({ userId: 1, taskId: 1, date: 1 }, { unique: true });
+TimesheetSchema.index({ tenantId: 1, status: 1, date: -1 });
+TimesheetSchema.index({ projectId: 1, date: 1 });
 
 // 8. Payroll
 export interface IPayroll extends Document {
@@ -250,21 +317,28 @@ export interface IPayroll extends Document {
   netSalary: number;
   status: 'DRAFT' | 'PROCESSED' | 'PAID';
   processedAt: Date;
+  // H6: markPayrollPaid sets this. Was being written without a schema field.
+  paidAt?: Date;
 }
 
 const PayrollSchema = new Schema<IPayroll>({
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  month: { type: Number, required: true },
-  year: { type: Number, required: true },
-  baseSalary: { type: Number, required: true },
-  overtimeHours: { type: Number, default: 0 },
-  overtimePayout: { type: Number, default: 0 },
-  deductions: { type: Number, default: 0 },
-  netSalary: { type: Number, required: true },
+  month: { type: Number, required: true, min: 1, max: 12 },
+  year: { type: Number, required: true, min: 2000, max: 2100 },
+  // L1: align with User.baseSalary default (was 50000 magic number, now 0).
+  baseSalary: { type: Number, required: true, min: 0 },
+  overtimeHours: { type: Number, default: 0, min: 0 },
+  overtimePayout: { type: Number, default: 0, min: 0 },
+  deductions: { type: Number, default: 0, min: 0 },
+  netSalary: { type: Number, required: true, min: 0 },
   status: { type: String, enum: ['DRAFT', 'PROCESSED', 'PAID'], default: 'DRAFT' },
-  processedAt: { type: Date, default: Date.now }
+  processedAt: { type: Date, default: Date.now },
+  paidAt: { type: Date }
 });
+// F-19: ensure one payroll per (tenant, user, month, year) — prevents dup on retry
+PayrollSchema.index({ tenantId: 1, userId: 1, month: 1, year: 1 }, { unique: true });
+PayrollSchema.index({ tenantId: 1, status: 1, year: -1, month: -1 });
 
 // 9. Isolated Settings Schemas
 export interface ISuperAdminSettings extends Document {
@@ -357,3 +431,31 @@ export const SuperAdminSettings = getModel<ISuperAdminSettings>('SuperAdminSetti
 export const HRAdminSettings = getModel<IHRAdminSettings>('HRAdminSettings', HRAdminSettingsSchema);
 export const ManagerSettings = getModel<IManagerSettings>('ManagerSettings', ManagerSettingsSchema);
 export const EmployeeSettings = getModel<IEmployeeSettings>('EmployeeSettings', EmployeeSettingsSchema);
+
+// 10. Audit Log
+export interface IAuditLog extends Document {
+  tenantId?: mongoose.Types.ObjectId;
+  actorId: string;
+  actorEmail: string;
+  actorRole: string;
+  action: string;
+  args: unknown[];
+  result: string;
+  durationMs: number;
+  createdAt: Date;
+}
+
+const AuditLogSchema = new Schema<IAuditLog>({
+  tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant' },
+  actorId: { type: String, required: true },
+  actorEmail: { type: String, required: true },
+  actorRole: { type: String, required: true },
+  action: { type: String, required: true, index: true },
+  args: { type: [Schema.Types.Mixed], default: [] },
+  result: { type: String, required: true },
+  durationMs: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now, index: true }
+});
+AuditLogSchema.index({ actorId: 1, createdAt: -1 });
+
+export const AuditLog = getModel<IAuditLog>('AuditLog', AuditLogSchema);

@@ -33,6 +33,11 @@ import {
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getInitials } from "@/lib/utils";
+import {
+  listMyNotifications,
+  markNotificationRead,
+  markAllMyNotificationsRead,
+} from "@/lib/actions/hrms-actions";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -58,19 +63,25 @@ export function Navbar({ onMenuClick, title }: NavbarProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifLoading, setNotifLoading] = useState(false);
 
-  // Fetch notifications
+  // Fetch notifications (server action; no /api route needed).
   useEffect(() => {
     if (!user?.id) return;
     const fetchNotifs = async () => {
       setNotifLoading(true);
       try {
-        const res = await fetch(`/api/hrm/v2/notifications?userId=${user.id}&limitCount=5`);
-        if (res.ok) {
-          const data = await res.json();
-          const items = data.data || [];
-          setNotifications(items.slice(0, 5));
-          setUnreadCount(items.filter((n: any) => !n.isRead).length);
-        }
+        const items = await listMyNotifications(5);
+        const safe = (items || []).map((n: any) => ({
+          id: String(n.id),
+          title: String(n.title || ""),
+          body: String(n.body || ""),
+          type: String(n.type || "general"),
+          isRead: Boolean(n.isRead),
+          createdAt: n.createdAt?.toDate ? n.createdAt.toDate().toISOString() : String(n.createdAt || new Date().toISOString()),
+          referenceId: n.referenceId,
+          referenceType: n.referenceType,
+        }));
+        setNotifications(safe);
+        setUnreadCount(safe.filter((n) => !n.isRead).length);
       } catch (err) {
         console.error("Failed to fetch notifications:", err);
       } finally {
@@ -85,7 +96,7 @@ export function Navbar({ onMenuClick, title }: NavbarProps) {
 
   const handleMarkAsRead = async (notifId: string) => {
     try {
-      await fetch(`/api/hrm/v2/notifications?id=${notifId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      await markNotificationRead(notifId);
       setNotifications((prev) =>
         prev.map((n) => (n.id === notifId ? { ...n, isRead: true } : n))
       );
@@ -97,11 +108,7 @@ export function Navbar({ onMenuClick, title }: NavbarProps) {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await fetch(`/api/hrm/v2/notifications`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.id, markAll: true }),
-      });
+      await markAllMyNotificationsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (err) {

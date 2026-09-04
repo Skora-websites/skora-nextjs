@@ -99,10 +99,14 @@ export async function signup(
 
     // 4. Determine role:
     //    - Designated super admin emails always get super_admin
-    //    - First user ever becomes super_admin
+    //    - First user ever becomes super_admin only if env opt-in
     //    - Everyone else becomes employee
     const existingUserCount = await usersService.count();
-    const role = isSuperAdminEmail(email) || existingUserCount === 0 ? "super_admin" : "employee";
+    const isFirstUser = existingUserCount === 0;
+    const allowBootstrap = process.env.REGISTER_BOOTSTRAP_SUPERADMIN === "1";
+    const role = isSuperAdminEmail(email) || (isFirstUser && allowBootstrap)
+      ? "super_admin"
+      : "employee";
 
     // 5. Create user profile in Firestore
     await usersService.createWithId(decoded.uid, {
@@ -238,7 +242,7 @@ export async function signInWithProvider(_provider: "google" | "github") {
   // After the popup, the ID token is sent to the session API.
   // This server action is kept for backward compatibility.
   throw new Error(
-    "Use client-side OAuth flow instead. See signInWithGoogle in actions/auth-oauth."
+    "Use client-side OAuth flow instead. See signInWithGoogle in lib/auth-oauth."
   );
 }
 
@@ -257,11 +261,20 @@ export async function createSessionFromIdToken(idToken: string): Promise<void> {
     const isSuperAdmin = isSuperAdminEmail(userEmail);
 
     if (!existing) {
+      // SECURITY: only the first user becomes super_admin when the env opt-in
+      // is set. Otherwise first-user OAuth sign-in gets "employee".
+      const total = await usersService.count();
+      const allowBootstrap = process.env.REGISTER_BOOTSTRAP_SUPERADMIN === "1";
+      const newRole = isSuperAdmin
+        ? ("super_admin" as const)
+        : total === 0 && allowBootstrap
+        ? ("super_admin" as const)
+        : ("employee" as const);
       await usersService.createWithId(decoded.uid, {
         name: decoded.name || decoded.email || "User",
         email: decoded.email || undefined,
         image: decoded.picture || undefined,
-        role: isSuperAdmin ? ("super_admin" as const) : ("employee" as const),
+        role: newRole,
         status: "active" as const,
       });
     } else {

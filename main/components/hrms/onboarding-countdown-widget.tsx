@@ -1,19 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Clock, ShieldAlert, Upload, CheckCircle2, FileText } from 'lucide-react';
-import { uploadOnboardingDocument } from '@/lib/actions/hrms-actions';
+import { useState, useEffect, useRef } from 'react';
+import { Clock, ShieldAlert, Upload, CheckCircle2, FileText, X } from 'lucide-react';
+import { attachOnboardingDocument } from '@/lib/actions/hrms-actions';
 
 interface OnboardingCountdownWidgetProps {
   user: any;
+}
+
+// Client-side size check is for UX only. The server re-validates everything.
+const MAX_BYTES = 5 * 1024 * 1024;
+const ACCEPT_ATTR = '.pdf,.jpg,.jpeg,.png,.webp,.docx,application/pdf,image/jpeg,image/png,image/webp,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+interface PendingFile {
+  file: File;
+  preview: string | null;
 }
 
 export function OnboardingCountdownWidget({ user }: OnboardingCountdownWidgetProps) {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [docType, setDocType] = useState('AADHAAR');
-  const [fileName, setFileName] = useState('');
-  const [msg, setMsg] = useState('');
+  const [files, setFiles] = useState<PendingFile[]>([]);
+  const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isPendingUpload = user.onboardingStatus === 'PENDING_UPLOAD';
   const isPendingReview = user.onboardingStatus === 'PENDING_REVIEW';
@@ -23,12 +33,10 @@ export function OnboardingCountdownWidget({ user }: OnboardingCountdownWidgetPro
 
   useEffect(() => {
     if (!user.onboardingDeadline) return;
-
     const interval = setInterval(() => {
       const target = new Date(user.onboardingDeadline).getTime();
       const now = new Date().getTime();
       const diff = target - now;
-
       if (diff <= 0) {
         setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
         clearInterval(interval);
@@ -39,26 +47,83 @@ export function OnboardingCountdownWidget({ user }: OnboardingCountdownWidgetPro
         setTimeLeft({ hours, minutes, seconds });
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [user.onboardingDeadline]);
 
+  // Clean up object URLs for previews.
+  useEffect(() => {
+    return () => {
+      for (const p of files) if (p.preview) URL.revokeObjectURL(p.preview);
+    };
+  }, [files]);
+
+  const handleFiles = (list: FileList | null) => {
+    if (!list) return;
+    const next: PendingFile[] = [];
+    for (const f of Array.from(list)) {
+      // UX guard; server is the final authority.
+      if (f.size > MAX_BYTES) {
+        setMsg({ kind: 'err', text: `${f.name} exceeds 5MB limit.` });
+        continue;
+      }
+      const isImage = f.type.startsWith('image/');
+      next.push({ file: f, preview: isImage ? URL.createObjectURL(f) : null });
+    }
+    setFiles(next);
+  };
+
+  const removeFile = (idx: number) => {
+    setFiles((prev) => {
+      const removed = prev[idx];
+      if (removed?.preview) URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fileName) return;
-
+    if (files.length === 0) {
+      setMsg({ kind: 'err', text: 'Pick at least one file.' });
+      return;
+    }
     setLoading(true);
-    try {
-      const mockUrl = `https://firebasestorage.googleapis.com/v0/b/skora-hrms.appspot.com/o/docs%2F${user._id}_${docType}.pdf?alt=media`;
-      const res = await uploadOnboardingDocument(user._id, docType, fileName, mockUrl);
-      if (res.success) {
-        setMsg(res.message);
-        setTimeout(() => window.location.reload(), 1500);
+    setMsg(null);
+
+    const successes: string[] = [];
+    const failures: string[] = [];
+
+    for (const { file } of files) {
+      try {
+        // Step 1: upload bytes to /api/uploads. Server returns a server-issued
+        // `path` (NOT a public URL). F-12: the path is the only thing the
+        // server trusts when we attach the DB record.
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('docType', docType);
+        fd.append('userId', user._id);
+        const upRes = await fetch('/api/uploads', { method: 'POST', body: fd });
+        if (!upRes.ok) {
+          const err = await upRes.json().catch(() => ({ error: 'Upload failed' }));
+          throw new Error(err.error || 'Upload failed');
+        }
+        const up = await upRes.json();
+
+        // Step 2: persist record. `up.path` must round-trip the server's
+        // tenant/user namespace check.
+        const res = await attachOnboardingDocument(user._id, docType, up.path, up.fileName, up.mime);
+        if (res?.success) successes.push(`${docType} (${Math.round(up.size / 1024)} KB)`);
+      } catch (err: any) {
+        failures.push(`${file.name}: ${err.message}`);
       }
-    } catch (err: any) {
-      setMsg(err.message);
-    } finally {
-      setLoading(false);
+    }
+
+    setLoading(false);
+
+    if (successes.length) {
+      setMsg({ kind: 'ok', text: `${successes.join(', ')} uploaded. Awaiting HR review.` });
+      setTimeout(() => window.location.reload(), 1500);
+    } else if (failures.length) {
+      setMsg({ kind: 'err', text: failures.join('; ') });
     }
   };
 
@@ -109,7 +174,7 @@ export function OnboardingCountdownWidget({ user }: OnboardingCountdownWidgetPro
 
           <h3 className="text-lg font-bold text-white">Compliance & Onboarding Verification</h3>
           <p className="text-xs text-slate-300 max-w-xl">
-            {isRejected 
+            {isRejected
               ? 'Your compliance documents were rejected by HR. Please re-upload corrected documents before the 48-hour deadline expires.'
               : isEscalated
               ? 'Your document re-upload deadline of 48 hours passed and has been escalated to the Super Admin for compliance audit.'
@@ -118,7 +183,6 @@ export function OnboardingCountdownWidget({ user }: OnboardingCountdownWidgetPro
           </p>
         </div>
 
-        {/* Live Countdown Timer if Rejected */}
         {(isRejected || isEscalated) && timeLeft && (
           <div className="bg-slate-950/80 border border-rose-500/30 rounded-xl p-4 text-center min-w-[200px]">
             <p className="text-[10px] uppercase tracking-wider text-rose-400 font-bold mb-1">Time Remaining</p>
@@ -130,7 +194,6 @@ export function OnboardingCountdownWidget({ user }: OnboardingCountdownWidgetPro
         )}
       </div>
 
-      {/* Upload Form if Pending or Rejected */}
       {!isPendingReview && !isVerified && (
         <form onSubmit={handleUploadSubmit} className="mt-6 pt-6 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div>
@@ -147,32 +210,54 @@ export function OnboardingCountdownWidget({ user }: OnboardingCountdownWidgetPro
             </select>
           </div>
 
-          <div>
-            <label className="block text-slate-300 font-medium mb-1">Document File Name</label>
+          <div className="md:col-span-2">
+            <label className="block text-slate-300 font-medium mb-1">Document File(s) (PDF/JPG/PNG/WEBP/DOCX, max 5MB each)</label>
             <input
-              type="text"
-              placeholder="e.g. alex_mercer_aadhaar.pdf"
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-              required
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPT_ATTR}
+              onChange={(e) => handleFiles(e.target.files)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 file:mr-3 file:bg-blue-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1.5 file:text-xs"
             />
+            {files.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {files.map((p, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-[11px] text-slate-300">
+                    {p.preview ? (
+                      <img src={p.preview} alt="" className="h-5 w-5 object-cover rounded" />
+                    ) : (
+                      <FileText className="h-4 w-4 text-slate-500" />
+                    )}
+                    <span className="truncate flex-1">{p.file.name}</span>
+                    <span className="text-slate-500">{Math.round(p.file.size / 1024)} KB</span>
+                    <button type="button" onClick={() => removeFile(idx)} className="text-slate-500 hover:text-rose-400">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
-          <div className="flex items-end">
+          <div className="md:col-span-3 flex justify-end">
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition-all"
+              disabled={loading || files.length === 0}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition-all disabled:opacity-50"
             >
               <Upload className="w-4 h-4" />
-              <span>{loading ? 'Uploading to Firebase...' : 'Upload to Firebase Storage'}</span>
+              <span>{loading ? 'Uploading...' : `Upload ${files.length} file${files.length === 1 ? '' : 's'}`}</span>
             </button>
           </div>
         </form>
       )}
 
-      {msg && <p className="mt-3 text-xs text-blue-400 font-medium">{msg}</p>}
+      {msg && (
+        <p className={`mt-3 text-xs font-medium ${msg.kind === 'ok' ? 'text-emerald-400' : 'text-rose-400'}`}>
+          {msg.text}
+        </p>
+      )}
     </div>
   );
 }

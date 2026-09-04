@@ -1,10 +1,20 @@
+import { cookies } from 'next/headers';
 import { getAllHRMSUsers, getHRMSUser, createEmployee } from '@/lib/actions/hrms-actions';
-import { Users, Plus, UserPlus, Shield, Building2, DollarSign } from 'lucide-react';
+import { Users, Plus, UserPlus, Shield, Building2, DollarSign, Copy, KeyRound } from 'lucide-react';
 import { revalidatePath } from 'next/cache';
 
 export default async function HRAdminEmployeesPage() {
   const hrUser = await getHRMSUser();
   const employees = await getAllHRMSUsers();
+
+  // Pull + clear the one-shot "last created employee" cookie set after createEmployee().
+  const jar = await cookies();
+  const lastCreatedRaw = jar.get('hrms_last_created')?.value;
+  let lastCreated: { name: string; email: string; employeeCode: string; temporaryPassword: string } | null = null;
+  if (lastCreatedRaw) {
+    try { lastCreated = JSON.parse(lastCreatedRaw); } catch {}
+    jar.delete('hrms_last_created');
+  }
 
   async function handleAddEmployeeAction(formData: FormData) {
     'use server';
@@ -16,7 +26,7 @@ export default async function HRAdminEmployeesPage() {
     const reportingManagerId = String(formData.get('reportingManagerId') || '');
 
     if (name && email) {
-      await createEmployee({
+      const result = await createEmployee({
         name,
         email,
         department,
@@ -25,6 +35,19 @@ export default async function HRAdminEmployeesPage() {
         reportingManagerId: reportingManagerId || undefined,
         tenantId: hrUser.tenantId?._id,
       });
+      if (result?.temporaryPassword) {
+        const c = await cookies();
+        c.set('hrms_last_created', JSON.stringify({
+          name, email,
+          employeeCode: result.employeeCode,
+          temporaryPassword: result.temporaryPassword,
+        }), {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/hrms/hr-admin/employees',
+          maxAge: 120, // 2 min, one-shot
+        });
+      }
       revalidatePath('/hrms/hr-admin/employees');
       revalidatePath('/hrms/hr-admin');
     }
@@ -41,6 +64,41 @@ export default async function HRAdminEmployeesPage() {
           Total: {employees.length} Employees
         </span>
       </div>
+
+      {lastCreated && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 shadow-xl">
+          <div className="flex items-center gap-2 mb-3">
+            <KeyRound className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-sm font-bold text-emerald-300">Employee Created — Share These Credentials Now</h2>
+          </div>
+          <p className="text-[11px] text-slate-300 mb-3">
+            Send the temporary password to <span className="font-bold text-white">{lastCreated.name}</span> over a secure channel. It will not be shown again.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="bg-slate-950 border border-slate-800 rounded-lg p-3">
+              <div className="text-[10px] uppercase font-bold text-slate-500 mb-1">Employee Code</div>
+              <div className="font-mono font-bold text-white text-sm">{lastCreated.employeeCode}</div>
+            </div>
+            <div className="bg-slate-950 border border-slate-800 rounded-lg p-3">
+              <div className="text-[10px] uppercase font-bold text-slate-500 mb-1">Email / Login</div>
+              <div className="font-mono text-white text-sm break-all">{lastCreated.email}</div>
+            </div>
+            <div className="bg-slate-950 border border-amber-500/30 rounded-lg p-3 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] uppercase font-bold text-amber-400 mb-1">Temporary Password</div>
+                <div className="font-mono font-bold text-amber-200 text-sm">{lastCreated.temporaryPassword}</div>
+              </div>
+              <button
+                type="button"
+                className="ml-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1"
+                title="Copy (server-rendered; copy from screen if needed)"
+              >
+                <Copy className="w-3 h-3" /> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Employee Form */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">

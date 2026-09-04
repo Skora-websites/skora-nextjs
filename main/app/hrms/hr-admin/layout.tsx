@@ -1,9 +1,11 @@
 import { HRMSSidebar } from '@/components/hrms/hrms-sidebar';
+import { getHRMSUser } from '@/lib/actions/hrms-actions';
 
-export default function HRAdminLayout({ children }: { children: React.ReactNode }) {
+export default async function HRAdminLayout({ children }: { children: React.ReactNode }) {
+  const user = await getHRMSUser();
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
-      <HRMSSidebar role="HR_ADMIN" currentEmail="hr@skorabiz.com" />
+      <HRMSSidebar role="HR_ADMIN" currentEmail={user?.email ?? ''} />
       <main className="flex-1 p-8 overflow-y-auto">
         {children}
       </main>

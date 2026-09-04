@@ -1,4 +1,4 @@
-import { getHRMSUser, submitLeaveRequest, logTimesheet } from '@/lib/actions/hrms-actions';
+import { getHRMSUser, submitLeaveRequest, logTimesheet, getTodayAttendance, getLeaveBalance, getTasks } from '@/lib/actions/hrms-actions';
 import { GeofencedPunchWidget } from '@/components/hrms/geofenced-punch-widget';
 import { OnboardingCountdownWidget } from '@/components/hrms/onboarding-countdown-widget';
 import { CheckSquare, Clock, HeartHandshake, DollarSign, Play, Pause, Calendar, Send } from 'lucide-react';
@@ -7,6 +7,9 @@ import { revalidatePath } from 'next/cache';
 
 export default async function EmployeeDashboardPage() {
   const empUser = await getHRMSUser();
+  if (!empUser) return null;
+  const todayAttendance = await getTodayAttendance(empUser.id);
+  const [leaveBalance, myTasks] = await Promise.all([getLeaveBalance(empUser.id), getTasks()]);
 
   async function handleLeaveSubmitAction(formData: FormData) {
     'use server';
@@ -19,7 +22,7 @@ export default async function EmployeeDashboardPage() {
 
     if (empUser && startDate && endDate) {
       await submitLeaveRequest({
-        userId: empUser._id,
+        userId: empUser.id,
         leaveType,
         startDate,
         endDate,
@@ -87,11 +90,34 @@ export default async function EmployeeDashboardPage() {
       {/* 1. TOP DYNAMIC BANNER: Onboarding Verification & 48h Countdown Timer */}
       <OnboardingCountdownWidget user={empUser} />
 
+      {/* 1b. Leave Balance Strip */}
+      <div className="grid grid-cols-3 gap-3 text-xs">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
+          <span className="text-[10px] text-slate-400 uppercase font-bold">Sick Leave</span>
+          <p className="text-base font-extrabold text-emerald-400 mt-0.5 font-mono">
+            {leaveBalance.sick.total - leaveBalance.sick.used} / {leaveBalance.sick.total}
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
+          <span className="text-[10px] text-slate-400 uppercase font-bold">Casual Leave</span>
+          <p className="text-base font-extrabold text-blue-400 mt-0.5 font-mono">
+            {leaveBalance.casual.total - leaveBalance.casual.used} / {leaveBalance.casual.total}
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
+          <span className="text-[10px] text-slate-400 uppercase font-bold">Earned Leave</span>
+          <p className="text-base font-extrabold text-purple-400 mt-0.5 font-mono">
+            {leaveBalance.earned.total - leaveBalance.earned.used} / {leaveBalance.earned.total}
+          </p>
+        </div>
+      </div>
+
       {/* 2. ACTION HUB: Geofenced Punch In / Out (100m Radius) */}
       <GeofencedPunchWidget
-        userId={empUser._id}
+        userId={empUser.id}
         userName={empUser.name}
         userRole={empUser.role}
+        todayAttendance={todayAttendance}
       />
 
       {/* Grid Layout */}
@@ -108,7 +134,7 @@ export default async function EmployeeDashboardPage() {
                 <p className="text-xs text-slate-400">Start task timer or manually log task hours</p>
               </div>
             </div>
-            <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded font-mono font-semibold">2 Assigned Tasks</span>
+            <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded font-mono font-semibold">{myTasks.length} Assigned Tasks</span>
           </div>
 
           <div className="space-y-3 text-xs">

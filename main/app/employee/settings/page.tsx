@@ -5,7 +5,8 @@ import { revalidatePath } from 'next/cache';
 
 export default async function EmployeeSettingsPage() {
   const user = await getHRMSUser();
-  const settings = await getEmployeeSettingsData(user._id);
+  if (!user) return null;
+  const settings = await getEmployeeSettingsData(user.id);
 
   async function handleSaveSettings(formData: FormData) {
     'use server';
@@ -14,7 +15,7 @@ export default async function EmployeeSettingsPage() {
     const contactRelation = String(formData.get('contactRelation') || '');
     const themePreference = (formData.get('themePreference') as any) || 'SYSTEM';
 
-    await updateEmployeeSettingsData(user._id, {
+    await updateEmployeeSettingsData(user.id, {
       emergencyContact: { name: contactName, phone: contactPhone, relation: contactRelation },
       themePreference
     });

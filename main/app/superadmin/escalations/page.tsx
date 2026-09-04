@@ -1,15 +1,28 @@
 export const dynamic = 'force-dynamic';
-import { getSuperAdminEscalations } from '@/lib/actions/hrms-actions';
+import { getSuperAdminEscalations, getOnboardingDocumentsForUser } from '@/lib/actions/hrms-actions';
 import { ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { OnboardingDocPreview } from '@/components/hrms/onboarding-doc-preview';
+import { DownloadAllButton } from '@/components/hrms/download-all-button';
 
 export default async function SuperAdminEscalationsPage() {
-  const { users: escalatedUsers } = await getSuperAdminEscalations();
+  const { users: escalatedUsers, documents } = await getSuperAdminEscalations();
+
+  // Bucket documents by userId for fast lookup.
+  const docsByUser = new Map<string, typeof documents>();
+  for (const d of documents as any[]) {
+    const k = String(d.userId);
+    if (!docsByUser.has(k)) docsByUser.set(k, []);
+    docsByUser.get(k)!.push(d);
+  }
 
   return (
     <div className="space-y-6">
       <div className="border-b border-slate-800 pb-4">
         <h1 className="text-xl font-bold text-white">Onboarding Document Escalations Queue</h1>
-        <p className="text-xs text-slate-400">Employees who failed to re-upload corrected compliance documents within the 48-hour deadline</p>
+        <p className="text-xs text-slate-400">
+          Employees who failed to re-upload corrected compliance documents within the 48-hour deadline.
+          Super Admin can review the originally submitted documents before final disposition.
+        </p>
       </div>
 
       <div className="bg-slate-900 border border-rose-900/40 rounded-2xl p-6 shadow-xl space-y-4">
@@ -20,19 +33,45 @@ export default async function SuperAdminEscalationsPage() {
             <p>All employee re-upload timers are within compliance parameters.</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {escalatedUsers.map((u: any) => (
-              <div key={u._id} className="bg-slate-950 border border-rose-800/60 p-4 rounded-xl flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-bold text-white text-sm">{u.name}</p>
-                  <p className="text-slate-400 font-mono">Email: {u.email} | Dept: {u.department}</p>
+          escalatedUsers.map((u: any) => {
+            const docs = (docsByUser.get(String(u._id)) || []) as Array<{
+              _id: string;
+              docType: string;
+              fileName: string;
+              fileUrl: string;
+              status: 'PENDING' | 'APPROVED' | 'REJECTED';
+              uploadedAt: string;
+              rejectionReason?: string;
+            }>;
+            return (
+              <div key={u._id} className="bg-slate-950 border border-rose-800/60 p-4 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-white text-sm">{u.name}</p>
+                    <p className="text-slate-400 font-mono text-[11px]">
+                      Email: {u.email} | Dept: {u.department} | Tenant: {u.tenantId?.name || '—'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {docs.length > 0 && <DownloadAllButton userId={u._id} />}
+                    <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold px-3 py-1 rounded font-mono text-[11px]">
+                      48H DEADLINE EXPIRED
+                    </span>
+                  </div>
                 </div>
-                <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold px-3 py-1 rounded font-mono">
-                  48H DEADLINE EXPIRED
-                </span>
+
+                {docs.length === 0 ? (
+                  <p className="text-[11px] text-slate-500 italic">No documents on file.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {docs.map((d) => (
+                      <OnboardingDocPreview key={d._id} doc={d} />
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })
         )}
       </div>
     </div>

@@ -91,52 +91,11 @@ export function createFirestoreService<T extends { id?: string }>(collectionName
         query = query.limit(options.limitCount);
       }
 
-      try {
-        const snap = await query.get();
-        return snap.docs.map((d) => serializeDoc<T>(d.id, d.data()));
-      } catch (err) {
-        // Firestore requires composite indexes for queries combining `where` + `orderBy`.
-        // If the query fails (e.g., missing index), fall back to fetching all and sorting
-        // in-memory so the app doesn't crash on first load.
-        if (
-          err instanceof Error &&
-          err.message.includes("requires an index")
-        ) {
-          console.warn(
-            `[Firestore] Missing composite index for "${collectionName}". ` +
-            `Falling back to in-memory sort.`
-          );
-          // Retry without ordering
-          let fallbackQuery: FirebaseFirestore.Query = coll();
-          if (options.where) {
-            for (const clause of options.where) {
-              fallbackQuery = fallbackQuery.where(clause.field, clause.op, clause.value);
-            }
-          }
-          if (options.limitCount) {
-            fallbackQuery = fallbackQuery.limit(options.limitCount);
-          }
-          const snap = await fallbackQuery.get();
-          const docs = snap.docs.map((d) => serializeDoc<T>(d.id, d.data()));
-
-          // In-memory sort
-          if (options.orderByField) {
-            const dir = options.orderByDirection === "desc" ? -1 : 1;
-            docs.sort((a: any, b: any) => {
-              const va = a[options.orderByField!];
-              const vb = b[options.orderByField!];
-              if (va == null && vb == null) return 0;
-              if (va == null) return 1;
-              if (vb == null) return -1;
-              if (typeof va === "string") return va.localeCompare(vb) * dir;
-              return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
-            });
-          }
-
-          return docs;
-        }
-        throw err;
-      }
+      // M10: fail loud on missing composite indexes. The previous in-memory
+      // sort fallback silently downgraded prod queries and hid index drift.
+      // Use `firebase deploy --only firestore:indexes` after adding the index.
+      const snap = await query.get();
+      return snap.docs.map((d) => serializeDoc<T>(d.id, d.data()));
     },
 
     /** Find a single document by a field value */

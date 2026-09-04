@@ -42,9 +42,11 @@ export default function ForgotPasswordPage() {
         }),
       });
 
+      // SECURITY: do not leak resetLink to the client. Always treat the
+      // response as a generic "we've sent an email if it exists". Even on
+      // errors, show the same success message to prevent user enumeration.
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to send password reset email");
+        // swallow — UI shows success regardless
       }
 
       setSent(true);

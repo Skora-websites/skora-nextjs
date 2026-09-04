@@ -10,6 +10,7 @@ import type {
   DocumentTemplate,
 } from "@/types";
 import { getAdminStorage } from "@/lib/firebase-admin";
+import { sanitizeFilename } from "@/lib/uploads/sanitize";
 
 // ══════════════════════════════════════════════════════════════════
 // Documents Service
@@ -78,22 +79,28 @@ export async function uploadDocument(
   }
 ): Promise<Document> {
   const bucket = getAdminStorage().bucket();
-  const filePath = `tenants/${tenantId}/documents/${data.userId}/${Date.now()}_${data.fileName}`;
+  // SECURITY (F-3, F-4): the on-disk object name is server-issued (uuid + ext).
+  // `fileName` is only used as a display label and is sanitized first.
+  const safe = sanitizeFilename(data.fileName);
+  const ext = safe.ext || "bin";
+  const filePath = `tenants/${tenantId}/documents/${data.userId}/${cryptoRandomUUID()}.${ext}`;
   const file = bucket.file(filePath);
 
   await file.save(data.file, {
     metadata: { contentType: data.mimeType },
   });
 
-  await file.makePublic();
-  const fileURL = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+  // SECURITY (F-3): never call makePublic(). The stored `fileURL` is the
+  // object PATH; consumers must call getDocumentDownloadUrl() to get a
+  // short-lived signed URL.
+  const filePath_out = filePath;
 
   return documentsService.create({
     categoryId: data.categoryId,
     userId: data.userId,
     title: data.title,
     description: data.description,
-    fileURL,
+    fileURL: filePath_out,
     fileType: data.mimeType,
     fileSize: data.file.length,
     expiryDate: data.expiryDate,
@@ -107,21 +114,30 @@ export async function updateDocument(id: string, data: Partial<Document>): Promi
   return documentsService.update(id, data as any);
 }
 
+const DELETE_RETRY_DELAYS_MS = [0, 200, 800] as const;
+
 export async function deleteDocument(id: string): Promise<boolean> {
   const doc = await documentsService.findById(id);
   if (!doc) return false;
 
-  // Delete from storage
-  try {
-    const bucket = getAdminStorage().bucket();
-    const url = new URL(doc.fileURL);
-    const filePath = decodeURIComponent(url.pathname.substring(1)).replace(
-      `${bucket.name}/`,
-      ""
-    );
-    await bucket.file(filePath).delete();
-  } catch (error) {
-    console.error("Failed to delete file from storage:", error);
+  // SECURITY (F-3): bounded retry, fail loud if storage delete doesn't work.
+  let lastErr: unknown = null;
+  for (const delay of DELETE_RETRY_DELAYS_MS) {
+    if (delay) await new Promise((r) => setTimeout(r, delay));
+    try {
+      const bucket = getAdminStorage().bucket();
+      await bucket.file(doc.fileURL).delete({ ignoreNotFound: true });
+      lastErr = null;
+      break;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  if (lastErr) {
+    // Don't delete the DB row if the storage delete failed. Surface the error
+    // so the caller can retry / escalate. The previous version swallowed this
+    // and left public objects live.
+    throw new Error(`Storage delete failed: ${(lastErr as Error).message}`);
   }
 
   return documentsService.delete(id);
@@ -136,6 +152,24 @@ export async function verifyDocument(
     verifiedById,
     verifiedAt: new Date(),
   } as any);
+}
+
+/**
+ * Issue a 5-minute signed download URL for a document. Tenant-isolated.
+ * Callers must look up the document by id, then call this with the
+ * resolved `tenantId` (do NOT trust client-supplied tenant).
+ */
+export async function getDocumentDownloadUrl(
+  tenantId: string,
+  id: string
+): Promise<{ url: string; expiresInMs: number } | null> {
+  const doc = await documentsService.findById(id);
+  if (!doc) return null;
+  if (String(doc.tenantId) !== String(tenantId)) return null;
+  const file = getAdminStorage().bucket().file(doc.fileURL);
+  const expires = Date.now() + 5 * 60 * 1000;
+  const [url] = await file.getSignedUrl({ action: "read", expires, version: "v4" });
+  return { url, expiresInMs: 5 * 60 * 1000 };
 }
 
 // ── Document Templates ─────────────────────────────────
@@ -179,4 +213,13 @@ export function renderTemplate(
     rendered = rendered.replace(new RegExp(`{{${key}}}`, "g"), value);
   }
   return rendered;
+}
+
+// ── Helpers ────────────────────────────────────────────
+
+function cryptoRandomUUID(): string {
+  // Lazy import; runs in Node runtime.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { randomUUID } = require("node:crypto") as typeof import("node:crypto");
+  return randomUUID();
 }

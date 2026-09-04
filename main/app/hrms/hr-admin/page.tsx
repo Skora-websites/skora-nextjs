@@ -1,4 +1,4 @@
-import { getHRMSUser, runMonthlyPayroll, createProject } from '@/lib/actions/hrms-actions';
+import { getHRMSUser, runMonthlyPayroll, createProject, getTodayAttendance, getAllHRMSUsers, getPendingOnboardingUsers } from '@/lib/actions/hrms-actions';
 import { GeofencedPunchWidget } from '@/components/hrms/geofenced-punch-widget';
 import { Users, FileCheck, DollarSign, FolderKanban, Plus, CheckCircle2, Shield } from 'lucide-react';
 import Link from 'next/link';
@@ -6,12 +6,16 @@ import { revalidatePath } from 'next/cache';
 
 export default async function HRAdminDashboardPage() {
   const hrUser = await getHRMSUser();
+  if (!hrUser) return null;
+  const todayAttendance = await getTodayAttendance(hrUser.id);
+  const [pendingOnboarding, allUsers] = await Promise.all([getPendingOnboardingUsers(), getAllHRMSUsers()]);
+  const managers = allUsers.filter((u: any) => u.role === 'MANAGER');
 
   async function handleRunPayrollAction() {
     'use server';
     const month = new Date().getMonth() + 1;
     const year = new Date().getFullYear();
-    await runMonthlyPayroll(month, year);
+    await runMonthlyPayroll({ month, year });
     revalidatePath('/hrms/hr-admin');
   }
 
@@ -22,11 +26,12 @@ export default async function HRAdminDashboardPage() {
     const description = String(formData.get('description') || '');
     
     if (name && hrUser) {
+      const formManager = String(formData.get('managerId') || hrUser.id);
       await createProject({
         name,
         clientBudget,
         description,
-        managerId: hrUser._id,
+        managerId: formManager,
         tenantId: hrUser.tenantId?._id
       });
       revalidatePath('/hrms/hr-admin');
@@ -55,9 +60,10 @@ export default async function HRAdminDashboardPage() {
         </div>
 
         <GeofencedPunchWidget
-          userId={hrUser._id}
+          userId={hrUser.id}
           userName={hrUser.name}
           userRole={hrUser.role}
+          todayAttendance={todayAttendance}
         />
       </div>
 
@@ -83,18 +89,24 @@ export default async function HRAdminDashboardPage() {
             </Link>
           </div>
 
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 text-xs">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-              <span className="font-semibold text-white">Alex Mercer (Software Engineer)</span>
-              <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono">PENDING_REVIEW</span>
+          {pendingOnboarding.length === 0 ? (
+            <p className="text-xs text-slate-500 italic bg-slate-950 border border-slate-800 rounded-xl p-4">No pending onboarding documents. Queue is clear.</p>
+          ) : (
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 text-xs">
+              {pendingOnboarding.slice(0, 1).map((u: any) => (
+                <div key={u._id} className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                  <span className="font-semibold text-white">{u.name} <span className="text-slate-400 font-normal">({u.email})</span></span>
+                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono">{u.onboardingStatus}</span>
+                </div>
+              ))}
+              <p className="text-slate-400">{pendingOnboarding.length} user(s) pending review</p>
+              <div className="flex items-center space-x-2 pt-1">
+                <Link href="/hrms/hr-admin/onboarding" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-center py-1.5 rounded">
+                  Review & Generate EMP Code
+                </Link>
+              </div>
             </div>
-            <p className="text-slate-400">Uploaded: Aadhaar & PAN Card (Firebase Storage)</p>
-            <div className="flex items-center space-x-2 pt-1">
-              <Link href="/hrms/hr-admin/onboarding" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-center py-1.5 rounded">
-                Review & Generate EMP Code
-              </Link>
-            </div>
-          </div>
+          )}
         </section>
 
         {/* 3. Project & Budget Setup */}
@@ -134,12 +146,17 @@ export default async function HRAdminDashboardPage() {
 
               <div>
                 <label className="block text-slate-300 font-medium mb-1">Assigned Manager</label>
-                <input
-                  type="text"
-                  disabled
-                  value="Marcus Brody (Manager)"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-400 font-medium"
-                />
+                <select name="managerId" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                  {managers.length === 0 ? (
+                    <option value={hrUser.id}>No managers in tenant — assigning to you</option>
+                  ) : (
+                    managers.map((m: any) => (
+                      <option key={m.id ?? m._id} value={m.id ?? m._id}>
+                        {m.name} ({m.employeeCode ?? m.email})
+                      </option>
+                    ))
+                  )}
+                </select>
               </div>
             </div>
 

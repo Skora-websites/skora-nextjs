@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 export default async function ManagerSettingsPage() {
   const user = await getHRMSUser();
-  const settings = await getManagerSettingsData(user._id);
+  const settings = await getManagerSettingsData(user.id);
 
   async function handleSaveSettings(formData: FormData) {
     'use server';
@@ -13,7 +13,7 @@ export default async function ManagerSettingsPage() {
     const autoTaskAssignment = formData.get('autoTaskAssignment') === 'on';
     const metricLayout = (formData.get('metricLayout') as any) || 'KANBAN_FIRST';
 
-    await updateManagerSettingsData(user._id, {
+    await updateManagerSettingsData(user.id, {
       overtimeNotificationsEnabled,
       autoTaskAssignment,
       metricLayout

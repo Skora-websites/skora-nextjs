@@ -2,13 +2,28 @@
 
 import { useState } from 'react';
 import { handleGeofencedPunchIn, handleGeofencedPunchOut, requestAttendanceRegularization } from '@/lib/actions/hrms-actions';
-import { MapPin, Clock, AlertTriangle, CheckCircle2, Navigation, Coffee } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle2, Navigation, Coffee } from 'lucide-react';
+
+interface PunchLocation {
+  latitude: number;
+  longitude: number;
+  distanceMeters: number;
+}
+
+interface TodayAttendanceLite {
+  punchIn?: string | Date | null;
+  punchOut?: string | Date | null;
+  punchInLocation?: PunchLocation;
+  punchOutLocation?: PunchLocation;
+  status?: 'PRESENT' | 'LATE' | 'HALF_DAY' | 'ABSENT';
+  overtimeHours?: number;
+}
 
 interface GeofencedPunchWidgetProps {
   userId: string;
   userName: string;
   userRole: string;
-  todayAttendance?: any;
+  todayAttendance?: TodayAttendanceLite | null;
 }
 
 export function GeofencedPunchWidget({ userId, userName, userRole, todayAttendance }: GeofencedPunchWidgetProps) {
@@ -201,7 +216,7 @@ export function GeofencedPunchWidget({ userId, userName, userRole, todayAttendan
               LATE ARRIVAL (&gt;10:00 AM)
             </span>
           )}
-          {todayAttendance.overtimeHours > 0 && (
+          {(todayAttendance.overtimeHours ?? 0) > 0 && (
             <span className="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-2.5 py-1 rounded-md font-sans text-[11px] font-semibold">
               PENDING OVERTIME ({todayAttendance.overtimeHours} hrs past 7PM)
             </span>

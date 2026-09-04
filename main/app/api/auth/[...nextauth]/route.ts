@@ -1,22 +1,24 @@
-import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 
 /**
- * Firebase Auth is used instead of NextAuth.
- * Session management is handled via:
- *   GET  /api/auth/session  — get current session
- *   POST /api/auth/session  — create session from ID token
- *   DEL  /api/auth/session  — destroy session
+ * Compatibility stub for the legacy NextAuth mount point.
  *
- * This catch-all route redirects to the new session API.
+ * Real auth lives in /api/auth/session. A few older clients may still hit
+ * the NextAuth path; route them to the live endpoint via 308 (permanent
+ * redirect) so HTTP method + body are preserved.
  */
-export async function GET() {
-  redirect("/api/auth/session");
+function redirectToSession(req: Request) {
+  return NextResponse.redirect(new URL("/api/auth/session", req.url), 308);
 }
 
-export async function POST() {
-  redirect("/api/auth/session");
+export async function GET(req: Request) {
+  return redirectToSession(req);
 }
 
-export async function DELETE() {
-  redirect("/api/auth/session");
+export async function POST(req: Request) {
+  return redirectToSession(req);
+}
+
+export async function DELETE(req: Request) {
+  return redirectToSession(req);
 }

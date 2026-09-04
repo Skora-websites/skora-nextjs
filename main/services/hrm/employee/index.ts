@@ -1,5 +1,11 @@
 import "server-only";
 import { getAdminAuth } from "@/lib/firebase-admin";
+import { logger } from "@/lib/logger";
+
+function isDualStackEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_ENABLE_FIRESTORE_HR === "true";
+}
+
 import {
   hrmUsersService,
   employeeJobsService,
@@ -150,7 +156,14 @@ export async function createEmployee(
     emergencyPhone?: string;
   }
 ): Promise<HRMUser> {
-  // 1. Create Firebase Auth user
+  // 1. Create Firebase Auth user (only when dual-stack is enabled)
+  if (!isDualStackEnabled()) {
+    throw new Error(
+      "Firestore+FirebaseAuth employee creation is disabled. " +
+      "Set NEXT_PUBLIC_ENABLE_FIRESTORE_HR=true to enable the legacy dual-creation flow."
+    );
+  }
+  logger.warn("[employee] dual-stack creation enabled — provisioning Firebase Auth", { email: data.email });
   const authUser = await getAdminAuth().createUser({
     email: data.email,
     password: data.password,
@@ -220,10 +233,12 @@ export async function updateEmployee(
 }
 
 export async function deleteEmployee(id: string): Promise<boolean> {
-  try {
-    await getAdminAuth().deleteUser(id);
-  } catch (error) {
-    console.error("Failed to delete Firebase Auth user:", error);
+  if (isDualStackEnabled()) {
+    try {
+      await getAdminAuth().deleteUser(id);
+    } catch (error) {
+      console.error("Failed to delete Firebase Auth user:", error);
+    }
   }
   return hrmUsersService.delete(id);
 }

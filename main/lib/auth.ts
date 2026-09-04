@@ -1,12 +1,60 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { getAdminAuth } from "./firebase-admin";
 import { usersService } from "./firestore";
 import { normalizeRole } from "./rbac";
 import { logger } from "./logger";
 import { connectDB } from "./db/db";
 import { User } from "./db/models";
+
+// ── Signed HRMS session helpers ────────────────────────
+// SESSION_SECRET is used to sign the hrms_session_* cookie payload so that
+// attackers cannot forge an arbitrary role. In production, set this env var.
+// In dev/test, fall back to a derived key so the app still boots.
+function getSessionSecret(): string {
+  const explicit = process.env.SESSION_SECRET;
+  if (explicit && explicit.length >= 16) return explicit;
+  // SECURITY: never derive the cookie-signing key from another secret. In
+  // production we fail closed so a missing/short SESSION_SECRET cannot silently
+  // fall back to a guessable value.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SESSION_SECRET must be set (>=16 chars) in production. " +
+        "Refusing to sign cookies with a derived fallback."
+    );
+  }
+  // Dev/test only — derive from a stable, clearly-dev marker.
+  const seed = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || "dev-only-hrms-session-secret";
+  return crypto.createHash("sha256").update(String(seed)).digest("hex");
+}
+
+export function signHrmsPayload(payload: object): string {
+  const json = JSON.stringify(payload);
+  const body = Buffer.from(json, "utf-8").toString("base64url");
+  const sig = crypto.createHmac("sha256", getSessionSecret()).update(body).digest("base64url");
+  return `${body}.${sig}`;
+}
+
+function verifyHrmsPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [body, sig] = parts;
+  const expected = crypto.createHmac("sha256", getSessionSecret()).update(body).digest("base64url");
+  // Constant-time comparison to avoid timing leaks.
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try {
+    const json = Buffer.from(body, "base64url").toString("utf-8");
+    const parsed = JSON.parse(json);
+    if (parsed && typeof parsed === "object") return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  return null;
+}
 
 // ── Types ───────────────────────────────────────────────
 
@@ -33,21 +81,45 @@ export async function auth(): Promise<Session> {
   if (!cookie) return { user: null };
 
   if (cookie.startsWith("hrms_session_")) {
-    try {
-      const raw = Buffer.from(cookie.replace("hrms_session_", ""), "base64").toString("utf-8");
-      const parsed = JSON.parse(raw);
+    const token = cookie.replace("hrms_session_", "");
+    const parsed = verifyHrmsPayload(token);
+    if (parsed) {
+      const id = (parsed.id as string) || (parsed._id as string) || "hrms-user";
+      const email = (parsed.email as string) || null;
+      // SECURITY: never trust the role baked into the signed payload.
+      // Always re-validate against MongoDB so role changes / deactivations
+      // take effect immediately, even before the cookie expires.
+      let role = (parsed.role as string) || "employee";
+      let active = true;
+      try {
+        const conn = await connectDB();
+        if (conn) {
+          const mongoUser = await User.findOne({ email: String(email || "").toLowerCase().trim() })
+            .select("role loginStatus")
+            .maxTimeMS(3000);
+          if (mongoUser) {
+            role = mongoUser.role || role;
+            active = mongoUser.loginStatus !== false;
+          }
+        }
+      } catch {
+        // Mongo unreachable: fall through with signed-payload role, but
+        // sign-then-immediately-revalidate callers (requireSession) will
+        // still see the HMAC role. This is the same trade-off as the
+        // Firebase path below.
+      }
+      if (!active) return { user: null };
       return {
         user: {
-          id: parsed.id || parsed._id || "hrms-user",
-          name: parsed.name || null,
-          email: parsed.email || null,
-          image: parsed.image || null,
-          role: parsed.role || "employee",
+          id,
+          name: (parsed.name as string) || null,
+          email,
+          image: (parsed.image as string) || null,
+          role,
         },
       };
-    } catch (e) {
-      // Fallback
     }
+    // Reject unsigned/legacy cookies silently
   }
 
   try {

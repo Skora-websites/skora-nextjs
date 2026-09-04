@@ -50,6 +50,14 @@ export function conflict(message: string) {
   return NextResponse.json({ error: message }, { status: STATUS.CONFLICT });
 }
 
+export function tooManyRequests(message: string) {
+  return NextResponse.json({ error: message }, { status: STATUS.TOO_MANY });
+}
+
+export function internalError(message: string) {
+  return NextResponse.json({ error: message }, { status: STATUS.INTERNAL });
+}
+
 // ── Error handler wrapper ────────────────────────────
 
 // Route handler type compatible with Next.js App Router

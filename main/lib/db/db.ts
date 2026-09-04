@@ -37,7 +37,8 @@ export async function connectDB() {
   } catch (e) {
     cached.promise = null;
     cached.conn = null;
-    console.warn('[db] MongoDB connection failed:', (e as Error).message);
+    console.error('[db] MongoDB connection failed:', (e as Error).message);
+    throw new Error(`MongoDB unavailable: ${(e as Error).message}`);
   }
 
   return cached.conn;

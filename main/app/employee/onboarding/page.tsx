@@ -4,6 +4,7 @@ import { OnboardingCountdownWidget } from '@/components/hrms/onboarding-countdow
 
 export default async function EmployeeOnboardingPage() {
   const empUser = await getHRMSUser();
+  if (!empUser) return null;
 
   return (
     <div className="space-y-6 max-w-4xl">
