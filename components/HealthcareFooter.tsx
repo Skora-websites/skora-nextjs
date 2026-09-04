@@ -148,7 +148,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
         body: JSON.stringify({
           fullName: name,
           email: email,
-          phone: "+91 92173 75835",
+          phone: "+44 07756083473",
           company: "Healthcare Practice",
           service: selectedInterest || "Healthcare IT & EHR Systems",
           budget: selectedBudget,
@@ -326,7 +326,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
                       {/* Section 3: Budget Pills */}
                       <div className="space-y-3">
                         <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 block">
-                          Your budget in INR (₹)*
+                          Your budget in GBP (£)*
                         </label>
                         <div className="flex flex-wrap gap-2.5">
                           {budgets.map((b) => {
@@ -468,7 +468,7 @@ export default function HealthcareFooter({ onOpenConsultation }: HealthcareFoote
               <motion.a
                 whileHover={{ y: -4, scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                href={`https://wa.me/${(siteContent.phone || "+919217375835").replace(/[^0-9]/g, "")}`}
+                href={`https://wa.me/${(siteContent.phone || "+4407756083473").replace(/[^0-9]/g, "").replace(/^440/, "44")}`}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="WhatsApp"

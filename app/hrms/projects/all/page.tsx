@@ -201,7 +201,7 @@ export default function AllProjectsPage() {
       sortable: true,
       cell: (project: ProjectData) => (
         <span className="text-sm text-muted font-medium">
-          {(project as any).budget ? `₹${(project as any).budget.toLocaleString()}` : "—"}
+          {(project as any).budget ? `£${(project as any).budget.toLocaleString()}` : "—"}
         </span>
       ),
     },
@@ -313,7 +313,7 @@ export default function AllProjectsPage() {
                 <FormInput label="Project Name" icon={<FolderKanban className="h-4 w-4" />} value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} placeholder="e.g. Website Redesign" required />
                 <FormSelect label="Priority" icon={<AlertCircle className="h-4 w-4" />} value={projectForm.priority} onChange={(e) => setProjectForm({ ...projectForm, priority: e.target.value as Project["priority"] })} options={PRIORITY_OPTIONS} />
                 <FormSelect label="Status" icon={<Clock className="h-4 w-4" />} value={projectForm.status} onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value as Project["status"] })} options={STATUS_OPTIONS} />
-                <FormInput label="Budget (₹)" icon={<span className="text-xs font-bold">₹</span>} type="number" value={projectForm.budget} onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })} placeholder="e.g. 500000" />
+                <FormInput label="Budget (£)" icon={<span className="text-xs font-bold">£</span>} type="number" value={projectForm.budget} onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })} placeholder="e.g. 500000" />
                 <FormInput label="Start Date" icon={<CalendarDays className="h-4 w-4" />} type="date" value={projectForm.startDate} onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })} />
                 <FormInput label="End Date" icon={<CalendarDays className="h-4 w-4" />} type="date" value={projectForm.endDate} onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })} />
               </FormSection>

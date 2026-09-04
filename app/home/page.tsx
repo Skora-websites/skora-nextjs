@@ -299,7 +299,7 @@ const valueProps = [
 const pricingPackages = [
   {
     name: "Audit & Consultation",
-    price: "₹0",
+    price: "£0",
     period: "/month",
     sub: "Growing teams and sales professionals.",
     extra: "Basic business consultation & digital audit.",
@@ -313,7 +313,7 @@ const pricingPackages = [
   },
   {
     name: "Starter Growth",
-    price: "₹15,000",
+    price: "£15,000",
     period: "/month",
     sub: "Growing teams and sales professionals.",
     extra: "Basic business consultation & local visibility.",
@@ -328,7 +328,7 @@ const pricingPackages = [
   },
   {
     name: "Standard Growth",
-    price: "₹25,000",
+    price: "£25,000",
     period: "/month",
     sub: "Ideal for growing teams seeking market dominance.",
     extra: "Complete web development & active lead generation.",
@@ -343,7 +343,7 @@ const pricingPackages = [
   },
   {
     name: "Enterprise Suite",
-    price: "₹49,000",
+    price: "£49,000",
     period: "/month",
     sub: "Growing teams and ambitious brands.",
     extra: "Full custom development & dedicated marketing team.",

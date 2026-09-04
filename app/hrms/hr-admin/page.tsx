@@ -470,11 +470,11 @@ export default function HrAdminDashboardPage() {
           </div>
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 text-center">
             <span className="text-[10px] text-slate-500 block">Deductions</span>
-            <span className="text-lg font-extrabold text-red-600 dark:text-red-400">₹0</span>
+            <span className="text-lg font-extrabold text-red-600 dark:text-red-400">£0</span>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5 text-center">
             <span className="text-[10px] text-slate-500 block">Net Pay</span>
-            <span className="text-lg font-extrabold text-primary">₹0</span>
+            <span className="text-lg font-extrabold text-primary">£0</span>
           </div>
         </div>
         <EmptyState message="Run your first payroll to see calculations here. Payroll fetches locked timesheets and pays out approved overtime." />

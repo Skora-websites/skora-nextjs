@@ -5,7 +5,7 @@ import { Settings, Save, CheckCircle2, AlertCircle, Lock, Mail, Phone, MapPin, S
 import { motion } from "framer-motion";
 
 export default function AdminSettingsPage() {
-  const [phone, setPhone] = useState("+91 92173 75835");
+  const [phone, setPhone] = useState("+44 07756083473");
   const [email, setEmail] = useState("info@skorainfotech.com");
   const [healthcareEmail, setHealthcareEmail] = useState("info@skorainfotech.com");
   const [address, setAddress] = useState("5 market square, High street, Uxbridge, UB8 1LH London");

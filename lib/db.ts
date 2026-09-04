@@ -55,7 +55,7 @@ const defaultPackages: PackageItem[] = [
   {
     id: "pkg-1",
     name: "Basic Growth Plan",
-    price: "₹5,000",
+    price: "£5,000",
     period: "+ GST / month",
     popular: false,
     subtitle: "Essential local visibility for solo doctors & clinics",
@@ -70,7 +70,7 @@ const defaultPackages: PackageItem[] = [
   {
     id: "pkg-2",
     name: "Standard Growth Plan",
-    price: "₹15,000",
+    price: "£15,000",
     period: "+ GST / month",
     popular: true,
     subtitle: "Our most popular package for growing medical practices",
@@ -86,7 +86,7 @@ const defaultPackages: PackageItem[] = [
   {
     id: "pkg-3",
     name: "Premium Growth Plan",
-    price: "₹32,000",
+    price: "£32,000",
     period: "+ GST / month",
     popular: false,
     subtitle: "Complete digital dominance for multi-specialty centers",
@@ -114,7 +114,7 @@ const defaultServices: ServiceItem[] = [
 ];
 
 const defaultSiteContent: SiteContent = {
-  phone: "+91 92173 75835",
+  phone: "+44 07756083473",
   email: "info@skorainfotech.com",
   healthcareEmail: "info@skorainfotech.com",
   address: "5 market square, High street, Uxbridge, UB8 1LH London",
@@ -316,6 +316,17 @@ export async function deleteLead(id: string): Promise<boolean> {
   return true;
 }
 
+function normalizeSiteContent(content: SiteContent): SiteContent {
+  return {
+    ...content,
+    phone: content.phone === "+91 92173 75835" ? defaultSiteContent.phone : content.phone,
+    packages: content.packages.map((pkg) => ({
+      ...pkg,
+      price: pkg.price.replace(/₹/g, "£"),
+    })),
+  };
+}
+
 export async function getSiteContent(): Promise<SiteContent> {
   if (clientPromise) {
     try {
@@ -326,10 +337,10 @@ export async function getSiteContent(): Promise<SiteContent> {
         const content = await collection.findOne({ key: "global_site_content" });
         if (content) {
           const { _id, ...cleanContent } = content as any;
-          return {
+          return normalizeSiteContent({
             ...defaultSiteContent,
             ...cleanContent,
-          };
+          });
         }
         // Auto-seed MongoDB with initial site content if collection is empty
         const localDb = ensureLocalDbFile();
@@ -339,7 +350,7 @@ export async function getSiteContent(): Promise<SiteContent> {
           { $set: { key: "global_site_content", ...seedContent } },
           { upsert: true }
         );
-        return seedContent;
+        return normalizeSiteContent(seedContent);
       }
     } catch (e) {
       console.error("MongoDB error, loading local content:", e);
@@ -356,7 +367,7 @@ export async function getSiteContent(): Promise<SiteContent> {
   if (!db.content.textOverrides) {
     db.content.textOverrides = {};
   }
-  return db.content;
+  return normalizeSiteContent(db.content);
 }
 
 export async function updateSiteContent(partialContent: Partial<SiteContent>): Promise<SiteContent> {

@@ -422,7 +422,7 @@ const doctorServices = [
     title: "Meta Ads & Google PPC",
     shortDesc: "Targeted lead generation campaigns driving instant patient inquiries for specific treatments.",
     image: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=600&q=80",
-    stats: "₹180 / Verified Lead",
+    stats: "£180 / Verified Lead",
     features: ["High Intent Ads", "Conversion Tracking", "WhatsApp Leads"],
     fullStrategy: "Run hyper-targeted ad campaigns for specific procedures (e.g., Dental Implants, IVF, Hair Transplant, Orthopedics). Inquiries land directly on your clinic WhatsApp or CRM.",
     deliverables: ["Ad Creative & Copywriting", "WhatsApp & Call Tracking", "A/B Testing Campaigns", "Daily Lead Dashboard"],
@@ -476,7 +476,7 @@ const doctorServices = [
 const packages = [
   {
     name: "Basic Growth Plan",
-    price: "₹5,000",
+    price: "£5,000",
     period: "+ GST / month",
     popular: false,
     subtitle: "Essential local visibility for solo doctors & clinics",
@@ -490,7 +490,7 @@ const packages = [
   },
   {
     name: "Standard Growth Plan",
-    price: "₹15,000",
+    price: "£15,000",
     period: "+ GST / month",
     popular: true,
     subtitle: "Our most popular package for growing medical practices",
@@ -505,7 +505,7 @@ const packages = [
   },
   {
     name: "Premium Growth Plan",
-    price: "₹32,000",
+    price: "£32,000",
     period: "+ GST / month",
     popular: false,
     subtitle: "Complete digital dominance for multi-specialty centers",
@@ -692,7 +692,7 @@ export default function HealthcarePortal() {
   const trustPills = [
     { icon: "🏆", label: "350+ Clinics Partnered" },
     { icon: "📍", label: "#1 Google Maps Ranking" },
-    { icon: "⚡", label: "₹180 / Verified Lead" },
+    { icon: "⚡", label: "£180 / Verified Lead" },
     { icon: "🔒", label: "HIPAA Compliant" },
   ];
 

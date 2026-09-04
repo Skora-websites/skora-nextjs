@@ -169,9 +169,9 @@ export default function HrAdminPayrollPage() {
         "Designation",
         "Period Start",
         "Period End",
-        "Gross Pay (INR)",
-        "Deductions (INR)",
-        "Net Pay (INR)",
+        "Gross Pay (GBP)",
+        "Deductions (GBP)",
+        "Net Pay (GBP)",
         "Status",
       ];
 
@@ -234,9 +234,9 @@ export default function HrAdminPayrollPage() {
       "Period Start",
       "Period End",
       "Employees Count",
-      "Total Gross (INR)",
-      "Total Deductions (INR)",
-      "Total Net (INR)",
+      "Total Gross (GBP)",
+      "Total Deductions (GBP)",
+      "Total Net (GBP)",
       "Status",
       "Processed At",
     ];
@@ -323,7 +323,7 @@ export default function HrAdminPayrollPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 text-slate-900 dark:text-white backdrop-blur-md shadow-sm">
           <DollarSign className="h-5 w-5 text-primary mb-2" />
-          <p className="text-2xl font-extrabold">₹{totalPayroll.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold">£{totalPayroll.toLocaleString()}</p>
           <p className="text-[11px] text-slate-500 mt-0.5">Total Payroll Disbursed</p>
         </div>
         <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 text-slate-900 dark:text-white backdrop-blur-md shadow-sm">
@@ -390,13 +390,13 @@ export default function HrAdminPayrollPage() {
                     </td>
                     <td className="py-3.5 pr-4 font-semibold">{run.totalEmployees || 0} Staff</td>
                     <td className="py-3.5 pr-4 text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
-                      ₹{(run.totalGross || 0).toLocaleString()}
+                      £{(run.totalGross || 0).toLocaleString()}
                     </td>
                     <td className="py-3.5 pr-4 text-red-600 dark:text-red-400 font-semibold font-mono">
-                      -₹{(run.totalDeductions || 0).toLocaleString()}
+                      -£{(run.totalDeductions || 0).toLocaleString()}
                     </td>
                     <td className="py-3.5 pr-4 font-extrabold text-primary font-mono text-sm">
-                      ₹{(run.totalNet || 0).toLocaleString()}
+                      £{(run.totalNet || 0).toLocaleString()}
                     </td>
                     <td className="py-3.5 pr-4">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
@@ -564,13 +564,13 @@ export default function HrAdminPayrollPage() {
                         <div>
                           <span className="text-slate-500 text-[10px] block">Gross / Deduct</span>
                           <span className="font-mono text-slate-700 dark:text-slate-300">
-                            ₹{(t.grossPay || 0).toLocaleString()} / -₹{(t.totalDeductions || 0).toLocaleString()}
+                            £{(t.grossPay || 0).toLocaleString()} / -£{(t.totalDeductions || 0).toLocaleString()}
                           </span>
                         </div>
                         <div>
                           <span className="text-slate-500 text-[10px] block">Net Salary</span>
                           <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-                            ₹{(t.netPay || 0).toLocaleString()}
+                            £{(t.netPay || 0).toLocaleString()}
                           </span>
                         </div>
                       </div>

@@ -98,7 +98,7 @@ export async function createTenant(data: {
     { key: "timezone", value: "UTC", category: "general", type: "string" },
     { key: "date_format", value: "YYYY-MM-DD", category: "general", type: "string" },
     { key: "time_format", value: "24h", category: "general", type: "string" },
-    { key: "currency", value: "USD", category: "general", type: "string" },
+    { key: "currency", value: "GBP", category: "general", type: "string" },
     { key: "attendance_type", value: "manual", category: "attendance", type: "string" },
     { key: "ai_enabled", value: "false", category: "modules", type: "boolean" },
     { key: "payroll_enabled", value: "false", category: "modules", type: "boolean" },

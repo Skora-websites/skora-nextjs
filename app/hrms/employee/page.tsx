@@ -316,7 +316,7 @@ export default function EmployeeDashboardPage() {
                     <span className="font-bold text-slate-900 dark:text-white">{p.month} {p.year}</span>
                     <span className="block text-[10px] text-slate-500">Net Pay</span>
                   </div>
-                  <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">₹{p.netPay.toLocaleString()}</span>
+                  <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">£{p.netPay.toLocaleString()}</span>
                 </div>
               ))}
             </div>

@@ -22,7 +22,7 @@ export default function ContactModal({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
-  const [budget, setBudget] = useState("₹25,000 - ₹50,000");
+  const [budget, setBudget] = useState("£25,000 - £50,000");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,7 +84,7 @@ export default function ContactModal({
         body: JSON.stringify({
           fullName,
           email,
-          phone: "+91 92173 75835",
+          phone: "+44 07756083473",
           company,
           service: selectedServices.join(", ") || "General Strategy Consultation",
           budget,
@@ -243,10 +243,10 @@ export default function ContactModal({
                     onChange={(e) => setBudget(e.target.value)}
                     className="w-full bg-[#F8F9F6] border border-[#E2E8F0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#0B1310] appearance-none focus:outline-none focus:border-[#2563EB] focus:bg-white transition-colors cursor-pointer font-medium"
                   >
-                    <option value="< ₹25,000">Under ₹25,000</option>
-                    <option value="₹25,000 - ₹50,000">₹25,000 - ₹50,000</option>
-                    <option value="₹50,000 - ₹1,50,000">₹50,000 - ₹1,50,000</option>
-                    <option value="₹1,50,000+">₹1,50,000+ Enterprise</option>
+                    <option value="< £25,000">Under £25,000</option>
+                    <option value="£25,000 - £50,000">£25,000 - £50,000</option>
+                    <option value="£50,000 - £1,50,000">£50,000 - £1,50,000</option>
+                    <option value="£1,50,000+">£1,50,000+ Enterprise</option>
                   </select>
                 </div>
               </div>

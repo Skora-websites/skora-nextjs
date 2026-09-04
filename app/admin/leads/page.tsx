@@ -227,7 +227,7 @@ export default function AdminLeadsPage() {
 
                     <td className="p-4 sm:p-5">
                       <div className="text-[#0B1310] font-bold">{lead.service}</div>
-                      <div className="text-[11px] font-mono text-[#2563EB] font-bold">₹ {lead.budget || "N/A"}</div>
+                      <div className="text-[11px] font-mono text-[#2563EB] font-bold">£ {lead.budget || "N/A"}</div>
                     </td>
 
                     <td className="p-4 sm:p-5">
@@ -328,7 +328,7 @@ export default function AdminLeadsPage() {
 
                 <div className="p-3.5 rounded-2xl bg-[#F4F6F1] border border-[#E1E6DF] space-y-1">
                   <span className="text-slate-500 uppercase text-[10px] font-bold">Estimated Budget</span>
-                  <p className="text-[#2563EB] font-bold">₹ {selectedLead.budget || "N/A"}</p>
+                  <p className="text-[#2563EB] font-bold">£ {selectedLead.budget || "N/A"}</p>
                 </div>
               </div>
 

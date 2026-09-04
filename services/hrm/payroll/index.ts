@@ -175,7 +175,7 @@ export async function processPayroll(
         description: "Default standard monthly payroll cycle for all company employees",
         payFrequency: "monthly",
         payDay: 30,
-        currency: "INR",
+        currency: "GBP",
         isActive: true,
         tenantId,
       } as any);

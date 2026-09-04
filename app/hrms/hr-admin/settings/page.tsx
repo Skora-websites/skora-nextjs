@@ -136,7 +136,7 @@ export default function HrAdminSettingsPage() {
               </div>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5">
-              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Professional Tax (₹/month)</label>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Professional Tax (£/month)</label>
               <input type="number" value={professionalTax} onChange={(e) => setProfessionalTax(Number(e.target.value))} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 px-3 py-2 text-sm focus:outline-none focus:border-primary" />
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-black/30 border border-gray-100 dark:border-white/5">

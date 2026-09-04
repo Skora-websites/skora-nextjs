@@ -146,7 +146,7 @@ export default function AdminContentPage() {
           </div>
           <div>
             <h2 className="text-lg font-black uppercase text-[#0B1310]">HEALTHCARE CLINIC PACKAGES &amp; AMOUNTS</h2>
-            <p className="text-xs text-slate-500 font-medium">Edit pricing amounts (in ₹ INR), package titles, and deliverables.</p>
+            <p className="text-xs text-slate-500 font-medium">Edit pricing amounts (in £ GBP), package titles, and deliverables.</p>
           </div>
         </div>
 
@@ -184,7 +184,7 @@ export default function AdminContentPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Amount (₹)</label>
+                    <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Amount (£)</label>
                     <input
                       type="text"
                       value={pkg.price}

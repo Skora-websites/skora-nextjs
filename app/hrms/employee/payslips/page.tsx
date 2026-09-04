@@ -47,17 +47,17 @@ export default function EmployeePayslipsPage() {
       `-----------------------------------------------------`,
       `EARNINGS:`,
       ...Object.entries(p.earnings || { "Basic Salary": Math.round(p.grossPay * 0.6), "Allowances": Math.round(p.grossPay * 0.4) }).map(
-        ([k, v]) => `  ${k.padEnd(30)}: INR ${v.toLocaleString()}`
+        ([k, v]) => `  ${k.padEnd(30)}: GBP ${v.toLocaleString()}`
       ),
-      `TOTAL GROSS PAY                : INR ${p.grossPay.toLocaleString()}`,
+      `TOTAL GROSS PAY                : GBP ${p.grossPay.toLocaleString()}`,
       `-----------------------------------------------------`,
       `DEDUCTIONS:`,
       ...Object.entries(p.deductionsDetail || { "Provident Fund (PF)": Math.round(p.deductions * 0.7), "Income Tax (TDS)": Math.round(p.deductions * 0.3) }).map(
-        ([k, v]) => `  ${k.padEnd(30)}: INR ${v.toLocaleString()}`
+        ([k, v]) => `  ${k.padEnd(30)}: GBP ${v.toLocaleString()}`
       ),
-      `TOTAL DEDUCTIONS               : INR ${p.deductions.toLocaleString()}`,
+      `TOTAL DEDUCTIONS               : GBP ${p.deductions.toLocaleString()}`,
       `-----------------------------------------------------`,
-      `NET SALARY PAID                : INR ${p.netPay.toLocaleString()}`,
+      `NET SALARY PAID                : GBP ${p.netPay.toLocaleString()}`,
       `=====================================================`,
     ];
 
@@ -90,17 +90,17 @@ export default function EmployeePayslipsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 text-center text-slate-900 dark:text-white backdrop-blur-md shadow-sm">
           <DollarSign className="h-5 w-5 text-emerald-500 mx-auto mb-2" />
-          <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">₹{totalEarnings.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">£{totalEarnings.toLocaleString()}</p>
           <p className="text-[10px] text-slate-500 mt-0.5">Total Gross Earnings</p>
         </div>
         <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 text-center text-slate-900 dark:text-white backdrop-blur-md shadow-sm">
           <DollarSign className="h-5 w-5 text-red-500 mx-auto mb-2" />
-          <p className="text-2xl font-extrabold text-red-600 dark:text-red-400">₹{totalDeductions.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-red-600 dark:text-red-400">£{totalDeductions.toLocaleString()}</p>
           <p className="text-[10px] text-slate-500 mt-0.5">Total Deductions (PF/Tax)</p>
         </div>
         <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-5 text-center text-slate-900 dark:text-white backdrop-blur-md shadow-sm">
           <DollarSign className="h-5 w-5 text-primary mx-auto mb-2" />
-          <p className="text-2xl font-extrabold text-primary">₹{totalNet.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-primary">£{totalNet.toLocaleString()}</p>
           <p className="text-[10px] text-slate-500 mt-0.5">Net Disbursed Pay</p>
         </div>
       </div>
@@ -135,9 +135,9 @@ export default function EmployeePayslipsPage() {
                 {payslips.map((p, idx) => (
                   <tr key={p.id || p._id || idx} className="hover:bg-slate-50 dark:hover:bg-white/[0.02]">
                     <td className="py-3.5 font-bold">{p.month} {p.year}</td>
-                    <td className="py-3.5 font-mono text-slate-700 dark:text-slate-300">₹{p.grossPay.toLocaleString()}</td>
-                    <td className="py-3.5 font-mono text-red-600 dark:text-red-400">-₹{p.deductions.toLocaleString()}</td>
-                    <td className="py-3.5 font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">₹{p.netPay.toLocaleString()}</td>
+                    <td className="py-3.5 font-mono text-slate-700 dark:text-slate-300">£{p.grossPay.toLocaleString()}</td>
+                    <td className="py-3.5 font-mono text-red-600 dark:text-red-400">-£{p.deductions.toLocaleString()}</td>
+                    <td className="py-3.5 font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">£{p.netPay.toLocaleString()}</td>
                     <td className="py-3.5">
                       <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
                         <CheckCircle2 className="h-3 w-3" /> {p.status}

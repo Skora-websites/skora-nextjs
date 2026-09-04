@@ -202,7 +202,7 @@ export default function AdminDashboardPage() {
                       <Phone size={12} className="text-emerald-600" />
                       {lead.phone}
                     </span>
-                    <span>Budget: ₹ {lead.budget || "N/A"}</span>
+                    <span>Budget: £ {lead.budget || "N/A"}</span>
                   </div>
                 </div>
 

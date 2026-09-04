@@ -121,7 +121,7 @@ export default function HrAdminProjectsPage() {
             <input type="text" placeholder="Project name" value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
             <textarea placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} rows={3} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
             <div className="grid grid-cols-2 gap-3">
-              <input type="number" placeholder="Budget (₹)" value={budget} onChange={e => setBudget(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
+              <input type="number" placeholder="Budget (£)" value={budget} onChange={e => setBudget(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
               <select value={status} onChange={e => setStatus(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary">
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -143,7 +143,7 @@ export default function HrAdminProjectsPage() {
             <input type="text" placeholder="Project name" value={editName} onChange={e => setEditName(e.target.value)} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
             <textarea placeholder="Description" value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={3} className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
             <div className="grid grid-cols-2 gap-3">
-              <input type="number" placeholder="Budget (₹)" value={editBudget} onChange={e => setEditBudget(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
+              <input type="number" placeholder="Budget (£)" value={editBudget} onChange={e => setEditBudget(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary" />
               <select value={editStatus} onChange={e => setEditStatus(e.target.value)} className="rounded-xl border border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary">
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -173,7 +173,7 @@ export default function HrAdminProjectsPage() {
                 </div>
                 {p.description && <p className="text-[11px] text-slate-500 line-clamp-2">{p.description}</p>}
                 <div className="flex items-center justify-between text-[10px] text-slate-400">
-                  {p.budget ? <span className="font-bold">Budget: ₹{p.budget.toLocaleString()}</span> : <span className="text-slate-300 dark:text-slate-600">No budget set</span>}
+                  {p.budget ? <span className="font-bold">Budget: £{p.budget.toLocaleString()}</span> : <span className="text-slate-300 dark:text-slate-600">No budget set</span>}
                   <div className="flex items-center gap-2">
                     <button onClick={() => startEdit(p)} className="text-primary hover:text-primary/80 font-bold">Edit</button>
                     <button onClick={() => handleDelete(p._id || p.id || "")} className="text-red-400 hover:text-red-600 font-bold">Delete</button>

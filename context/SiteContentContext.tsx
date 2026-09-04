@@ -31,7 +31,7 @@ export interface SiteContent {
 }
 
 const defaultContent: SiteContent = {
-  phone: "+91 92173 75835",
+  phone: "+44 07756083473",
   email: "info@skorainfotech.com",
   healthcareEmail: "info@skorainfotech.com",
   address: "5 market square, High street, Uxbridge, UB8 1LH London",
@@ -40,7 +40,7 @@ const defaultContent: SiteContent = {
     {
       id: "pkg-1",
       name: "Basic Growth Plan",
-      price: "₹5,000",
+      price: "£5,000",
       period: "+ GST / month",
       popular: false,
       subtitle: "Essential local visibility for solo doctors & clinics",
@@ -55,7 +55,7 @@ const defaultContent: SiteContent = {
     {
       id: "pkg-2",
       name: "Standard Growth Plan",
-      price: "₹15,000",
+      price: "£15,000",
       period: "+ GST / month",
       popular: true,
       subtitle: "Our most popular package for growing medical practices",
@@ -71,7 +71,7 @@ const defaultContent: SiteContent = {
     {
       id: "pkg-3",
       name: "Premium Growth Plan",
-      price: "₹32,000",
+      price: "£32,000",
       period: "+ GST / month",
       popular: false,
       subtitle: "Complete digital dominance for multi-specialty centers",

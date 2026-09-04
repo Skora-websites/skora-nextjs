@@ -63,7 +63,7 @@ export default async function SuperadminOverviewPage() {
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monthly SaaS Revenue</span>
             <DollarSign className="h-5 w-5 text-cyan-500" />
           </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">₹1,45,000</p>
+          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">£1,45,000</p>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1 font-semibold">
             <ArrowUpRight className="h-3 w-3" /> +15.4% from last month
           </span>
