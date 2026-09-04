@@ -1,9 +1,10 @@
 import "server-only";
+import { ObjectId } from "mongodb";
+import { getDb } from "@/lib/db/mongo-helper";
 import {
   projectsService,
   projectMembersService,
   projectTasksService,
-  hrmUsersService,
   milestonesService,
   taskCommentsService,
   taskAttachmentsService,
@@ -14,23 +15,79 @@ import type { Project, ProjectMember, ProjectTask, HRMUser, Milestone, TaskComme
 // Projects Service
 // ══════════════════════════════════════════════════════════════════
 
-// ── Helpers ────────────────────────────────────────────
-
-/** Calculate progress (0-100) for a project based on completed vs total tasks */
-async function calculateProjectProgress(projectId: string): Promise<number> {
-  const tasks = await projectTasksService.findMany({
-    where: [{ field: "projectId", op: "==", value: projectId }],
-  });
-  if (tasks.length === 0) return 0;
-  const completed = tasks.filter((t) => t.status === "completed").length;
-  return Math.round((completed / tasks.length) * 100);
+async function calculateProgressBatch(projectIds: string[]): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (projectIds.length === 0) return map;
+  const db = await getDb();
+  if (!db) return map;
+  const tasks = await db
+    .collection("project_tasks")
+    .find({ projectId: { $in: projectIds } })
+    .project<{ projectId: string; status: string }>({ projectId: 1, status: 1 })
+    .toArray();
+  return aggregateProgress(projectIds, tasks);
 }
 
-async function enrichProjectWithProgress(project: Project): Promise<Project> {
-  return {
-    ...project,
-    progress: await calculateProjectProgress(project.id),
-  };
+function aggregateProgress(
+  projectIds: string[],
+  tasks: { projectId?: string | null; status: string }[]
+): Map<string, number> {
+  const map = new Map<string, number>();
+  const counts = new Map<string, { total: number; done: number }>();
+  for (const t of tasks) {
+    if (!t.projectId) continue;
+    const c = counts.get(t.projectId) || { total: 0, done: 0 };
+    c.total += 1;
+    if (t.status === "completed") c.done += 1;
+    counts.set(t.projectId, c);
+  }
+  for (const pid of projectIds) {
+    const c = counts.get(pid) || { total: 0, done: 0 };
+    map.set(pid, c.total === 0 ? 0 : Math.round((c.done / c.total) * 100));
+  }
+  return map;
+}
+
+/** Single-query dashboard fetch for a user: memberships + projects + tasks → 2 round-trips. */
+async function getProjectsForUser(
+  tenantId: string,
+  userId: string
+): Promise<Project[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const memberships = await db
+    .collection("project_members")
+    .find({ userId })
+    .project<{ projectId: string }>({ projectId: 1 })
+    .toArray();
+  if (memberships.length === 0) return [];
+  const memberProjectIds = memberships.map((m) => m.projectId);
+  const ownedDocs = await db
+    .collection("projects")
+    .find({ tenantId, ownerId: userId })
+    .project<{ id: string }>({ id: 1 })
+    .toArray();
+  const ownedIds = new Set(ownedDocs.map((d) => d.id).filter((x): x is string => !!x));
+  const allIds = Array.from(new Set([...memberProjectIds, ...ownedIds]));
+  if (allIds.length === 0) return [];
+  const [projectDocs, taskDocs] = await Promise.all([
+    db.collection("projects").find({ tenantId, id: { $in: allIds } }).toArray(),
+    db
+      .collection("project_tasks")
+      .find({ projectId: { $in: allIds } })
+      .project<{ projectId?: string | null; status: string }>({ projectId: 1, status: 1 })
+      .toArray(),
+  ]);
+  const progressMap = aggregateProgress(allIds, taskDocs);
+  return projectDocs.map((d) => {
+    const { _id, ...rest } = d as any;
+    const id = rest.id ?? _id?.toString();
+    return { ...rest, id, progress: progressMap.get(id) ?? 0 } as Project;
+  });
+}
+
+function enrichWithProgress(project: Project, progressMap: Map<string, number>): Project {
+  return { ...project, progress: progressMap.get(project.id) ?? 0 };
 }
 
 // ── Projects ────────────────────────────────────────────
@@ -40,13 +97,15 @@ export async function getProjects(tenantId: string): Promise<Project[]> {
     orderByField: "createdAt",
     orderByDirection: "desc",
   });
-  return Promise.all(projects.map(enrichProjectWithProgress));
+  const progress = await calculateProgressBatch(projects.map((p) => p.id));
+  return projects.map((p) => enrichWithProgress(p, progress));
 }
 
 export async function getProjectById(id: string): Promise<Project | null> {
   const project = await projectsService.findById(id);
   if (!project) return null;
-  return enrichProjectWithProgress(project);
+  const progress = await calculateProgressBatch([id]);
+  return enrichWithProgress(project, progress);
 }
 
 export async function createProject(
@@ -83,29 +142,14 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string): Promise<boolean> {
-  // Delete associated tasks and members
-  const tasks = await projectTasksService.findMany({
-    where: [{ field: "projectId", op: "==", value: id }],
-  });
-  for (const task of tasks) {
-    await projectTasksService.delete(task.id);
+  const db = await getDb();
+  if (db) {
+    await Promise.all([
+      db.collection("project_tasks").deleteMany({ projectId: id }),
+      db.collection("project_members").deleteMany({ projectId: id }),
+      db.collection("milestones").deleteMany({ projectId: id }),
+    ]);
   }
-
-  const members = await projectMembersService.findMany({
-    where: [{ field: "projectId", op: "==", value: id }],
-  });
-  for (const member of members) {
-    await projectMembersService.delete(member.id);
-  }
-
-  // Delete associated milestones
-  const milestones = await milestonesService.findMany({
-    where: [{ field: "projectId", op: "==", value: id }],
-  });
-  for (const m of milestones) {
-    await milestonesService.delete(m.id);
-  }
-
   return projectsService.delete(id);
 }
 
@@ -118,7 +162,8 @@ export async function getProjectsByOwner(
     orderByField: "createdAt",
     orderByDirection: "desc",
   });
-  return Promise.all(projects.map(enrichProjectWithProgress));
+  const progress = await calculateProgressBatch(projects.map((p) => p.id));
+  return projects.map((p) => enrichWithProgress(p, progress));
 }
 
 export async function getProjectsByMember(
@@ -128,13 +173,21 @@ export async function getProjectsByMember(
   const memberships = await projectMembersService.findMany({
     where: [{ field: "userId", op: "==", value: userId }],
   });
-
   if (memberships.length === 0) return [];
 
   const projectIds = memberships.map((m) => m.projectId);
-  const projects = await projectsService.findManyInTenant(tenantId);
-  const filtered = projects.filter((p) => projectIds.includes(p.id));
-  return Promise.all(filtered.map(enrichProjectWithProgress));
+  const db = await getDb();
+  if (!db) return [];
+  const docs = await db
+    .collection("projects")
+    .find({ tenantId, id: { $in: projectIds } })
+    .toArray();
+  const projects = docs.map((d) => {
+    const { _id, ...rest } = d as any;
+    return { ...rest, id: rest.id ?? _id?.toString() } as Project;
+  });
+  const progress = await calculateProgressBatch(projects.map((p) => p.id));
+  return projects.map((p) => enrichWithProgress(p, progress));
 }
 
 // ── Dashboard Stats ─────────────────────────────────────
@@ -153,15 +206,7 @@ export async function getProjectDashboardStats(
   let projects: Project[];
 
   if (userRole === "employee") {
-    const member = await getProjectsByMember(tenantId, userId);
-    const owned = await getProjectsByOwner(tenantId, userId);
-    const ownedIds = new Set(owned.map((p) => p.id));
-    for (const p of owned) {
-      if (!member.some((pr) => pr.id === p.id)) {
-        member.push(p);
-      }
-    }
-    projects = member;
+    projects = await getProjectsForUser(tenantId, userId);
   } else {
     projects = await getProjects(tenantId);
   }
@@ -170,20 +215,22 @@ export async function getProjectDashboardStats(
   const activeProjects = projects.filter(
     (p) => p.status === "in_progress" || p.status === "planning"
   ).length;
-  const completedProjects = projects.filter(
-    (p) => p.status === "completed"
-  ).length;
+  const completedProjects = projects.filter((p) => p.status === "completed").length;
 
-  const projectIds = projects.map((p) => p.id);
   let overdueTasks = 0;
-  for (const pid of projectIds) {
-    const tasks = await projectTasksService.findMany({
-      where: [
-        { field: "projectId", op: "==", value: pid },
-        { field: "status", op: "!=", value: "completed" },
-      ],
-    });
-    overdueTasks += tasks.filter((t) => t.dueDate && new Date(t.dueDate) < now).length;
+  if (projects.length > 0) {
+    const db = await getDb();
+    if (db) {
+      const tasks = await db
+        .collection("project_tasks")
+        .find({
+          projectId: { $in: projects.map((p) => p.id) },
+          status: { $ne: "completed" },
+        })
+        .project<{ dueDate?: Date | null }>({ dueDate: 1 })
+        .toArray();
+      overdueTasks = tasks.filter((t) => t.dueDate && new Date(t.dueDate) < now).length;
+    }
   }
 
   return {
@@ -203,15 +250,31 @@ export async function getProjectMembers(
   const members = await projectMembersService.findMany({
     where: [{ field: "projectId", op: "==", value: projectId }],
   });
+  if (members.length === 0) return [];
 
-  const enriched = await Promise.all(
-    members.map(async (m) => {
-      const user = await hrmUsersService.findById(m.userId);
-      return { ...m, user: user || undefined };
-    })
-  );
+  const db = await getDb();
+  if (!db) return members;
 
-  return enriched;
+  const userIds = members.map((m) => m.userId);
+  const objectIds: ObjectId[] = [];
+  const stringIds: string[] = [];
+  for (const id of userIds) {
+    if (ObjectId.isValid(id) && String(new ObjectId(id)) === id) objectIds.push(new ObjectId(id));
+    else stringIds.push(id);
+  }
+  const orClauses: Record<string, unknown>[] = [];
+  if (objectIds.length > 0) orClauses.push({ _id: { $in: objectIds } });
+  if (stringIds.length > 0) orClauses.push({ id: { $in: stringIds } });
+  const users = orClauses.length
+    ? await db.collection("users").find({ $or: orClauses }).toArray()
+    : [];
+
+  const userMap = new Map<string, HRMUser>();
+  for (const u of users) {
+    const uid = (u as any).id ?? u._id?.toString();
+    if (uid) userMap.set(uid, { ...(u as any), id: uid } as HRMUser);
+  }
+  return members.map((m) => ({ ...m, user: userMap.get(m.userId) }));
 }
 
 export async function addProjectMember(
@@ -319,21 +382,13 @@ export async function updateProjectTask(
 }
 
 export async function deleteProjectTask(id: string): Promise<boolean> {
-  // Delete associated comments and attachments
-  const comments = await taskCommentsService.findMany({
-    where: [{ field: "taskId", op: "==", value: id }],
-  });
-  for (const c of comments) {
-    await taskCommentsService.delete(c.id);
+  const db = await getDb();
+  if (db) {
+    await Promise.all([
+      db.collection("task_comments").deleteMany({ taskId: id }),
+      db.collection("task_attachments").deleteMany({ taskId: id }),
+    ]);
   }
-
-  const attachments = await taskAttachmentsService.findMany({
-    where: [{ field: "taskId", op: "==", value: id }],
-  });
-  for (const a of attachments) {
-    await taskAttachmentsService.delete(a.id);
-  }
-
   return projectTasksService.delete(id);
 }
 

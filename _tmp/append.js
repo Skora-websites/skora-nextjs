@@ -1,1 +1,0 @@
-var fs=require("fs");var c=fs.readFileSync("app/hrms/superadmin/page.tsx","utf8");fs.writeFileSync("app/hrms/superadmin/page.tsx",c);console.log("copied")
