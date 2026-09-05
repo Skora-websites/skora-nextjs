@@ -1,24 +1,13 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
 import { SiteContentProvider } from "@/context/SiteContentContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-
-// Applies the persisted theme before first paint (no flash of wrong theme).
-// App routes (/hrms, /main, /admin) always render in their own styling.
-const themeInitScript = `try{if(localStorage.getItem('skora-theme')==='light'&&!/^\\/(hrms|main|admin)/.test(location.pathname)){document.documentElement.classList.add('light-theme')}}catch(e){}`;
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -52,15 +41,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-[#F4F6F1] text-[#0B1310] font-sans antialiased selection:bg-[#2563EB] selection:text-white flex flex-col" suppressHydrationWarning>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <ThemeProvider>
-          <SiteContentProvider>
-            <ScrollToTop />
-            {children}
-          </SiteContentProvider>
-        </ThemeProvider>
+        <SiteContentProvider>
+          <ScrollToTop />
+          {children}
+        </SiteContentProvider>
       </body>
     </html>
   );

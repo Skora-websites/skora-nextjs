@@ -38,7 +38,7 @@ const expertiseRow2 = [
 
 export default function TechExpertiseSection() {
   return (
-    <section className="relative overflow-hidden border-t border-white/10 bg-[#05070E]/80 py-20">
+    <section className="relative overflow-hidden bg-white py-20 border-t border-slate-200">
       <style>{`
         @keyframes marqueeLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes marqueeRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
@@ -48,38 +48,34 @@ export default function TechExpertiseSection() {
         .marquee-container:hover .animate-marquee-right { animation-play-state: paused; }
       `}</style>
 
-      {/* Dot grid + ambient halos on dark */}
+      {/* Grid Pattern Background */}
       <div
-        className="absolute inset-0 opacity-[0.25]"
-        style={{ backgroundImage: "radial-gradient(rgba(148,163,184,0.35) 1px, transparent 1px)", backgroundSize: "32px 32px" }}
+        className="absolute inset-0 opacity-[0.4]"
+        style={{ backgroundImage: "radial-gradient(#cbd5e1 1px, transparent 1px)", backgroundSize: "32px 32px" }}
       />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="bg-radial-halo-subtle absolute -top-24 left-1/4 h-96 w-[40rem] rounded-full blur-[120px]" />
-        <div className="absolute -bottom-24 right-1/4 h-80 w-[34rem] rounded-full bg-cyan-500/[0.07] blur-[120px]" />
-      </div>
 
       <div className="relative mx-auto mb-10 max-w-4xl px-4 text-center">
-        <h2 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-          Our <span className="text-gradient-cyan">Tech &amp; Media Expertise</span>
+        <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-950">
+          Our <span className="text-blue-600">Tech &amp; Media Expertise</span>
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-base font-medium text-slate-400 sm:text-lg">
+        <p className="mx-auto mt-4 max-w-2xl text-base sm:text-lg font-medium text-slate-600">
           Empowering scalable digital ecosystems with industry-standard development frameworks, cloud solutions, and media platforms.
         </p>
       </div>
 
       {/* Marquee Row 1 - Left */}
       <div className="marquee-container relative flex overflow-hidden py-3">
-        <div className="edge-fade-l pointer-events-none absolute inset-y-0 left-0 z-10 w-24 md:w-48" />
-        <div className="edge-fade-r pointer-events-none absolute inset-y-0 right-0 z-10 w-24 md:w-48" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-white to-transparent md:w-48" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-white to-transparent md:w-48" />
 
         <div className="animate-marquee-left flex gap-5 px-4 py-2">
           {[...expertiseRow1, ...expertiseRow1, ...expertiseRow1].map((item, index) => (
             <motion.div
               key={`row1-${item.name}-${index}`}
               whileHover={{ y: -5, scale: 1.04 }}
-              className="glass-card group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4 transition-all duration-300 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(56,189,248,0.2)]"
+              className="group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm backdrop-blur transition-all duration-300 hover:border-blue-400 hover:shadow-xl"
             >
-              <div className="flex h-14 w-full items-center justify-center rounded-xl p-1">
+              <div className="flex h-14 w-full items-center justify-center p-1">
                 <img
                   src={item.icon}
                   alt={item.name}
@@ -90,10 +86,10 @@ export default function TechExpertiseSection() {
                 />
               </div>
               <div className="w-full text-center">
-                <h3 className="truncate text-xs font-bold text-slate-200 transition-colors group-hover:text-sky-300">
+                <h3 className="text-xs font-bold text-slate-800 transition-colors group-hover:text-blue-600 truncate">
                   {item.name}
                 </h3>
-                <span className="mt-0.5 block font-mono-accent text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="mt-0.5 block text-[9px] font-semibold tracking-wider text-slate-400 uppercase">
                   {item.category}
                 </span>
               </div>
@@ -103,18 +99,18 @@ export default function TechExpertiseSection() {
       </div>
 
       {/* Marquee Row 2 - Right */}
-      <div className="marquee-container relative mt-4 flex overflow-hidden py-3">
-        <div className="edge-fade-l pointer-events-none absolute inset-y-0 left-0 z-10 w-24 md:w-48" />
-        <div className="edge-fade-r pointer-events-none absolute inset-y-0 right-0 z-10 w-24 md:w-48" />
+      <div className="marquee-container relative flex overflow-hidden py-3 mt-4">
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-white to-transparent md:w-48" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-white to-transparent md:w-48" />
 
         <div className="animate-marquee-right flex gap-5 px-4 py-2">
           {[...expertiseRow2, ...expertiseRow2, ...expertiseRow2].map((item, index) => (
             <motion.div
               key={`row2-${item.name}-${index}`}
               whileHover={{ y: -5, scale: 1.04 }}
-              className="glass-card group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4 transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_0_25px_rgba(34,211,238,0.2)]"
+              className="group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm backdrop-blur transition-all duration-300 hover:border-cyan-400 hover:shadow-xl"
             >
-              <div className="flex h-14 w-full items-center justify-center rounded-xl p-1">
+              <div className="flex h-14 w-full items-center justify-center p-1">
                 <img
                   src={item.icon}
                   alt={item.name}
@@ -125,10 +121,10 @@ export default function TechExpertiseSection() {
                 />
               </div>
               <div className="w-full text-center">
-                <h3 className="truncate text-xs font-bold text-slate-200 transition-colors group-hover:text-cyan-300">
+                <h3 className="text-xs font-bold text-slate-800 transition-colors group-hover:text-cyan-600 truncate">
                   {item.name}
                 </h3>
-                <span className="mt-0.5 block font-mono-accent text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="mt-0.5 block text-[9px] font-semibold tracking-wider text-slate-400 uppercase">
                   {item.category}
                 </span>
               </div>

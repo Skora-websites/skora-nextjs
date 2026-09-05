@@ -396,8 +396,6 @@ export default function HomePage() {
   useEffect(() => {
     if (typeof window === "undefined" || !containerRef.current) return;
 
-    let rafId = 0;
-
     const ctx = gsap.context(() => {
       ScrollTrigger.refresh();
 
@@ -449,31 +447,24 @@ export default function HomePage() {
       });
     }, containerRef);
 
-    // Interactive Mouse Movement Parallax (rAF-throttled, overwrite: kills
-    // the previous tween instead of stacking a new one on every mousemove)
+    // Interactive Mouse Movement Parallax
     const handleMouseMove = (e: MouseEvent) => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = 0;
-        const { innerWidth, innerHeight } = window;
-        const moveX = (e.clientX / innerWidth - 0.5) * 25;
-        const moveY = (e.clientY / innerHeight - 0.5) * 25;
+      const { innerWidth, innerHeight } = window;
+      const moveX = (e.clientX / innerWidth - 0.5) * 25;
+      const moveY = (e.clientY / innerHeight - 0.5) * 25;
 
-        gsap.to(".gsap-mouse-parallax", {
-          x: moveX,
-          y: moveY,
-          duration: 0.8,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
+      gsap.to(".gsap-mouse-parallax", {
+        x: moveX,
+        y: moveY,
+        duration: 0.8,
+        ease: "power2.out",
       });
     };
 
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mousemove", handleMouseMove);
 
     return () => {
       ctx.revert();
-      cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
@@ -556,7 +547,7 @@ export default function HomePage() {
               key={img.id}
               whileHover={{ y: -10, scale: 1.04, rotateX: 4, rotateY: -4 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="media-dark gsap-gallery-item relative h-64 sm:h-72 rounded-[2.2rem] overflow-hidden shadow-lg border border-[#E1E6DF] bg-white group cursor-pointer"
+              className="gsap-gallery-item relative h-64 sm:h-72 rounded-[2.2rem] overflow-hidden shadow-lg border border-[#E1E6DF] bg-white group cursor-pointer"
             >
               <img
                 src={img.url}
@@ -650,7 +641,7 @@ export default function HomePage() {
             transition={{ duration: 0.7 }}
             className="lg:col-span-5 gsap-scroll-card"
           >
-            <div className="media-dark relative rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E1E6DF] bg-white group cursor-pointer">
+            <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border border-[#E1E6DF] bg-white group cursor-pointer">
               <img
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
                 alt="Skora Strategy Session"
@@ -967,7 +958,7 @@ export default function HomePage() {
               transition={{ type: "spring", stiffness: 300 }}
               className={`gsap-scroll-card rounded-[2.2rem] p-8 flex flex-col justify-between transition-all duration-300 relative ${
                 pkg.featured
-                  ? "media-dark bg-gradient-to-br from-[#1E824C] to-[#27AE60] text-white shadow-2xl scale-105 border-0 z-10"
+                  ? "bg-gradient-to-br from-[#1E824C] to-[#27AE60] text-white shadow-2xl scale-105 border-0 z-10"
                   : "bg-white border border-[#E1E6DF] text-[#0B1310] hover:border-[#2563EB]/50 shadow-lg"
               }`}
             >

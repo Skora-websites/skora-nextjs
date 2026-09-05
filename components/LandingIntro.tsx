@@ -2,118 +2,13 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import * as THREE from "three";
 
 interface LandingIntroProps {
   onComplete?: () => void;
 }
 
-/** Lightweight WebGL particle burst rendered behind the monogram. */
-function IntroParticleBurst({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    } catch {
-      return;
-    }
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
-    camera.position.z = 40;
-
-    renderer.setSize(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-
-    // Burst field: particles radiating outward from center
-    const count = 700;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    const velocities: number[] = [];
-    const colors = new Float32Array(count * 3);
-    const cyan = new THREE.Color("#38BDF8");
-    const blue = new THREE.Color("#2563EB");
-
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = 0;
-      positions[i * 3 + 1] = 0;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-
-      const theta = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 0.09 + 0.015;
-      velocities.push(Math.cos(theta) * speed, Math.sin(theta) * speed);
-
-      const c = blue.clone().lerp(cyan, Math.random());
-      colors[i * 3] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-    }
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-      size: 0.32,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
-
-    const resize = () => {
-      camera.aspect = (container.clientWidth || 1) / (container.clientHeight || 1);
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(container);
-
-    let frame: number;
-    let running = true;
-    const posAttr = geometry.getAttribute("position") as THREE.BufferAttribute;
-
-    const tick = () => {
-      if (!running) return;
-      frame = requestAnimationFrame(tick);
-      for (let i = 0; i < count; i++) {
-        const x = posAttr.getX(i) + velocities[i * 2];
-        const y = posAttr.getY(i) + velocities[i * 2 + 1];
-        velocities[i * 2] *= 0.985;
-        velocities[i * 2 + 1] *= 0.985;
-        posAttr.setXYZ(i, x, y, posAttr.getZ(i));
-      }
-      posAttr.needsUpdate = true;
-      points.rotation.z += 0.0008;
-      renderer.render(scene, camera);
-    };
-    tick();
-
-    return () => {
-      running = false;
-      cancelAnimationFrame(frame);
-      ro.disconnect();
-      geometry.dispose();
-      material.dispose();
-      if (renderer.domElement && renderer.domElement.parentElement === container) {
-        container.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-    };
-  }, [containerRef]);
-
-  return <div ref={containerRef} aria-hidden="true" className="absolute inset-0 z-10 pointer-events-none" />;
-}
-
 export default function LandingIntro({ onComplete }: LandingIntroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const burstRef = useRef<HTMLDivElement>(null);
   const sMonogramRef = useRef<HTMLDivElement>(null);
   const textStageRef = useRef<HTMLDivElement>(null);
   const curtainRef = useRef<HTMLDivElement>(null);
@@ -123,7 +18,7 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    // Session-gated: never replay within the same browser session
+    // Check if user has seen intro in this session to prevent repeating
     const hasSeenIntro = sessionStorage.getItem("skora_cinematic_intro_v4");
     if (hasSeenIntro) {
       setVisible(false);
@@ -142,33 +37,32 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
         },
       });
 
-      // 1. Laser horizon ignition
+      // 1. Electric Blue Laser Horizon Ignition
       tl.fromTo(
         laserBeamRef.current,
         { scaleX: 0, opacity: 0 },
-        { scaleX: 1, opacity: 1, duration: 0.45, ease: "expo.out" }
+        { scaleX: 1, opacity: 1, duration: 0.5, ease: "expo.out" }
       );
 
-      // 2. Deep 3D monogram prism zoom entrance (particle burst fires underneath)
+      // 2. Netflix-Inspired Monogram "S" Prism Zoom Entrance
       tl.fromTo(
         sMonogramRef.current,
-        { opacity: 0, scale: 0.25, z: -600, rotateY: 60, rotateX: 18 },
+        { opacity: 0, scale: 0.3, z: -400, rotateY: 45 },
         {
           opacity: 1,
           scale: 1,
           z: 0,
           rotateY: 0,
-          rotateX: 0,
           duration: 1.0,
           ease: "expo.out",
         }
       );
 
-      // 3. Typewriter sequence
+      // 3. Typewriter Animation ("S" -> "SK" -> "SKO" -> "SKOR" -> "SKORA" -> "SKORA.digital")
       tl.to(
         {},
         {
-          duration: 1.1,
+          duration: 1.2,
           ease: "none",
           onUpdate: function () {
             const progress = this.progress();
@@ -178,28 +72,27 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
         }
       );
 
-      // 4. Dissolve monogram, expand text stage
+      // 4. Fade Monogram S out & Expand Text Stage
       tl.to(sMonogramRef.current, {
         opacity: 0,
-        scale: 1.5,
-        rotateY: -25,
+        scale: 1.4,
         duration: 0.4,
         ease: "power2.in",
       });
 
       tl.fromTo(
         textStageRef.current,
-        { opacity: 0, scale: 0.88, z: -200, rotateX: -10 },
-        { opacity: 1, scale: 1, z: 0, rotateX: 0, duration: 0.5, ease: "back.out(1.4)" },
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.4)" },
         "<"
       );
 
-      // 5. Final dissolve curtain reveal
+      // 5. Clean Final Dissolve Curtain Reveal (Entire Intro Container Scales Up & Dissolves)
       tl.to(curtainRef.current, {
         opacity: 0,
         scale: 1.08,
-        duration: 0.65,
-        delay: 0.45,
+        duration: 0.7,
+        delay: 0.5,
         ease: "power3.inOut",
       });
     }, containerRef);
@@ -212,62 +105,58 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
   return (
     <div
       ref={containerRef}
-      className="pointer-events-none fixed inset-0 z-[1000] overflow-hidden [perspective:1400px]"
+      className="fixed inset-0 z-[1000] overflow-hidden pointer-events-none [perspective:1200px]"
     >
+      {/* Black & Deep Blue Backdrop Curtain */}
       <div
         ref={curtainRef}
-        className="media-dark absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#03050B] p-6 text-center"
+        className="absolute inset-0 bg-[#03050B] z-20 flex flex-col items-center justify-center p-6 text-center"
       >
-        {/* Ambient deep-space bloom */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[750px] w-[750px] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-gradient-to-tr from-blue-600/30 via-sky-500/20 to-transparent blur-[160px]" />
-        {/* Horizon glow line field */}
-        <div aria-hidden="true" className="grid-floor opacity-70" />
+        {/* Ambient Electric Blue Glowing Bloom Spheres */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-blue-600/30 via-sky-500/20 to-transparent rounded-full blur-[160px] pointer-events-none animate-pulse" />
 
-        {/* WebGL particle burst behind the monogram */}
-        <IntroParticleBurst containerRef={burstRef} />
-
-        {/* Laser horizon beam */}
+        {/* Laser Horizon Beam */}
         <div
           ref={laserBeamRef}
-          className="pointer-events-none absolute left-0 right-0 top-1/2 h-[2px] -translate-y-1/2 bg-gradient-to-r from-transparent via-[#38BDF8] to-transparent shadow-[0_0_30px_#38bdf8]"
+          className="absolute top-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#38BDF8] to-transparent shadow-[0_0_30px_#38bdf8] origin-center -translate-y-1/2 pointer-events-none"
         />
 
-        {/* Phase 1: Holographic monogram */}
+        {/* Phase 1: Netflix-Inspired Holographic Monogram "S" */}
         <div
           ref={sMonogramRef}
           className="relative z-30 flex flex-col items-center justify-center space-y-4 [transform-style:preserve-3d]"
         >
           <div className="relative flex items-center justify-center">
-            <span className="select-none bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-200 bg-clip-text text-8xl font-black font-serif italic tracking-wider text-transparent drop-shadow-[0_0_45px_rgba(56,189,248,0.85)] sm:text-9xl">
+            {/* Holographic Glowing S Ribbon */}
+            <span className="text-8xl sm:text-9xl font-black font-serif italic text-transparent bg-clip-text bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-200 tracking-wider drop-shadow-[0_0_40px_rgba(56,189,248,0.8)] select-none">
               S
             </span>
-            <div className="pointer-events-none absolute -inset-8 animate-ping rounded-full border border-sky-400/30 blur-sm" />
+
+            {/* Radiant Spectrum Beam Lines */}
+            <div className="absolute -inset-8 rounded-full border border-sky-400/30 blur-sm animate-ping pointer-events-none" />
           </div>
 
-          <span className="font-mono-accent text-xs font-bold uppercase tracking-[0.3em] text-sky-400">
+          <span className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-sky-400">
             ✦ SKORA INFO ✦
           </span>
         </div>
 
-        {/* Phase 2: Typewriter stage */}
+        {/* Phase 2: Typewriter Sequence Stage */}
         <div
           ref={textStageRef}
-          className="pointer-events-none absolute z-40 flex flex-col items-center justify-center space-y-4 opacity-0 [transform-style:preserve-3d]"
+          className="absolute z-40 flex flex-col items-center justify-center space-y-4 opacity-0 pointer-events-none"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-blue-950/80 px-4 py-1.5 text-xs font-bold text-sky-300 shadow-xl font-mono-accent">
-            <span className="h-2 w-2 animate-ping rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-950/80 border border-blue-500/40 text-xs font-mono font-bold text-sky-300 shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
             <span>ENTERPRISE DIGITAL SOLUTIONS</span>
           </div>
 
-          <div
-            aria-hidden="true"
-            className="font-sans text-5xl font-black uppercase tracking-tight text-white drop-shadow-[0_0_50px_rgba(37,99,235,0.9)] sm:text-7xl lg:text-8xl"
-          >
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white uppercase drop-shadow-[0_0_50px_rgba(37,99,235,0.9)] font-sans">
             {typedText}
-            <span className="animate-pulse text-sky-400">|</span>
-          </div>
+            <span className="text-sky-400 animate-pulse">|</span>
+          </h1>
 
-          <p className="font-mono-accent text-xs uppercase tracking-widest text-slate-400 sm:text-sm">
+          <p className="text-xs sm:text-sm font-mono text-slate-400 tracking-widest uppercase">
             DOMINATE SEARCH • ENGINEER SAAS • SCALE CLOUD
           </p>
         </div>

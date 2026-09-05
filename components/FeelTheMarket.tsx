@@ -115,22 +115,9 @@ export default function FeelTheMarket() {
   }, []);
 
   return (
-    <section className="media-dark relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-[#05070E] via-[#081226] to-[#05070E] flex items-center justify-center border-t border-blue-900/30">
-      {/* Subtle WebGL-free starfield */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "radial-gradient(1px 1px at 12% 18%, rgba(224,242,254,0.7) 50%, transparent 51%), radial-gradient(1px 1px at 34% 8%, rgba(125,211,252,0.6) 50%, transparent 51%), radial-gradient(1.5px 1.5px at 58% 22%, rgba(224,242,254,0.55) 50%, transparent 51%), radial-gradient(1px 1px at 76% 12%, rgba(125,211,252,0.65) 50%, transparent 51%), radial-gradient(1px 1px at 90% 30%, rgba(224,242,254,0.5) 50%, transparent 51%), radial-gradient(1.5px 1.5px at 22% 62%, rgba(125,211,252,0.4) 50%, transparent 51%), radial-gradient(1px 1px at 48% 72%, rgba(224,242,254,0.4) 50%, transparent 51%), radial-gradient(1px 1px at 68% 55%, rgba(125,211,252,0.45) 50%, transparent 51%), radial-gradient(1.5px 1.5px at 84% 78%, rgba(224,242,254,0.35) 50%, transparent 51%), radial-gradient(1px 1px at 8% 84%, rgba(125,211,252,0.4) 50%, transparent 51%)",
-        }}
-      />
-
+    <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-[#05070E] via-[#081226] to-[#05070E] flex items-center justify-center border-t border-blue-900/30">
       {/* Radial Blue Light Mesh Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.25)_0%,rgba(5,7,14,1)_80%)] pointer-events-none" />
-
-      {/* Horizon beam */}
-      <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-400/50 to-transparent pointer-events-none" />
 
       {/* 3D RUSTY/FROSTY DROPPING ICE CUBES LOOP WITH MELTING DRIP PARTICLES */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
@@ -150,13 +137,12 @@ export default function FeelTheMarket() {
               delay: cube.delay,
               times: [0, 0.15, 0.85, 1],
             }}
-            className={`absolute ${cube.size} flex flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-100/25 via-blue-900/40 to-slate-900/80 border-2 border-cyan-300/50 shadow-[inset_0_4px_25px_rgba(255,255,255,0.45),0_0_45px_rgba(56,189,248,0.35),0_20px_45px_rgba(0,0,0,0.8)] backdrop-blur-xl pointer-events-auto cursor-pointer group`}
+            className={`absolute ${cube.size} flex flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-100/25 via-blue-900/40 to-slate-900/80 border-2 border-cyan-300/50 shadow-[inset_0_4px_25px_rgba(255,255,255,0.45),0_20px_45px_rgba(0,0,0,0.8)] backdrop-blur-xl pointer-events-auto cursor-pointer group`}
             style={{ left: cube.left }}
             whileHover={{ scale: 1.18, zIndex: 50, transition: { duration: 0.2 } }}
           >
-            {/* Frost & Rust Crystal Detail + frost drip glow */}
+            {/* Frost & Rust Crystal Detail */}
             <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.3)_0%,transparent_60%)] pointer-events-none" />
-            <div className="absolute inset-0 rounded-3xl shadow-[inset_0_-12px_24px_rgba(56,189,248,0.28)] pointer-events-none" />
             
             {/* Icon Inside Ice Cube */}
             <div className="relative z-10">{cube.icon}</div>
