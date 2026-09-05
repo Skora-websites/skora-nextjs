@@ -1,22 +1,30 @@
-'use client';
-
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  Building2, Users, ShieldAlert, Settings, FileCheck, DollarSign, 
-  FolderKanban, Clock, CheckSquare, BarChart3, UserCheck, LayoutDashboard,
-  LogOut, Shield, MapPin
+import {
+  Building2, Users, ShieldAlert, Settings, FileCheck, DollarSign,
+  FolderKanban, Clock, CheckSquare, BarChart3, LayoutDashboard,
+  LogOut, Shield, MapPin, Bell
 } from 'lucide-react';
+import { getPendingApprovalCounts } from '@/lib/actions/hrms-actions';
+import type { HRMSRole } from '@/lib/hrms-roles';
+import { SidebarNavClient, type SidebarNavItem } from './hrms-sidebar-client';
 
 interface SidebarProps {
   role: 'SUPER_ADMIN' | 'HR_ADMIN' | 'MANAGER' | 'EMPLOYEE';
   currentEmail: string;
+  currentName?: string;
+  hrmsRole: HRMSRole;
 }
 
-export function HRMSSidebar({ role, currentEmail }: SidebarProps) {
-  const pathname = usePathname();
+export async function HRMSSidebar({ role, currentEmail, currentName, hrmsRole }: SidebarProps) {
+  let pendingTotal = 0;
+  try {
+    const counts = await getPendingApprovalCounts(hrmsRole);
+    pendingTotal = counts.total;
+  } catch {
+    // Sidebar must never crash the layout; swallow and show no badge.
+  }
 
-  const navItemsByRole = {
+  const navItemsByRole: Record<SidebarRole, SidebarNavItem[]> = {
     SUPER_ADMIN: [
       { name: 'Dashboard', href: '/superadmin', icon: LayoutDashboard },
       { name: 'Tenants & Geofencing', href: '/superadmin/tenants', icon: Building2 },
@@ -47,15 +55,15 @@ export function HRMSSidebar({ role, currentEmail }: SidebarProps) {
       { name: 'My Payslips', href: '/employee/payslips', icon: DollarSign },
       { name: 'My Performance', href: '/employee/performance', icon: BarChart3 },
       { name: 'Isolated Settings', href: '/employee/settings', icon: Settings },
-    ]
+    ],
   };
 
   const navItems = navItemsByRole[role] || navItemsByRole.EMPLOYEE;
+  const showApprovalsShortcut = role !== 'EMPLOYEE';
 
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 text-slate-200 min-h-screen flex flex-col justify-between p-4 shadow-xl">
       <div>
-        {/* Brand */}
         <div className="flex items-center space-x-3 px-2 py-4 mb-6 border-b border-slate-800">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
             S
@@ -66,49 +74,44 @@ export function HRMSSidebar({ role, currentEmail }: SidebarProps) {
           </div>
         </div>
 
-        {/* Role Badge */}
         <div className="px-2 mb-6">
           <div className="bg-slate-800/80 border border-slate-700/60 rounded-lg p-2.5 flex items-center space-x-2">
             <Shield className="w-4 h-4 text-blue-400" />
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Active Role</p>
-              <p className="text-xs font-semibold text-white">{role.replace('_', ' ')}</p>
+              <p className="text-xs font-semibold text-white truncate">{role.replace('_', ' ')}</p>
             </div>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="space-y-1">
-          {navItems.map((item) => {
-            const isHrmsPrefix = pathname.startsWith('/hrms');
-            const targetHref = isHrmsPrefix ? `/hrms${item.href}` : item.href;
-            const isActive = pathname === targetHref || pathname === item.href || pathname.startsWith(`${targetHref}/`) || pathname.startsWith(`${item.href}/`);
-            const Icon = item.icon;
+        {showApprovalsShortcut && (
+          <Link
+            href="/hrms/approvals"
+            className="mx-2 mb-4 flex items-center justify-between px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-rose-500/10 border border-amber-500/30 hover:border-amber-400 transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-200">Approvals</span>
+            </span>
+            {pendingTotal > 0 ? (
+              <span className="bg-rose-500 text-white text-[10px] font-extrabold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                {pendingTotal}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400 font-mono">0</span>
+            )}
+          </Link>
+        )}
 
-            return (
-              <Link
-                key={item.href}
-                href={targetHref}
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-blue-600/10 text-blue-400 border border-blue-500/30 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <SidebarNavClient navItems={navItems} />
       </div>
 
-      {/* Switcher & User Footer */}
       <div className="border-t border-slate-800 pt-4 space-y-2">
-        <div className="px-2 py-1.5 bg-slate-950/60 rounded-lg text-[11px] text-slate-400 font-mono flex items-center justify-between">
-          <span className="truncate">{currentEmail}</span>
+        <div className="px-2 py-1.5 bg-slate-950/60 rounded-lg text-[11px] text-slate-400 font-mono">
+          <p className="truncate text-white font-semibold">{currentName || currentEmail}</p>
+          <p className="truncate">{currentEmail}</p>
         </div>
-        <Link 
+        <Link
           href="/hrms/logout"
           className="w-full flex items-center justify-center space-x-2 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors"
         >
@@ -119,3 +122,5 @@ export function HRMSSidebar({ role, currentEmail }: SidebarProps) {
     </aside>
   );
 }
+
+type SidebarRole = 'SUPER_ADMIN' | 'HR_ADMIN' | 'MANAGER' | 'EMPLOYEE';

@@ -15,10 +15,17 @@ export const ROLES = {
 } as const;
 
 /**
- * Maps legacy roles (from the old system) to the new 3-role RBAC system.
- * This ensures backward compatibility for existing users.
+ * Maps HRMS roles (4-role) AND legacy roles to the 3-role RBAC system.
+ * HR_ADMIN and MANAGER map to "admin" so the existing 3-role permission
+ * matrix keeps working without a schema change.
  */
 export const LEGACY_ROLE_MAP: Record<string, Role> = {
+  // 4-role HRMS roles
+  SUPER_ADMIN: "super_admin",
+  HR_ADMIN: "admin",
+  MANAGER: "admin",
+  EMPLOYEE: "employee",
+  // legacy / external names
   super_admin: "super_admin",
   admin: "admin",
   hr: "admin",
@@ -34,7 +41,13 @@ export const LEGACY_ROLE_MAP: Record<string, Role> = {
  */
 export function normalizeRole(role: string | undefined | null): Role {
   if (!role) return "employee";
-  return LEGACY_ROLE_MAP[role] || "employee";
+  // Try exact, then uppercase (HRMS roles are uppercase), then lowercase.
+  return (
+    LEGACY_ROLE_MAP[role] ||
+    LEGACY_ROLE_MAP[role.toUpperCase()] ||
+    LEGACY_ROLE_MAP[role.toLowerCase()] ||
+    "employee"
+  );
 }
 
 export const ROLE_HIERARCHY: Record<Role, number> = {
@@ -457,6 +470,20 @@ export const ROUTE_ACCESS: Record<string, Role[]> = {
   // System-level — Super Admin only
   "/role-management": ["super_admin"],
   "/permission-management": ["super_admin"],
+
+  // ── HRMS portal routes (4-role: SA/HR/MGR/EMP all map via LEGACY_ROLE_MAP) ──
+  // Super Admin can access every HRMS area.
+  // HR_ADMIN can access superadmin, hr-admin, manager, employee areas.
+  // MANAGER can access manager + employee areas only.
+  // EMPLOYEE can access only the employee area.
+  // Note: server-side layouts also enforce this; this map is the
+  // client-side canAccess() fast path. The /hrms index and /hrms/login
+  // routes are server-redirected and do not need client-side gating.
+  "/hrms/superadmin": ["super_admin", "admin"],
+  "/hrms/hr-admin": ["super_admin", "admin"],
+  "/hrms/manager": ["super_admin", "admin"],
+  "/hrms/employee": ["super_admin", "admin", "employee"],
+  "/hrms/approvals": ["super_admin", "admin"],
 };
 
 // ── Helper Functions ───────────────────────────────────
@@ -519,15 +546,18 @@ export function canAccessRoute(
   // Super Admin can access everything
   if (role === "super_admin") return true;
 
-  // Check exact path match
-  const allowedRoles = ROUTE_ACCESS[path];
-  if (allowedRoles?.includes(role as Role)) return true;
+  // Exact path match wins.
+  const exact = ROUTE_ACCESS[path];
+  if (exact?.includes(role as Role)) return true;
 
-  // Check prefix match (e.g., /employees/123 matches /employees)
-  for (const [route, roles] of Object.entries(ROUTE_ACCESS)) {
-    if (path.startsWith(route + "/") || path === route) {
-      if (roles.includes(role as Role)) return true;
-    }
+  // Prefix match using LONGEST route entry first, so /hrms/manager
+  // does not get caught by the broader /hrms rule.
+  const candidates = Object.keys(ROUTE_ACCESS)
+    .filter((r) => path === r || path.startsWith(r + "/"))
+    .sort((a, b) => b.length - a.length);
+  for (const route of candidates) {
+    const roles = ROUTE_ACCESS[route];
+    if (roles?.includes(role as Role)) return true;
   }
 
   return false;

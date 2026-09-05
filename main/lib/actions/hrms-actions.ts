@@ -11,14 +11,7 @@ import { auth } from '@/lib/auth';
 import { getAdminAuth } from '@/lib/firebase-admin';
 import { usersService } from '@/lib/firestore';
 
-// ── Helper: map Firebase/custom-claim roles to HRMS MongoDB roles ──
-function mapFirebaseRoleToHRMS(role?: string | null): 'SUPER_ADMIN' | 'HR_ADMIN' | 'MANAGER' | 'EMPLOYEE' {
-  const norm = (role || '').toUpperCase();
-  if (norm === 'SUPER_ADMIN' || norm === 'SUPERADMIN' || norm === 'SUPER_ADMINISTRATOR') return 'SUPER_ADMIN';
-  if (norm === 'HR_ADMIN' || norm === 'HRADMIN' || norm === 'ADMIN') return 'HR_ADMIN';
-  if (norm === 'MANAGER') return 'MANAGER';
-  return 'EMPLOYEE';
-}
+import { mapFirebaseRoleToHRMS } from '@/lib/hrms-roles';
 
 // Connect to DB cleanly without seeding fake data
 export async function initHRMSSystem() {
@@ -849,4 +842,218 @@ export async function updateEmployeeSettingsData(userId: string, data: any) {
   await connectDB();
   const s = await EmployeeSettings.findOneAndUpdate({ userId }, data, { upsert: true, new: true });
   return { success: true, settings: JSON.parse(JSON.stringify(s)) };
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Unified Approvals surface
+// ══════════════════════════════════════════════════════════════════
+//
+// One server-side query that returns the counts (for the sidebar badge)
+// and another that returns the full queue (for /hrms/approvals).
+// The queue is role-scoped: employees never see approver queues.
+
+import type { HRMSRole } from '@/lib/hrms-roles';
+
+export interface PendingApprovalCounts {
+  leaves: number;
+  regularization: number;
+  overtime: number;
+  onboarding: number;
+  escalations: number;
+  payroll: number;
+  timesheets: number;
+  total: number;
+}
+
+const ZERO_COUNTS: PendingApprovalCounts = {
+  leaves: 0,
+  regularization: 0,
+  overtime: 0,
+  onboarding: 0,
+  escalations: 0,
+  payroll: 0,
+  timesheets: 0,
+  total: 0,
+};
+
+/** Counts only — cheap; used by the sidebar badge on every layout render. */
+export async function getPendingApprovalCounts(actorRole: HRMSRole): Promise<PendingApprovalCounts> {
+  if (actorRole === 'EMPLOYEE') return ZERO_COUNTS;
+  try {
+    await connectDB();
+    const [leaves, regularization, overtime, onboarding, escalations, timesheets] = await Promise.all([
+      LeaveRequest.countDocuments({ status: 'PENDING' }),
+      Attendance.countDocuments({ regularizationStatus: 'PENDING' }),
+      Attendance.countDocuments({ overtimeHours: { $gt: 0 }, overtimeStatus: { $in: [null, 'PENDING'] } }),
+      User.countDocuments({ onboardingStatus: { $in: ['PENDING_REVIEW', 'PENDING_UPLOAD'] } }),
+      actorRole === 'SUPER_ADMIN'
+        ? User.countDocuments({ onboardingStatus: 'ESCALATED_SUPERADMIN' })
+        : Promise.resolve(0),
+      actorRole === 'MANAGER' || actorRole === 'HR_ADMIN'
+        ? Timesheet.countDocuments({ status: { $in: ['LOGGED', 'SUBMITTED'] } })
+        : Promise.resolve(0),
+    ]);
+    return {
+      leaves,
+      regularization,
+      overtime,
+      onboarding,
+      escalations,
+      payroll: actorRole === 'HR_ADMIN' || actorRole === 'SUPER_ADMIN' ? 1 : 0,
+      timesheets,
+      total: leaves + regularization + overtime + onboarding + escalations + timesheets,
+    };
+  } catch {
+    return ZERO_COUNTS;
+  }
+}
+
+export interface ApprovalItem {
+  id: string;
+  type: 'leave' | 'regularization' | 'overtime' | 'onboarding' | 'escalation' | 'timesheet' | 'payroll';
+  title: string;
+  subtitle?: string;
+  status: string;
+  requestedAt?: string;
+  actorName?: string;
+  href: string;
+}
+
+export interface ApprovalsQueue {
+  role: HRMSRole;
+  counts: PendingApprovalCounts;
+  items: ApprovalItem[];
+}
+
+/** Full queue for the /hrms/approvals page. Role-scoped. */
+export async function getPendingApprovalsForActor(): Promise<ApprovalsQueue> {
+  const counts = await getPendingApprovalCounts('SUPER_ADMIN');
+  // Recompute for the actual actor below.
+  let actor: Awaited<ReturnType<typeof getHRMSUser>> | null = null;
+  try {
+    actor = await getHRMSUser();
+  } catch {
+    return { role: 'EMPLOYEE', counts: ZERO_COUNTS, items: [] };
+  }
+  const role = mapFirebaseRoleToHRMS(actor?.role);
+  if (role === 'EMPLOYEE') {
+    return { role, counts: ZERO_COUNTS, items: [] };
+  }
+
+  const realCounts = await getPendingApprovalCounts(role);
+  const items: ApprovalItem[] = [];
+
+  try {
+    await connectDB();
+    const [leaves, attendance, onboardingUsers, escalated, timesheets] = await Promise.all([
+      LeaveRequest.find({ status: 'PENDING' })
+        .populate('userId', 'name email')
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean(),
+      Attendance.find({
+        $or: [
+          { regularizationStatus: 'PENDING' },
+          { overtimeHours: { $gt: 0 }, overtimeStatus: { $in: [null, 'PENDING'] } },
+        ],
+      })
+        .populate('userId', 'name email')
+        .sort({ date: -1 })
+        .limit(50)
+        .lean(),
+      User.find({ onboardingStatus: { $in: ['PENDING_REVIEW', 'PENDING_UPLOAD'] } })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean(),
+      role === 'SUPER_ADMIN'
+        ? User.find({ onboardingStatus: 'ESCALATED_SUPERADMIN' })
+            .sort({ updatedAt: -1 })
+            .limit(50)
+            .lean()
+        : Promise.resolve([]),
+      role === 'MANAGER' || role === 'HR_ADMIN'
+        ? Timesheet.find({ status: { $in: ['LOGGED', 'SUBMITTED'] } })
+            .populate('userId', 'name email')
+            .sort({ date: -1 })
+            .limit(50)
+            .lean()
+        : Promise.resolve([]),
+    ]);
+
+    for (const l of leaves as any[]) {
+      items.push({
+        id: String(l._id),
+        type: 'leave',
+        title: `${l.leaveType || 'Leave'} — ${l.userId?.name || 'Unknown'}`,
+        subtitle: l.reason || l.startDate,
+        status: l.status,
+        requestedAt: l.createdAt,
+        actorName: l.userId?.name,
+        href: '/hrms/approvals?tab=leaves',
+      });
+    }
+    for (const a of attendance as any[]) {
+      const isOT = (a.overtimeHours || 0) > 0;
+      items.push({
+        id: String(a._id),
+        type: isOT ? 'overtime' : 'regularization',
+        title: `${isOT ? 'Overtime' : 'Regularization'} — ${a.userId?.name || 'Unknown'}`,
+        subtitle: a.regularizationReason || `${a.overtimeHours || 0}h OT on ${a.date}`,
+        status: isOT ? a.overtimeStatus || 'PENDING' : a.regularizationStatus,
+        requestedAt: a.date,
+        actorName: a.userId?.name,
+        href: '/hrms/approvals?tab=' + (isOT ? 'overtime' : 'regularization'),
+      });
+    }
+    for (const u of onboardingUsers as any[]) {
+      items.push({
+        id: String(u._id),
+        type: 'onboarding',
+        title: `Onboarding — ${u.name}`,
+        subtitle: u.email,
+        status: u.onboardingStatus,
+        requestedAt: u.createdAt,
+        actorName: u.name,
+        href: '/hrms/approvals?tab=onboarding',
+      });
+    }
+    for (const u of escalated as any[]) {
+      items.push({
+        id: String(u._id),
+        type: 'escalation',
+        title: `Escalation — ${u.name}`,
+        subtitle: 'Missed 48h onboarding deadline',
+        status: u.onboardingStatus,
+        requestedAt: u.updatedAt,
+        actorName: u.name,
+        href: '/hrms/superadmin/escalations',
+      });
+    }
+    for (const t of timesheets as any[]) {
+      items.push({
+        id: String(t._id),
+        type: 'timesheet',
+        title: `Timesheet — ${t.userId?.name || 'Unknown'}`,
+        subtitle: `${t.hours || 0}h on ${t.date}`,
+        status: t.status,
+        requestedAt: t.date,
+        actorName: t.userId?.name,
+        href: '/hrms/approvals?tab=timesheets',
+      });
+    }
+    if (role === 'HR_ADMIN' || role === 'SUPER_ADMIN') {
+      items.push({
+        id: 'payroll-current',
+        type: 'payroll',
+        title: 'Monthly payroll run',
+        subtitle: `Period: ${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}`,
+        status: 'READY',
+        href: '/hrms/approvals?tab=payroll',
+      });
+    }
+  } catch {
+    // Fall through with whatever was collected.
+  }
+
+  return { role, counts: realCounts, items };
 }
