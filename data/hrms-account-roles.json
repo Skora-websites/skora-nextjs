@@ -1,0 +1,119 @@
+{
+  "skorainfotech@gmail.com": {
+    "role": "super_admin",
+    "displayName": "Vishal Srivastava",
+    "firstName": "Vishal",
+    "lastName": "Srivastava",
+    "department": "Executive",
+    "designation": "CEO",
+    "employeeCode": "CEO-001"
+  },
+  "hr@skorainfotech.com": {
+    "role": "hr_admin",
+    "displayName": "Vishal Srivastava",
+    "firstName": "Vishal",
+    "lastName": "Srivastava",
+    "department": "Human Resources",
+    "designation": "HR Manager",
+    "employeeCode": "HR-001"
+  },
+  "rajat.stf007@gmail.com": {
+    "role": "manager",
+    "displayName": "Rajat Kashyap",
+    "firstName": "Rajat",
+    "lastName": "Kashyap",
+    "department": "Development",
+    "designation": "Development Manager",
+    "employeeCode": "MGR-DEV-001"
+  },
+  "vipul.skorasoft@gmail.com": {
+    "role": "manager",
+    "displayName": "Vipul Singh",
+    "firstName": "Vipul",
+    "lastName": "Singh",
+    "department": "Sales",
+    "designation": "Sales Manager",
+    "employeeCode": "MGR-SLS-001"
+  },
+  "sg.shivangi@outlook.com": {
+    "role": "manager",
+    "displayName": "Shivangi Gupta",
+    "firstName": "Shivangi",
+    "lastName": "Gupta",
+    "department": "Marketing",
+    "designation": "Marketing Manager",
+    "employeeCode": "MGR-MKT-001"
+  },
+  "abhishek.skorasoft@gmail.com": {
+    "role": "employee",
+    "displayName": "Abhishek Singh",
+    "firstName": "Abhishek",
+    "lastName": "Singh",
+    "department": "Sales",
+    "designation": "Sales Executive",
+    "employeeCode": "EMP-SLS-001"
+  },
+  "sapnadelhi2004@gmail.com": {
+    "role": "employee",
+    "displayName": "Sapna",
+    "firstName": "Sapna",
+    "lastName": "",
+    "department": "Marketing",
+    "designation": "Marketing Executive",
+    "employeeCode": "EMP-MKT-003"
+  },
+  "chaudharygoldy08@gmail.com": {
+    "role": "employee",
+    "displayName": "Goldy Chaudhary",
+    "firstName": "Goldy",
+    "lastName": "Chaudhary",
+    "department": "Marketing",
+    "designation": "Marketing Executive",
+    "employeeCode": "EMP-MKT-001"
+  },
+  "maazhasan024@gmail.com": {
+    "role": "employee",
+    "displayName": "Maaz Hasan",
+    "firstName": "Maaz",
+    "lastName": "Hasan",
+    "department": "Marketing",
+    "designation": "Marketing Executive",
+    "employeeCode": "EMP-MKT-002"
+  },
+  "ashish17427@gmail.com": {
+    "role": "employee",
+    "displayName": "Ashish Mishra",
+    "firstName": "Ashish",
+    "lastName": "Mishra",
+    "department": "Development",
+    "designation": "Web Developer",
+    "employeeCode": "EMP-DEV-001"
+  },
+  "sk01506967961@gmail.com": {
+    "role": "employee",
+    "displayName": "Sachin",
+    "firstName": "Sachin",
+    "lastName": "",
+    "department": "Marketing",
+    "designation": "Marketing Executive",
+    "employeeCode": "EMP-MKT-004"
+  },
+  "simarkaurwork15@gmail.com": {
+    "role": "employee",
+    "displayName": "Simar Kaur",
+    "firstName": "Simar",
+    "lastName": "Kaur",
+    "department": "Marketing",
+    "designation": "Social Media Designer",
+    "employeeCode": "EMP-MKT-005"
+  },
+  "spallavivatsa@gmail.com": {
+    "role": "employee",
+    "displayName": "Shubha Pallavi",
+    "firstName": "Shubha",
+    "lastName": "Pallavi",
+    "department": "Development",
+    "designation": "Web Developer",
+    "employeeCode": "EMP-DEV-002"
+  }
+}

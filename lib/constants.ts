@@ -1,3 +1,5 @@
+import hrmsAccountRolesData from "@/data/hrms-account-roles.json";
+
 // ══════════════════════════════════════════════════════════════════
 // Navigation Items (CRM + HRM)
 // ══════════════════════════════════════════════════════════════════
@@ -116,16 +118,36 @@ export const NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
 // ══════════════════════════════════════════════════════════════════
 
 /**
- * List of email addresses that should automatically be granted Super Admin role.
- * The first user to sign up also becomes super_admin automatically.
- * Add additional emails here to designate multiple super admins.
+ * Authoritative email → role map for the HRMS portal (see data/hrms-account-roles.json).
+ * Login routes the dashboard by email: whoever signs in with one of these emails gets
+ * exactly the role listed here (stored user records are synced to match). Emails not
+ * listed keep whatever role is stored in the database.
  */
-export const SUPER_ADMIN_EMAILS = [
-  "ashish17427@gmail.com",
-  "skorainfotech@gmail.com",
+export interface HrmsAccountRole {
+  role: "super_admin" | "hr_admin" | "manager" | "employee";
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  department: string;
+  designation: string;
+  employeeCode: string;
+}
+
+export const HRMS_ACCOUNT_ROLES: Record<string, HrmsAccountRole> = hrmsAccountRolesData as Record<
+  string,
+  HrmsAccountRole
+>;
+
+/**
+ * Emails that are automatically granted Super Admin. Derived from the authoritative
+ * HRMS_ACCOUNT_ROLES map so the CEO dashboard belongs only to listed super admins.
+ * Add extra super admins via the SUPER_ADMIN_EMAIL environment variable.
+ */
+export const SUPER_ADMIN_EMAILS: string[] = [
+  ...Object.entries(HRMS_ACCOUNT_ROLES)
+    .filter(([, account]) => account.role === "super_admin")
+    .map(([email]) => email),
   process.env.SUPER_ADMIN_EMAIL || "",
-  "admin@skora.info",
-  "admin@edskora.com",
 ].filter(Boolean);
 
 // ══════════════════════════════════════════════════════════════════
