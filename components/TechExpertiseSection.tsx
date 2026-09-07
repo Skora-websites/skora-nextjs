@@ -28,7 +28,7 @@ const expertiseRow2 = [
   { name: "Facebook", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/facebook/facebook-original.svg" },
   { name: "Instagram", category: "Social Media", icon: "https://cdn.simpleicons.org/instagram/E4405F" },
   { name: "LinkedIn", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/linkedin/linkedin-original.svg" },
-  { name: "X", category: "Social Media", icon: "https://cdn.simpleicons.org/x/ffffff" },
+  { name: "X", category: "Social Media", icon: "https://cdn.simpleicons.org/x/0b1220" },
   { name: "Pinterest", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/pinterest/pinterest-original.svg" },
   { name: "Meta", category: "Platform", icon: "https://cdn.simpleicons.org/meta/0467DF" },
   { name: "Google Ads", category: "Marketing", icon: "https://cdn.simpleicons.org/googleads/4285F4" },
@@ -50,8 +50,8 @@ export default function TechExpertiseSection() {
 
       {/* Dot Grid Background (dark) */}
       <div
-        className="absolute inset-0 opacity-[0.3]"
-        style={{ backgroundImage: "radial-gradient(#1e293b 1px, transparent 1px)", backgroundSize: "32px 32px" }}
+        className="absolute inset-0 opacity-70"
+        style={{ backgroundImage: "radial-gradient(#d7e0ee 1px, transparent 1px)", backgroundSize: "32px 32px" }}
       />
 
       {/* Ambient blue glow */}

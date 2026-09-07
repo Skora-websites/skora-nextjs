@@ -22,7 +22,7 @@ export default function TestimonialsSection() {
         .marquee-track:hover .animate-scroll-marquee { animation-play-state: paused; }
       `}</style>
 
-      <div aria-hidden="true" className="absolute inset-0 opacity-[0.2]" style={{ backgroundImage: "radial-gradient(#1e293b 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
+      <div aria-hidden="true" className="absolute inset-0 opacity-70" style={{ backgroundImage: "radial-gradient(#d7e0ee 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
       <motion.div aria-hidden="true" animate={{ x: [0, 40, 0], y: [0, -25, 0] }} transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-40 top-0 h-96 w-96 rounded-full bg-blue-600/15 blur-[100px]" />
 
       <div className="relative mx-auto mb-14 max-w-3xl px-4 text-center">

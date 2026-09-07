@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import LandingIntro from "@/components/LandingIntro";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
 import ScrollReveal from "@/components/ScrollReveal";
 import Navbar from "@/components/Navbar";
@@ -33,13 +32,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-main text-ink flex flex-col relative overflow-hidden">
-      {/* High-Impact GSAP 3D Cyber Intro Sequence */}
-      <LandingIntro />
-
       {/* Top Sticky Scroll Progress Bar */}
       <ScrollProgressBar />
 
-      {/* Navbar with transparent-to-dark-glass scroll transition */}
+      {/* Navbar with white-glass scroll treatment */}
       <Navbar onOpenConsultation={handleOpenConsultation} />
 
       {/* 1. ENTERPRISE HERO — Electric Blue Theme & 5 Front Showcase 3D Cards */}

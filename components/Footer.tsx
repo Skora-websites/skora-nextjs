@@ -35,7 +35,7 @@ const TechCyberParticles = () => {
       {particleSeeds.map((p, i) => (
         <motion.div
           key={i}
-          className="absolute w-2 h-2 rounded-full bg-gradient-to-tr from-blue-600 via-blue-400 to-accent-light opacity-60 shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+          className="absolute w-2 h-2 rounded-full bg-accent/35"
           initial={{ x: p.x, y: p.y, rotate: p.rotate, scale: p.scale }}
           animate={{
             y: [null, p.rise],
@@ -167,13 +167,13 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
     `px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-wider transition-all cursor-pointer border ${
       active
         ? "bg-accent text-white border-accent shadow-[0_0_20px_rgba(37,99,235,0.5)]"
-        : "bg-ink/5 text-sub border-line hover:border-accent/60 hover:text-white"
+        : "bg-ink/5 text-sub border-line hover:border-accent/60 hover:text-ink"
     }`;
 
   return (
     <footer
       ref={footerRef}
-      className="relative bg-main text-ink pt-24 pb-12 overflow-hidden border-t border-line selection:bg-accent selection:text-white"
+      className="relative bg-surface text-ink pt-24 pb-12 overflow-hidden border-t border-line selection:bg-accent selection:text-white"
     >
       {/* 3D Cyber Tech Network Floating Particles */}
       <TechCyberParticles />
@@ -420,7 +420,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="X Twitter"
-                className="w-11 h-11 bg-ink/5 hover:bg-white hover:text-black rounded-full flex items-center justify-center transition-all border border-line text-sub shadow-lg cursor-pointer"
+                className="w-11 h-11 bg-ink/5 hover:bg-ink hover:text-white rounded-full flex items-center justify-center transition-all border border-line text-sub shadow-lg cursor-pointer"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -468,7 +468,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
               <li>
                 <Link
                   href="/terms"
-                  className="hover:text-accent-light transition-colors inline-block hover:translate-x-1 duration-200 transform"
+                  className="hover:text-accent transition-colors inline-block hover:translate-x-1 duration-200 transform"
                 >
                   Terms &amp; Conditions
                 </Link>
@@ -476,7 +476,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
               <li>
                 <Link
                   href="/privacy"
-                  className="hover:text-accent-light transition-colors inline-block hover:translate-x-1 duration-200 transform"
+                  className="hover:text-accent transition-colors inline-block hover:translate-x-1 duration-200 transform"
                 >
                   Privacy Policy
                 </Link>

@@ -7,7 +7,7 @@
   justify-content: center;
   background-color: var(--bg-main);
   overflow: hidden;
-  background-image: radial-gradient(circle at 50% 40%, rgba(37, 99, 235, 0.14) 0%, transparent 65%);
+  background-image: radial-gradient(circle at 50% 40%, rgba(37, 99, 235, 0.08) 0%, transparent 65%);
   border-top: 1px solid var(--border-light);
 }
 
@@ -33,7 +33,7 @@
   align-items: center;
   gap: 8px;
   background: var(--btn-secondary-bg);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-strong);
   padding: 10px 20px;
   border-radius: 30px;
   color: var(--text-primary);
@@ -43,18 +43,19 @@
   letter-spacing: 0.05em;
   cursor: pointer;
   backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
 }
 
 .audio-toggle:hover {
   background: var(--btn-secondary-bg-hover);
-  border-color: var(--border-strong);
+  border-color: var(--border-accent);
 }
 
 .audio-active {
-  background: rgba(37, 99, 235, 0.2);
-  border-color: #3b82f6;
-  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.4);
+  color: #1d4ed8;
 }
 
 .carousel-scene {
@@ -106,7 +107,7 @@
   position: relative;
   transform-origin: bottom center;
   transform: rotateX(-20deg);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 2px 4px rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 2px 4px rgba(255, 255, 255, 0.15), 0 20px 40px -18px rgba(11, 18, 32, 0.35);
   z-index: 2;
   transform-style: preserve-3d;
 }
@@ -198,7 +199,7 @@
   transform-origin: top center;
   transform: rotateX(-90deg);
   border-radius: 0 0 12px 12px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
 }
 
 .desk-shadow {
@@ -207,7 +208,7 @@
   left: 50%;
   width: 450px;
   height: 250px;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 65%);
+  background: radial-gradient(ellipse at center, rgba(11, 18, 32, 0.3) 0%, rgba(11, 18, 32, 0) 65%);
   transform: translate(-50%, 0) rotateX(90deg) translateZ(-30px);
   pointer-events: none;
 }
@@ -217,7 +218,7 @@
   inset: 0;
   background: var(--bg-main);
   border-radius: inherit;
-  opacity: 0.7;
+  opacity: 0.75;
   z-index: 10;
   pointer-events: none;
   transition: opacity 0.7s ease;
@@ -254,10 +255,10 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0 0 12px 0;
-  background: linear-gradient(135deg, var(--text-primary) 0%, #60a5fa 100%);
+  background: linear-gradient(100deg, #0b1220 0%, #1d4ed8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 10px 30px rgba(96, 165, 250, 0.3);
+  background-clip: text;
 }
 
 .carousel-text-overlay p {

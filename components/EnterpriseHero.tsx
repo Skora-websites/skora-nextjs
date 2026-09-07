@@ -27,50 +27,71 @@ const profileCards = [
     role: "Clinical Portals & EHR",
     img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80",
     link: "/services/pms",
-    badge: "HIPAA Compliant",
+    badge: "HIPAA",
   },
   {
     title: "Custom Software",
     role: "Enterprise Platforms",
     img: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80",
     link: "/services/saas-development",
-    badge: "Multi-Tenant SaaS",
+    badge: "SaaS",
   },
   {
     title: "Cloud Infra",
     role: "AWS & Azure Scaling",
     img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
     link: "/services/cloud-services",
-    badge: "99.99% Uptime",
+    badge: "Cloud",
   },
   {
     title: "UI / UX Design",
     role: "Cinematic Interfaces",
     img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=600&q=80",
     link: "/services/website-design",
-    badge: "High Conversion",
+    badge: "Design",
   },
   {
     title: "Mobile Apps",
     role: "iOS & Android Engine",
     img: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80",
     link: "/services/mobile-development",
-    badge: "Native Speed",
+    badge: "Mobile",
   },
 ];
 
 export const EnterpriseBackground = () => (
   <div className="absolute inset-0 z-0 overflow-hidden bg-main" aria-hidden="true">
-    {/* Electric blue radial halo */}
-    <motion.div animate={{ opacity: [0.35, 0.9, 0.35], scale: [0.96, 1.1, 0.96] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-28 bg-[radial-gradient(ellipse_at_50%_40%,rgba(37,99,235,.45)_0%,rgba(29,78,216,.3)_31%,rgba(5,7,14,0)_70%)] blur-[42px]" />
-    <motion.div animate={{ x: ["-32%", "32%", "-32%"], opacity: [0.04, 0.32, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-[35%] -left-[42%] h-[145%] w-[118%] rotate-[14deg] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent blur-[48px]" />
-    <motion.div animate={{ opacity: [0.6, 0.14, 0.6], x: [0, -28, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-64 -left-48 h-[40rem] w-[40rem] rounded-full bg-glow/20 blur-[145px]" />
-    <motion.div animate={{ opacity: [0.04, 0.4, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(96,165,250,.3)_0%,rgba(5,7,14,0)_58%)]" />
+    {/* Soft sky gradient wash */}
+    <div className="absolute inset-0 bg-[linear-gradient(180deg,#eef4fd_0%,#f7f9fc_55%,#f7f9fc_100%)]" />
 
-    <motion.svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" animate={{ x: [0, -24, 0], y: [0, 12, 0], opacity: [0.08, 0.32, 0.08], filter: ["blur(4px)", "blur(1.4px)", "blur(4px)"] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-[8%] h-[116%] w-[116%]">
+    {/* Ambient blue halos */}
+    <motion.div
+      animate={{ opacity: [0.5, 0.8, 0.5], scale: [0.96, 1.08, 0.96] }}
+      transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+      className="absolute -top-40 left-1/2 h-[36rem] w-[64rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.14)_0%,rgba(37,99,235,0)_65%)] blur-2xl"
+    />
+    <motion.div
+      animate={{ x: [0, -28, 0], y: [0, 18, 0], opacity: [0.35, 0.6, 0.35] }}
+      transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+      className="absolute -bottom-48 -left-40 h-[34rem] w-[34rem] rounded-full bg-sky-300/25 blur-[120px]"
+    />
+    <motion.div
+      animate={{ x: [0, 26, 0], y: [0, -14, 0], opacity: [0.3, 0.55, 0.3] }}
+      transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+      className="absolute top-1/3 -right-44 h-[32rem] w-[32rem] rounded-full bg-blue-300/20 blur-[120px]"
+    />
+
+    {/* Faint social & tech icon pattern */}
+    <motion.svg
+      viewBox="0 0 1440 900"
+      preserveAspectRatio="xMidYMid slice"
+      animate={{ opacity: [0.05, 0.1, 0.05] }}
+      transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+      className="absolute -inset-[8%] h-[116%] w-[116%]"
+    >
       <defs>
         <pattern id="socialPlatformPattern" width="248" height="158" patternUnits="userSpaceOnUse">
-          <g fill="#60a5fa" stroke="#60a5fa" strokeLinecap="round" strokeLinejoin="round">
+          <g fill="#2563eb" stroke="#2563eb" strokeLinecap="round" strokeLinejoin="round">
             <g transform="translate(18 16) scale(.78)">{socialIconsSvg.facebook}</g>
             <g transform="translate(103 13) scale(.82)">{socialIconsSvg.instagram}</g>
             <g transform="translate(189 16) scale(.78)">{socialIconsSvg.linkedin}</g>
@@ -84,6 +105,9 @@ export const EnterpriseBackground = () => (
       </defs>
       <rect width="100%" height="100%" fill="url(#socialPlatformPattern)" />
     </motion.svg>
+
+    {/* Ground fade into page canvas */}
+    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-main" />
   </div>
 );
 
@@ -128,15 +152,21 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
       ref={heroRef}
       className="relative min-h-[720px] overflow-hidden border-b border-line pt-20 lg:pt-24 pb-12 [perspective:1200px]"
     >
-      {/* SVG Social & Tech Icon Pattern Background */}
+      {/* Soft Light Background */}
       <EnterpriseBackground />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
 
+        {/* Trust pill */}
+        <div className="gsap-hero-title mb-6 inline-flex items-center gap-2 rounded-full glass-pill px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+          Enterprise Digital &amp; Technology Partner
+        </div>
+
         {/* Kinetic Hero Title */}
-        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-extrabold leading-[1.03] tracking-tight text-ink sm:text-6xl lg:text-[5.4rem] drop-shadow-[0_10px_35px_rgba(37,99,235,0.15)]">
+        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-extrabold leading-[1.03] tracking-tight text-ink sm:text-6xl lg:text-[5.2rem]">
           Innovation doesn&apos;t wait.<br />
-          Neither does <span className="text-accent-light drop-shadow-[0_0_30px_rgba(96,165,250,0.6)]">Skora.</span>
+          Neither does <span className="text-gradient">Skora.</span>
         </h1>
 
         {/* Subtitle */}
@@ -156,19 +186,19 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
           </button>
 
           <a href="#capabilities" className="gsap-hero-btn btn-secondary px-7 py-4 text-base">
-            <Layers size={18} className="text-accent-light group-hover:scale-110 transition-transform" />
+            <Layers size={18} className="text-accent group-hover:scale-110 transition-transform" />
             <span>Explore Capabilities</span>
           </a>
         </div>
 
-        {/* 5 SERVICE SHOWCASE CARDS — glass cards with blue glow */}
+        {/* 5 SERVICE SHOWCASE CARDS — white cards with soft shadows */}
         <div className="mt-10 w-full overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex min-w-max items-stretch justify-center gap-3 px-2 lg:min-w-0 lg:flex-wrap">
             {profileCards.map((card) => (
               <a href={card.link} key={card.title} className="gsap-card-item block">
                 <Card3D
                   maxTilt={14}
-                  className="w-[178px] overflow-hidden rounded-2xl glass-card glass-card-hover p-2.5 text-left"
+                  className="group w-[178px] overflow-hidden rounded-2xl glass-card glass-card-hover p-2.5 text-left"
                 >
                   <div className="h-26 overflow-hidden rounded-xl relative">
                     <img
@@ -179,13 +209,13 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
                       }}
                       className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                     />
-                    <span className="glass-pill absolute top-1.5 right-1.5 px-2 py-0.5 text-[9px]">
+                    <span className="absolute top-1.5 right-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent shadow-sm">
                       {card.badge}
                     </span>
                   </div>
                   <div className="px-1 pb-1 pt-3">
                     <h2 className="text-sm font-bold text-ink truncate">{card.title}</h2>
-                    <p className="mt-1 text-[11px] font-semibold text-accent-light truncate">{card.role}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-sub truncate">{card.role}</p>
                   </div>
                 </Card3D>
               </a>

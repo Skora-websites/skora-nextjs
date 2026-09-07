@@ -22,71 +22,61 @@ import {
   X,
   ArrowLeft,
 } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const services = [
   {
     name: "Website Design & Engineering",
     icon: Globe2,
     link: "/services/website-design",
-    desc: "Bespoke Next.js, Sub-second Page Speed & High Conversion UI",
-    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    desc: "Bespoke Next.js, sub-second page speed & high-conversion UI.",
   },
   {
     name: "Digital Marketing & Local SEO",
     icon: Video,
     link: "/services/digital-marketing",
-    desc: "Google Maps #1 Ranking, Meta Ads & AI Search Optimization",
-    img: "https://images.unsplash.com/photo-1533750349088-cd871a92f312?auto=format&fit=crop&w=800&q=80",
+    desc: "Google Maps #1 ranking, Meta Ads & AI search optimization.",
   },
   {
     name: "Branding & Visual Identity",
     icon: PenTool,
     link: "/services/branding",
-    desc: "Logo Design, Positioning & Corporate Visual Style Guides",
-    img: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
+    desc: "Logo design, positioning & corporate visual style guides.",
   },
   {
     name: "Video Production & Reels",
     icon: BriefcaseBusiness,
     link: "/services/video-production",
-    desc: "Commercial Product Videos, Instagram Reels & Executive Intros",
-    img: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=800&q=80",
+    desc: "Commercial product videos, Instagram reels & executive intros.",
   },
   {
     name: "Mobile App Development",
     icon: Code,
     link: "/services/mobile-development",
-    desc: "Native iOS & Android Applications Built for Scale",
-    img: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
+    desc: "Native iOS & Android applications built for scale.",
   },
   {
     name: "Cloud Services & DevOps",
     icon: Activity,
     link: "/services/cloud-services",
-    desc: "AWS/Azure Migrations, 99.99% Uptime & CI/CD Pipelines",
-    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+    desc: "AWS/Azure migrations, 99.99% uptime & CI/CD pipelines.",
   },
   {
     name: "SaaS Platform Development",
     icon: Code,
     link: "/services/saas-development",
-    desc: "Multi-Tenant Cloud SaaS & Automated Recurring Billing",
-    img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+    desc: "Multi-tenant cloud SaaS & automated recurring billing.",
   },
   {
     name: "Custom CRM & Automations",
     icon: MessageCircle,
     link: "/services/crm",
-    desc: "Lead Pipeline Sync & Automated WhatsApp Triggers",
-    img: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80",
+    desc: "Lead pipeline sync & automated WhatsApp triggers.",
   },
   {
     name: "Project Management Systems",
     icon: CalendarClock,
     link: "/services/pms",
-    desc: "Agile Task Workflows, Gantt Charts & Client Approval Portals",
-    img: "https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?auto=format&fit=crop&w=800&q=80",
+    desc: "Agile task workflows, Gantt charts & client approval portals.",
   },
 ];
 
@@ -108,16 +98,15 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
   const isHomePage = pathname === "/";
   const isHealthcarePage = pathname === "/healthcare";
   const isServicesPage = pathname.startsWith("/services");
-  // Single dark behavior: transparent at the very top, dark glass once scrolled.
+  // Transparent at the very top of the landing page, white glass once scrolled.
   const isTransparentNav = isLandingPage && !isScrolled;
 
   const textClass = isTransparentNav
-    ? "text-ink hover:text-accent-light"
-    : "text-ink hover:text-accent-light";
-  const logoTextClass = "text-ink";
+    ? "text-ink/80 hover:text-accent"
+    : "text-ink/80 hover:text-accent";
   const headerBgClass = isTransparentNav
     ? "bg-transparent border-transparent"
-    : "glass-card border-b border-line";
+    : "bg-white/85 backdrop-blur-xl border-line shadow-[0_1px_2px_rgba(11,18,32,0.04)]";
 
   const siteContent = useSiteContent();
   const whatsappNumber = (siteContent.phone || "+919217375835").replace(/[^0-9]/g, "");
@@ -155,10 +144,10 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             {/* Skora Logo -> Redirects to Landing Page (/) */}
             <Link
               href="/"
-              className={`relative z-50 flex items-center gap-1.5 text-2xl font-extrabold tracking-tight transition-colors duration-300 ${logoTextClass}`}
+              className={`relative z-50 flex items-center gap-1.5 text-2xl font-extrabold tracking-tight transition-colors duration-300 text-ink`}
             >
               Skora{" "}
-              <span className="h-2.5 w-2.5 rounded-full bg-glow shadow-[0_0_8px_#3b82f6]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
             </Link>
 
             <nav className="hidden h-full items-center gap-8 lg:flex">
@@ -166,12 +155,12 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <Link
                 href="/"
                 className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${
-                  isHomePage ? "text-accent-light font-extrabold" : textClass
+                  isHomePage ? "text-accent font-extrabold" : textClass
                 }`}
               >
                 <span>Home</span>
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-accent transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left rounded-full bg-accent transition-transform duration-300 ease-out ${
                     isHomePage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -182,7 +171,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 type="button"
                 onClick={() => setIsServicesOpen(true)}
                 className={`group relative flex h-full cursor-pointer items-center text-[15px] font-semibold transition-colors duration-300 gap-1 ${
-                  isServicesPage ? "text-accent-light font-extrabold" : textClass
+                  isServicesPage ? "text-accent font-extrabold" : textClass
                 }`}
               >
                 <span>Services</span>
@@ -193,7 +182,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   }`}
                 />
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-accent transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left rounded-full bg-accent transition-transform duration-300 ease-out ${
                     isServicesPage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -204,22 +193,22 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 href="/healthcare"
                 className={`group relative flex h-full items-center gap-1.5 text-[15px] font-semibold transition-colors duration-300 ${
                   isHealthcarePage
-                    ? "text-emerald-400 font-extrabold"
-                    : "text-emerald-300/90 hover:text-emerald-200"
+                    ? "text-emerald-600 font-extrabold"
+                    : "text-emerald-600/80 hover:text-emerald-600"
                 }`}
               >
                 <Activity
                   size={16}
-                  className={isHealthcarePage ? "animate-spin text-emerald-400" : ""}
+                  className={isHealthcarePage ? "animate-spin text-emerald-600" : ""}
                 />
                 <span>Healthcare IT</span>
                 {isHealthcarePage && (
-                  <span className="ml-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-300">
+                  <span className="ml-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-700">
                     ACTIVE
                   </span>
                 )}
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-emerald-400 transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left rounded-full bg-emerald-500 transition-transform duration-300 ease-out ${
                     isHealthcarePage ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
@@ -228,21 +217,19 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <Link
                 href="/contact"
                 className={`group relative flex h-full items-center text-[15px] font-semibold transition-colors duration-300 ${
-                  pathname === "/contact" ? "text-accent-light font-extrabold" : textClass
+                  pathname === "/contact" ? "text-accent font-extrabold" : textClass
                 }`}
               >
                 <span>Contact</span>
                 <span
-                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left bg-accent transition-transform duration-300 ease-out ${
+                  className={`absolute bottom-0 left-0 h-[3px] w-full origin-left rounded-full bg-accent transition-transform duration-300 ease-out ${
                     pathname === "/contact" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
               </Link>
             </nav>
 
-            <div className="hidden items-center gap-4 lg:flex">
-              <ThemeToggle />
-
+            <div className="hidden items-center gap-3 lg:flex">
               <button
                 type="button"
                 onClick={() => setIsAuditOpen(true)}
@@ -265,8 +252,8 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               type="button"
               className={`relative z-50 rounded-xl p-2 transition cursor-pointer lg:hidden border ${
                 isTransparentNav
-                  ? "border-ink/30 text-ink hover:bg-ink/10"
-                  : "border-line bg-ink/5 text-ink hover:bg-ink/10"
+                  ? "border-line bg-white/70 text-ink hover:bg-surface"
+                  : "border-line bg-white text-ink hover:bg-elevated"
               }`}
               onClick={() => setMobileMenuOpen((current) => !current)}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -277,7 +264,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
         </div>
       </header>
 
-      {/* FULL-SCREEN SERVICES MODAL — dark glass */}
+      {/* FULL-SCREEN SERVICES MEGA-MENU — white glass */}
       <AnimatePresence>
         {isServicesOpen && (
           <motion.div
@@ -285,20 +272,21 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-[1000] flex flex-col overflow-y-auto bg-main/95 backdrop-blur-2xl px-4 py-6 sm:p-8 text-ink"
+            className="fixed inset-0 z-[1000] flex flex-col overflow-y-auto bg-white/95 backdrop-blur-2xl px-4 py-6 sm:p-8 text-ink"
           >
             <div className="flex w-full items-center justify-between mx-auto max-w-[90rem]">
               <button
                 onClick={closeServices}
                 className="btn-secondary px-4 py-2 text-xs"
               >
-                <ArrowLeft size={16} className="text-accent-light" />
+                <ArrowLeft size={16} className="text-accent" />
                 <span>Return to Previous Page</span>
               </button>
 
               <button
                 onClick={closeServices}
-                className="flex h-11 w-11 items-center justify-center rounded-full glass-card text-ink transition hover:bg-ink/10 hover:rotate-90 cursor-pointer"
+                aria-label="Close services menu"
+                className="btn-icon-ghost flex h-11 w-11 items-center justify-center rounded-full glass-card transition hover:rotate-90 cursor-pointer"
               >
                 <X size={22} />
               </button>
@@ -309,7 +297,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="mb-10 lg:mb-16 text-center lg:text-left"
+                className="mb-10 lg:mb-14 text-center lg:text-left"
               >
                 <h2 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
                   Our{" "}
@@ -322,38 +310,31 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 </p>
               </motion.div>
 
-              <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-5 lg:grid-cols-3">
                 {services.map((item, idx) => (
                   <motion.div
                     key={item.name}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 + idx * 0.1, duration: 0.4 }}
+                    transition={{ delay: 0.1 + idx * 0.05, duration: 0.4 }}
                   >
                     <Link
                       href={item.link}
                       onClick={closeServices}
-                      className="glass-card group relative flex h-[350px] lg:h-[420px] w-full flex-col justify-end overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:border-blue-500/40 cursor-pointer"
+                      className="group flex h-full flex-col gap-4 rounded-2xl border border-line bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_16px_36px_-16px_rgba(37,99,235,0.25)] cursor-pointer"
                     >
-                      <img
-                        src={item.img}
-                        alt={item.name}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-main via-main/90 to-main/40 transition-opacity group-hover:from-main" />
-                      <div className="relative z-10 p-8">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl glass-pill transition-colors group-hover:bg-accent group-hover:text-white group-hover:border-accent">
-                          <item.icon size={28} />
+                      <div className="flex items-center justify-between">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+                          <item.icon size={24} />
                         </div>
-                        <h3 className="text-2xl font-extrabold text-white mb-2">{item.name}</h3>
-                        <p className="text-sub font-medium mb-6 text-sm leading-relaxed">{item.desc}</p>
-                        <div className="flex items-center gap-2 text-sm font-bold text-accent-light">
-                          <span>Explore Division</span>
-                          <ArrowRight
-                            size={16}
-                            className="transition-transform group-hover:translate-x-2"
-                          />
-                        </div>
+                        <ArrowRight
+                          size={18}
+                          className="text-faint transition-all group-hover:translate-x-1 group-hover:text-accent"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-ink mb-1">{item.name}</h3>
+                        <p className="text-sub text-sm leading-relaxed">{item.desc}</p>
                       </div>
                     </Link>
                   </motion.div>
@@ -364,7 +345,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
         )}
       </AnimatePresence>
 
-      {/* MOBILE MENU — dark glass */}
+      {/* MOBILE MENU — white */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -372,14 +353,14 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-main overflow-y-auto lg:hidden"
+            className="fixed inset-0 z-40 bg-white overflow-y-auto lg:hidden"
           >
             <div className="flex flex-col pt-24 px-6 pb-12 min-h-screen">
               <div className="flex flex-col gap-6 flex-grow">
                 <Link
                   href="/"
                   className={`border-b border-line pb-4 text-xl font-bold ${
-                    isHomePage ? "text-accent-light font-extrabold" : "text-ink"
+                    isHomePage ? "text-accent font-extrabold" : "text-ink"
                   }`}
                 >
                   Home {isHomePage && "●"}
@@ -391,12 +372,12 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   }}
                   className="flex w-full justify-between items-center border-b border-line pb-4 text-xl font-bold text-ink cursor-pointer"
                 >
-                  Services <ArrowRight size={20} className="text-accent-light" />
+                  Services <ArrowRight size={20} className="text-accent" />
                 </button>
                 <Link
                   href="/healthcare"
                   className={`flex items-center gap-3 text-lg font-bold ${
-                    isHealthcarePage ? "text-emerald-400 font-extrabold" : "text-emerald-300/90"
+                    isHealthcarePage ? "text-emerald-600 font-extrabold" : "text-emerald-600/80"
                   }`}
                 >
                   <div className="p-2 rounded bg-emerald-500/10">
@@ -412,9 +393,6 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 </button>
               </div>
               <div className="mt-8 flex flex-col gap-3">
-                <div className="flex justify-center pb-2">
-                  <ThemeToggle />
-                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -438,7 +416,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
         )}
       </AnimatePresence>
 
-      {/* FREE AUDIT MODAL — dark glass */}
+      {/* FREE AUDIT MODAL — white card on soft scrim */}
       <AnimatePresence>
         {isAuditOpen && (
           <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -447,7 +425,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeAudit}
-              className="absolute inset-0 cursor-pointer bg-scrim backdrop-blur-md"
+              className="absolute inset-0 cursor-pointer bg-scrim backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.98, y: 10 }}
@@ -463,14 +441,15 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   onClick={closeAudit}
                   className="btn-secondary px-3.5 py-1.5 text-xs"
                 >
-                  <ArrowLeft size={16} className="text-accent-light" />
+                  <ArrowLeft size={16} className="text-accent" />
                   <span>Return to Previous Page</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={closeAudit}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink/5 text-sub transition-colors hover:bg-ink/10 hover:text-ink cursor-pointer"
+                  aria-label="Close audit modal"
+                  className="btn-icon-ghost flex h-9 w-9 items-center justify-center rounded-xl bg-elevated transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -560,17 +539,17 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                         className={`${inputClass} appearance-none pl-10`}
                         defaultValue=""
                       >
-                        <option value="" disabled className="bg-surface">
+                        <option value="" disabled>
                           Select a service
                         </option>
-                        <option className="bg-surface">Custom Enterprise Software</option>
-                        <option className="bg-surface">Healthcare IT & EHR Solutions</option>
-                        <option className="bg-surface">Cloud Architecture & Migration</option>
-                        <option className="bg-surface">UI / UX & Product Design</option>
-                        <option className="bg-surface">Mobile Applications</option>
-                        <option className="bg-surface">Branding & Digital Experience</option>
-                        <option className="bg-surface">Video Production</option>
-                        <option className="bg-surface">Not sure — I need guidance</option>
+                        <option>Custom Enterprise Software</option>
+                        <option>Healthcare IT & EHR Solutions</option>
+                        <option>Cloud Architecture & Migration</option>
+                        <option>UI / UX & Product Design</option>
+                        <option>Mobile Applications</option>
+                        <option>Branding & Digital Experience</option>
+                        <option>Video Production</option>
+                        <option>Not sure — I need guidance</option>
                       </select>
                     </div>
                   </div>
@@ -606,7 +585,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     href={whatsappHref}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-emerald-400 transition hover:text-emerald-300 cursor-pointer"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 transition hover:text-emerald-700 cursor-pointer"
                   >
                     <MessageCircle size={17} /> Chat with our Analytics Team now
                   </a>
