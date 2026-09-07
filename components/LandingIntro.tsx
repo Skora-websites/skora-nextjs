@@ -156,7 +156,7 @@ export default function LandingIntro({ onComplete }: LandingIntroProps) {
             <span className="text-sky-400 animate-pulse">|</span>
           </h1>
 
-          <p className="text-xs sm:text-sm font-mono text-slate-400 tracking-widest uppercase">
+          <p className="text-xs sm:text-sm font-mono text-sub tracking-widest uppercase">
             DOMINATE SEARCH • ENGINEER SAAS • SCALE CLOUD
           </p>
         </div>

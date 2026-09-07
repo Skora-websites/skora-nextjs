@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Star, Quote, Hexagon, Activity, Triangle, CircleDot, Cloud } from "lucide-react";
+import Pill from "./landing/Pill";
 
 const testimonials = [
   { quote: "Skora didn't just build our platform; they re-engineered our entire digital architecture. The cloud scalability they achieved is entirely unmatched.", name: "Elena Rodriguez", role: "Chief Technology Officer", Logo: Hexagon, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" },
@@ -14,39 +15,39 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <section className="relative overflow-hidden border-t border-slate-200 bg-[#f8fbff] py-24">
+    <section className="relative overflow-hidden border-t border-white/10 bg-main py-24">
       <style>{`
         @keyframes scrollMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .animate-scroll-marquee { display: flex; width: max-content; animation: scrollMarquee 42s linear infinite; }
         .marquee-track:hover .animate-scroll-marquee { animation-play-state: paused; }
       `}</style>
 
-      <div aria-hidden="true" className="absolute inset-0 opacity-[0.25]" style={{ backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
-      <motion.div aria-hidden="true" animate={{ x: [0, 40, 0], y: [0, -25, 0] }} transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-40 top-0 h-96 w-96 rounded-full bg-blue-200/30 blur-[100px]" />
+      <div aria-hidden="true" className="absolute inset-0 opacity-[0.2]" style={{ backgroundImage: "radial-gradient(#1e293b 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
+      <motion.div aria-hidden="true" animate={{ x: [0, 40, 0], y: [0, -25, 0] }} transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-40 top-0 h-96 w-96 rounded-full bg-blue-600/15 blur-[100px]" />
 
       <div className="relative mx-auto mb-14 max-w-3xl px-4 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/85 px-3.5 py-2 text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
-          <Star size={14} className="fill-blue-600" /> Global Trust
-        </div>
-        <h2 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">Partnered with the Best</h2>
-        <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">Hear from engineering leaders and executives who scaled their operations with Skora.</p>
+        <Pill>
+          <Star size={14} className="fill-accent-light" /> Global Trust
+        </Pill>
+        <h2 className="mt-6 text-4xl font-extrabold tracking-tight text-ink md:text-5xl">Partnered with the Best</h2>
+        <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-sub">Hear from engineering leaders and executives who scaled their operations with Skora.</p>
       </div>
 
       <div className="marquee-track relative flex overflow-hidden py-4">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#f8fbff] to-transparent md:w-48" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#f8fbff] to-transparent md:w-48" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-main to-transparent md:w-48" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-main to-transparent md:w-48" />
 
         <div className="animate-scroll-marquee gap-6 px-3">
           {[...testimonials, ...testimonials].map((item, index) => (
-            <article key={`${item.name}-${index}`} className="w-[350px] shrink-0 rounded-2xl border border-slate-200 bg-white/85 p-8 shadow-[0_16px_36px_rgba(15,23,42,0.07)] backdrop-blur">
-              <Quote size={36} className="text-blue-200" />
+            <article key={`${item.name}-${index}`} className="glass-card w-[350px] shrink-0 rounded-2xl p-8">
+              <Quote size={36} className="text-accent/50" />
               <div className="mt-5 flex gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star key={star} size={15} className="fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <p className="mt-5 min-h-28 text-[15px] font-medium leading-relaxed text-slate-700">&ldquo;{item.quote}&rdquo;</p>
-              <div className="mt-7 flex items-center justify-between border-t border-slate-100 pt-5">
+              <p className="mt-5 min-h-28 text-[15px] font-medium leading-relaxed text-[#CBD5E1]">&ldquo;{item.quote}&rdquo;</p>
+              <div className="mt-7 flex items-center justify-between border-t border-white/10 pt-5">
                 <div className="flex items-center gap-3">
                   <img
                     src={item.avatar}
@@ -57,11 +58,11 @@ export default function TestimonialsSection() {
                     className="h-11 w-11 rounded-full object-cover"
                   />
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">{item.role}</p>
+                    <h3 className="text-sm font-bold text-ink">{item.name}</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-accent-light">{item.role}</p>
                   </div>
                 </div>
-                <item.Logo size={19} className="text-blue-600" />
+                <item.Logo size={19} className="text-accent-light" />
               </div>
             </article>
           ))}

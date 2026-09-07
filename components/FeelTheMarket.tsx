@@ -27,6 +27,21 @@ const socialIconsSvg = {
   ),
 };
 
+// Precomputed pseudo-random values (stable across renders — no hydration wobble)
+const drift = [
+  { drift1: "-6vh", drift2: "26vh", rot: [-8, 10, 34] },
+  { drift1: "4vh", drift2: "38vh", rot: [6, -11, 42] },
+  { drift1: "-9vh", drift2: "18vh", rot: [-12, 8, 28] },
+  { drift1: "7vh", drift2: "34vh", rot: [10, -9, 46] },
+  { drift1: "-3vh", drift2: "22vh", rot: [-5, 12, 38] },
+  { drift1: "9vh", drift2: "31vh", rot: [12, -6, 24] },
+  { drift1: "-7vh", drift2: "29vh", rot: [-10, 7, 30] },
+  { drift1: "2vh", drift2: "35vh", rot: [4, -12, 40] },
+  { drift1: "-5vh", drift2: "19vh", rot: [-7, 9, 26] },
+  { drift1: "6vh", drift2: "27vh", rot: [8, -10, 44] },
+  { drift1: "-4vh", drift2: "32vh", rot: [-6, 11, 36] },
+] as const;
+
 const iceCubes = [
   {
     name: "Instagram",
@@ -115,48 +130,51 @@ export default function FeelTheMarket() {
   }, []);
 
   return (
-    <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-[#05070E] via-[#081226] to-[#05070E] flex items-center justify-center border-t border-blue-900/30">
+    <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-main via-[#081226] to-main flex items-center justify-center border-t border-blue-900/30">
       {/* Radial Blue Light Mesh Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.25)_0%,rgba(5,7,14,1)_80%)] pointer-events-none" />
 
       {/* 3D RUSTY/FROSTY DROPPING ICE CUBES LOOP WITH MELTING DRIP PARTICLES */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
         {mounted &&
-          iceCubes.map((cube) => (
-            <motion.div
-              key={cube.name}
-              animate={{
-                y: ["-100vh", `${Math.random() * 20 - 10}vh`, `${Math.random() * 30 + 10}vh`, "100vh"],
-                rotate: [0, Math.random() * 25 - 12, Math.random() * -25 + 12, Math.random() * 50],
-                opacity: [0, 1, 1, 0],
-              }}
-            transition={{
-              duration: 8.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: cube.delay,
-              times: [0, 0.15, 0.85, 1],
-            }}
-            className={`absolute ${cube.size} flex flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-100/25 via-blue-900/40 to-slate-900/80 border-2 border-cyan-300/50 shadow-[inset_0_4px_25px_rgba(255,255,255,0.45),0_20px_45px_rgba(0,0,0,0.8)] backdrop-blur-xl pointer-events-auto cursor-pointer group`}
-            style={{ left: cube.left }}
-            whileHover={{ scale: 1.18, zIndex: 50, transition: { duration: 0.2 } }}
-          >
-            {/* Frost & Rust Crystal Detail */}
-            <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.3)_0%,transparent_60%)] pointer-events-none" />
-            
-            {/* Icon Inside Ice Cube */}
-            <div className="relative z-10">{cube.icon}</div>
+          iceCubes.map((cube, cubeIdx) => {
+            const d = drift[cubeIdx % drift.length];
+            return (
+              <motion.div
+                key={cube.name}
+                animate={{
+                  y: ["-100vh", d.drift1, d.drift2, "100vh"],
+                  rotate: [0, d.rot[0], d.rot[1], d.rot[2]],
+                  opacity: [0, 1, 1, 0],
+                }}
+                transition={{
+                  duration: 8.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: cube.delay,
+                  times: [0, 0.15, 0.85, 1],
+                }}
+                className={`absolute ${cube.size} flex flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-100/25 via-blue-900/40 to-slate-900/80 border-2 border-cyan-300/50 shadow-[inset_0_4px_25px_rgba(255,255,255,0.45),0_20px_45px_rgba(0,0,0,0.8)] backdrop-blur-xl pointer-events-auto cursor-pointer group`}
+                style={{ left: cube.left }}
+                whileHover={{ scale: 1.18, zIndex: 50, transition: { duration: 0.2 } }}
+              >
+                {/* Frost & Rust Crystal Detail */}
+                <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.3)_0%,transparent_60%)] pointer-events-none" />
 
-            {/* Melting Water Drip Animation */}
-            <motion.div
-              animate={{ y: [0, 24, 48], opacity: [1, 0.7, 0] }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "easeIn" }}
-              className="absolute -bottom-4 text-cyan-400 flex items-center justify-center"
-            >
-              <Droplets className="w-3.5 h-3.5 fill-cyan-400 animate-bounce" />
-            </motion.div>
-          </motion.div>
-        ))}
+                {/* Icon Inside Ice Cube */}
+                <div className="relative z-10">{cube.icon}</div>
+
+                {/* Melting Water Drip Animation */}
+                <motion.div
+                  animate={{ y: [0, 24, 48], opacity: [1, 0.7, 0] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeIn" }}
+                  className="absolute -bottom-4 text-cyan-400 flex items-center justify-center"
+                >
+                  <Droplets className="w-3.5 h-3.5 fill-cyan-400 animate-bounce" />
+                </motion.div>
+              </motion.div>
+            );
+          })}
       </div>
 
       {/* Slogan Content */}
@@ -169,7 +187,7 @@ export default function FeelTheMarket() {
           className="text-[3.5rem] font-extrabold tracking-tight text-white sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.95]"
         >
           feel the market <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 drop-shadow-[0_0_35px_rgba(56,189,248,0.6)]">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-blue-500 drop-shadow-[0_0_35px_rgba(56,189,248,0.6)]">
             in your favour.
           </span>
         </motion.h2>
@@ -178,7 +196,7 @@ export default function FeelTheMarket() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="mx-auto mt-8 max-w-2xl text-lg font-medium leading-relaxed text-[#94A3B8]"
+          className="mx-auto mt-8 max-w-2xl text-lg font-medium leading-relaxed text-sub"
         >
           Dominate every channel. Our engineered digital strategies align your enterprise with the platforms that drive absolute, quantifiable scale.
         </motion.p>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Calendar, ArrowRight, Layers, Sparkles, CheckCircle2, Zap } from "lucide-react";
+import { Calendar, ArrowRight, Layers } from "lucide-react";
 import Card3D from "./Card3D";
 import gsap from "gsap";
 
@@ -28,7 +28,6 @@ const profileCards = [
     img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80",
     link: "/services/pms",
     badge: "HIPAA Compliant",
-    glow: "hover:border-emerald-300/80 shadow-emerald-500/25",
   },
   {
     title: "Custom Software",
@@ -36,7 +35,6 @@ const profileCards = [
     img: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80",
     link: "/services/saas-development",
     badge: "Multi-Tenant SaaS",
-    glow: "hover:border-sky-300/80 shadow-sky-500/25",
   },
   {
     title: "Cloud Infra",
@@ -44,7 +42,6 @@ const profileCards = [
     img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
     link: "/services/cloud-services",
     badge: "99.99% Uptime",
-    glow: "hover:border-indigo-300/80 shadow-indigo-500/25",
   },
   {
     title: "UI / UX Design",
@@ -52,7 +49,6 @@ const profileCards = [
     img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=600&q=80",
     link: "/services/website-design",
     badge: "High Conversion",
-    glow: "hover:border-purple-300/80 shadow-purple-500/25",
   },
   {
     title: "Mobile Apps",
@@ -60,21 +56,21 @@ const profileCards = [
     img: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80",
     link: "/services/mobile-development",
     badge: "Native Speed",
-    glow: "hover:border-cyan-300/80 shadow-cyan-500/25",
   },
 ];
 
 export const EnterpriseBackground = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden bg-[#071a42]" aria-hidden="true">
-    <motion.div animate={{ opacity: [0.12, 0.94, 0.12], scale: [0.96, 1.1, 0.96] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-28 bg-[radial-gradient(ellipse_at_50%_40%,rgba(82,145,239,.82)_0%,rgba(28,82,171,.72)_31%,rgba(7,26,66,0)_70%)] blur-[42px]" />
-    <motion.div animate={{ x: ["-32%", "32%", "-32%"], opacity: [0.04, 0.48, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-[35%] -left-[42%] h-[145%] w-[118%] rotate-[14deg] bg-gradient-to-r from-transparent via-sky-300/45 to-transparent blur-[48px]" />
-    <motion.div animate={{ opacity: [0.6, 0.14, 0.6], x: [0, -28, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-64 -left-48 h-[40rem] w-[40rem] rounded-full bg-[#0b3578] blur-[145px]" />
-    <motion.div animate={{ opacity: [0.04, 0.46, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(147,197,253,.42)_0%,rgba(7,26,66,0)_58%)]" />
+  <div className="absolute inset-0 z-0 overflow-hidden bg-main" aria-hidden="true">
+    {/* Electric blue radial halo */}
+    <motion.div animate={{ opacity: [0.35, 0.9, 0.35], scale: [0.96, 1.1, 0.96] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-28 bg-[radial-gradient(ellipse_at_50%_40%,rgba(37,99,235,.45)_0%,rgba(29,78,216,.3)_31%,rgba(5,7,14,0)_70%)] blur-[42px]" />
+    <motion.div animate={{ x: ["-32%", "32%", "-32%"], opacity: [0.04, 0.32, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-[35%] -left-[42%] h-[145%] w-[118%] rotate-[14deg] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent blur-[48px]" />
+    <motion.div animate={{ opacity: [0.6, 0.14, 0.6], x: [0, -28, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-64 -left-48 h-[40rem] w-[40rem] rounded-full bg-[#0B0F19] blur-[145px]" />
+    <motion.div animate={{ opacity: [0.04, 0.4, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(96,165,250,.3)_0%,rgba(5,7,14,0)_58%)]" />
 
     <motion.svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" animate={{ x: [0, -24, 0], y: [0, 12, 0], opacity: [0.08, 0.32, 0.08], filter: ["blur(4px)", "blur(1.4px)", "blur(4px)"] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-[8%] h-[116%] w-[116%]">
       <defs>
         <pattern id="socialPlatformPattern" width="248" height="158" patternUnits="userSpaceOnUse">
-          <g fill="#dbeafe" stroke="#dbeafe" strokeLinecap="round" strokeLinejoin="round">
+          <g fill="#60a5fa" stroke="#60a5fa" strokeLinecap="round" strokeLinejoin="round">
             <g transform="translate(18 16) scale(.78)">{socialIconsSvg.facebook}</g>
             <g transform="translate(103 13) scale(.82)">{socialIconsSvg.instagram}</g>
             <g transform="translate(189 16) scale(.78)">{socialIconsSvg.linkedin}</g>
@@ -137,48 +133,42 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
 
-        {/* Kinetic Hero Title (Top pill badge removed per user request) */}
-        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-white sm:text-6xl lg:text-[5.4rem] drop-shadow-[0_10px_35px_rgba(0,0,0,0.5)]">
+        {/* Kinetic Hero Title */}
+        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-extrabold leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-[5.4rem] drop-shadow-[0_10px_35px_rgba(0,0,0,0.5)]">
           Innovation doesn&apos;t wait.<br />
-          Neither does <span className="text-sky-300 drop-shadow-[0_0_30px_rgba(125,211,252,0.6)]">Skora.</span>
+          Neither does <span className="text-accent-light drop-shadow-[0_0_30px_rgba(96,165,250,0.6)]">Skora.</span>
         </h1>
 
         {/* Subtitle */}
-        <div className="gsap-hero-title mx-auto mt-5 max-w-2xl text-base sm:text-lg lg:text-xl font-medium leading-relaxed text-slate-200">
+        <div className="gsap-hero-title mx-auto mt-5 max-w-2xl text-base sm:text-lg lg:text-xl font-medium leading-relaxed text-[#CBD5E1]">
           We architect custom enterprise platforms, dedicated healthcare IT solutions, high-converting digital marketing, and scalable cloud architectures.
         </div>
 
-        {/* Animated Premium Re-Designed Buttons */}
+        {/* CTA buttons — the two shared button styles */}
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          {/* Schedule Consultation Button */}
           <button
             onClick={() => onOpenConsultation()}
-            className="gsap-hero-btn group relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-r from-white via-sky-100 to-white px-7 py-4 text-base font-extrabold text-[#071a42] shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_45px_rgba(255,255,255,0.7)] hover:bg-sky-200 cursor-pointer overflow-hidden"
+            className="gsap-hero-btn btn-primary group px-7 py-4 text-base"
           >
-            <div className="absolute inset-0 bg-sky-400/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-            <Calendar size={18} className="relative z-10 text-[#071a42] group-hover:rotate-12 transition-transform duration-300" />
-            <span className="relative z-10">Schedule Consultation</span>
-            <ArrowRight size={17} className="relative z-10 text-[#071a42] group-hover:translate-x-1.5 transition-transform duration-300" />
+            <Calendar size={18} className="group-hover:rotate-12 transition-transform duration-300" />
+            <span>Schedule Consultation</span>
+            <ArrowRight size={17} className="group-hover:translate-x-1.5 transition-transform duration-300" />
           </button>
 
-          {/* Explore Capabilities Button */}
-          <a
-            href="#capabilities"
-            className="gsap-hero-btn group inline-flex items-center gap-3 rounded-xl border border-white/40 bg-white/10 px-7 py-4 text-base font-bold text-white shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white hover:bg-white/20 cursor-pointer"
-          >
-            <Layers size={18} className="text-sky-300 group-hover:scale-110 transition-transform" />
+          <a href="#capabilities" className="gsap-hero-btn btn-secondary px-7 py-4 text-base">
+            <Layers size={18} className="text-accent-light group-hover:scale-110 transition-transform" />
             <span>Explore Capabilities</span>
           </a>
         </div>
 
-        {/* 5 SERVICE SHOWCASE CARDS — VISIBLE ABOVE THE FOLD AT INITIAL LANDING VIEW */}
+        {/* 5 SERVICE SHOWCASE CARDS — glass cards with blue glow */}
         <div className="mt-10 w-full overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex min-w-max items-stretch justify-center gap-3 px-2 lg:min-w-0 lg:flex-wrap">
-            {profileCards.map((card, index) => (
+            {profileCards.map((card) => (
               <a href={card.link} key={card.title} className="gsap-card-item block">
                 <Card3D
                   maxTilt={14}
-                  className={`w-[178px] overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-2.5 text-left shadow-[0_14px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl transition duration-300 hover:border-sky-200/80 hover:bg-white/15 ${card.glow}`}
+                  className="w-[178px] overflow-hidden rounded-2xl glass-card glass-card-hover p-2.5 text-left"
                 >
                   <div className="h-26 overflow-hidden rounded-xl relative">
                     <img
@@ -189,13 +179,13 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
                       }}
                       className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                     />
-                    <span className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#071a42]/90 border border-white/30 text-sky-200 backdrop-blur-md">
+                    <span className="glass-pill absolute top-1.5 right-1.5 px-2 py-0.5 text-[9px]">
                       {card.badge}
                     </span>
                   </div>
                   <div className="px-1 pb-1 pt-3">
                     <h2 className="text-sm font-bold text-white truncate">{card.title}</h2>
-                    <p className="mt-1 text-[11px] font-semibold text-sky-200 truncate">{card.role}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-accent-light truncate">{card.role}</p>
                   </div>
                 </Card3D>
               </a>

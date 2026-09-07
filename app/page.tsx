@@ -32,14 +32,14 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#05070E] text-white flex flex-col relative overflow-hidden">
+    <main className="min-h-screen bg-main text-ink flex flex-col relative overflow-hidden">
       {/* High-Impact GSAP 3D Cyber Intro Sequence */}
       <LandingIntro />
 
       {/* Top Sticky Scroll Progress Bar */}
       <ScrollProgressBar />
 
-      {/* Navbar with transparent-to-white scroll transition logic */}
+      {/* Navbar with transparent-to-dark-glass scroll transition */}
       <Navbar onOpenConsultation={handleOpenConsultation} />
 
       {/* 1. ENTERPRISE HERO — Electric Blue Theme & 5 Front Showcase 3D Cards */}
