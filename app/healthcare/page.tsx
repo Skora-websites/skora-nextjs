@@ -761,7 +761,7 @@ export default function HealthcarePortal() {
               </div>
 
               {/* Stats strip */}
-              <div className="hero-fade-up flex flex-wrap items-center gap-x-10 gap-y-4 pt-4 border-t border-white/10">
+              <div className="hero-fade-up flex flex-wrap items-center gap-x-10 gap-y-4 pt-4 border-t border-line">
                 {[
                   { val: "+320%", label: "Avg. Patient Lead Growth" },
                   { val: "350+", label: "Clinics Partnered", green: true },
@@ -789,7 +789,7 @@ export default function HealthcarePortal() {
 
             {/* RIGHT: Doctor image slider — scale-in from right */}
             <div className="relative space-y-5">
-              <div className="hero-image-card relative rounded-[2.5rem] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-white/10">
+              <div className="hero-image-card relative rounded-[2.5rem] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-line">
                 <HeroRightDoctorSlider />
               </div>
               <div className="hero-ekg-section">
@@ -851,10 +851,10 @@ export default function HealthcarePortal() {
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-white/10 mt-4 space-y-3">
+                  <div className="pt-4 border-t border-line mt-4 space-y-3">
                     <div className="flex flex-wrap gap-1.5">
                       {service.features.map((feat, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-lg bg-white/5 text-[10px] font-bold text-[#CBD5E1] border border-white/10">
+                        <span key={idx} className="px-2.5 py-1 rounded-lg bg-ink/5 text-[10px] font-bold text-sub border border-line">
                           ✓ {feat}
                         </span>
                       ))}
@@ -967,7 +967,7 @@ export default function HealthcarePortal() {
                     </span>
                   </div>
 
-                  <ul className="space-y-3 pt-4 border-t border-white/10 text-xs font-semibold">
+                  <ul className="space-y-3 pt-4 border-t border-line text-xs font-semibold">
                     {pkg.features.map((feat, fIdx) => (
                       <li key={fIdx} className="flex items-center gap-2.5">
                         <CheckCircle2 size={16} className="text-emerald-400" />
@@ -997,7 +997,7 @@ export default function HealthcarePortal() {
       </section>
 
       {/* FRAMER ORAL CARE STYLE LIGHT DOCTOR REVIEWS MARQUEE CAROUSEL */}
-      <section id="testimonials" className="py-20 bg-surface/60 border-y border-white/10 my-8 overflow-hidden w-full relative z-10">
+      <section id="testimonials" className="py-20 bg-surface/60 border-y border-line my-8 overflow-hidden w-full relative z-10">
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-14 px-4">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
             Verified Doctor Testimonials /
@@ -1024,12 +1024,12 @@ export default function HealthcarePortal() {
                       <Star key={s} size={16} fill="currentColor" />
                     ))}
                   </div>
-                  <p className="text-[#CBD5E1] text-sm font-medium leading-relaxed italic">
+                  <p className="text-sub text-sm font-medium leading-relaxed italic">
                     "{rev.quote}"
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+                <div className="flex items-center gap-4 pt-4 border-t border-line">
                   <img
                     src={rev.avatar}
                     alt={rev.doctor}
@@ -1097,7 +1097,7 @@ export default function HealthcarePortal() {
       {/* INTERACTIVE DOCTOR CARD EXPANSION MODAL */}
       <AnimatePresence>
         {activeCardModal && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-scrim backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1105,7 +1105,7 @@ export default function HealthcarePortal() {
               transition={{ duration: 0.25 }}
               className="relative z-10 my-auto w-full max-w-2xl rounded-3xl glass-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-line mb-6">
                 <button
                   onClick={() => setActiveCardModal(null)}
                   className="btn-secondary px-3.5 py-1.5 text-xs"
@@ -1115,7 +1115,7 @@ export default function HealthcarePortal() {
                 </button>
                 <button
                   onClick={() => setActiveCardModal(null)}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-sub hover:text-ink transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-ink/5 hover:bg-ink/10 text-sub hover:text-ink transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1135,11 +1135,11 @@ export default function HealthcarePortal() {
                   {activeCardModal.title}
                 </h2>
 
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="p-4 rounded-2xl bg-ink/5 border border-line">
                   <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 mb-2">
                     Clinical Strategy Overview
                   </h4>
-                  <p className="text-xs sm:text-sm text-[#CBD5E1] font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-sub font-medium leading-relaxed">
                     {activeCardModal.fullStrategy}
                   </p>
                 </div>
@@ -1150,7 +1150,7 @@ export default function HealthcarePortal() {
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {activeCardModal.deliverables.map((del, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs font-bold text-[#CBD5E1] p-2.5 rounded-xl bg-white/5 border border-white/10">
+                      <div key={i} className="flex items-center gap-2 text-xs font-bold text-sub p-2.5 rounded-xl bg-ink/5 border border-line">
                         <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
                         <span>{del}</span>
                       </div>
@@ -1180,7 +1180,7 @@ export default function HealthcarePortal() {
       {/* INTERACTIVE DOCTOR PACKAGE BOOKING MODAL */}
       <AnimatePresence>
         {packageModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-scrim backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1188,7 +1188,7 @@ export default function HealthcarePortal() {
               transition={{ duration: 0.25 }}
               className="relative z-10 my-auto w-full max-w-xl rounded-3xl glass-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-line mb-6">
                 <button
                   onClick={() => setPackageModalOpen(null)}
                   className="btn-secondary px-3.5 py-1.5 text-xs"
@@ -1198,7 +1198,7 @@ export default function HealthcarePortal() {
                 </button>
                 <button
                   onClick={() => setPackageModalOpen(null)}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-sub hover:text-ink transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-ink/5 hover:bg-ink/10 text-sub hover:text-ink transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1255,7 +1255,7 @@ export default function HealthcarePortal() {
       {/* INTERACTIVE NEWS ARTICLE SLIDER MODAL */}
       <AnimatePresence>
         {activeNewsModal && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-scrim backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1263,7 +1263,7 @@ export default function HealthcarePortal() {
               transition={{ duration: 0.25 }}
               className="relative z-10 my-auto w-full max-w-2xl rounded-3xl glass-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-line mb-6">
                 <button
                   onClick={() => setActiveNewsModal(null)}
                   className="btn-secondary px-3.5 py-1.5 text-xs"
@@ -1273,7 +1273,7 @@ export default function HealthcarePortal() {
                 </button>
                 <button
                   onClick={() => setActiveNewsModal(null)}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-sub hover:text-ink transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-ink/5 hover:bg-ink/10 text-sub hover:text-ink transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1289,11 +1289,11 @@ export default function HealthcarePortal() {
                   {activeNewsModal.title}
                 </h2>
 
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <div className="p-5 rounded-2xl bg-ink/5 border border-line space-y-3">
                   <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
                     Article Analysis & Action Plan
                   </h4>
-                  <p className="text-xs sm:text-sm text-[#CBD5E1] font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-sub font-medium leading-relaxed">
                     {activeNewsModal.fullContent}
                   </p>
                 </div>

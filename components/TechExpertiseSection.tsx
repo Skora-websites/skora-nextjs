@@ -38,7 +38,7 @@ const expertiseRow2 = [
 
 export default function TechExpertiseSection() {
   return (
-    <section className="relative overflow-hidden bg-main py-20 border-t border-white/10">
+    <section className="relative overflow-hidden bg-main py-20 border-t border-line">
       <style>{`
         @keyframes marqueeLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes marqueeRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }

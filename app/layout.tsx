@@ -43,6 +43,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-main text-ink font-sans antialiased flex flex-col" suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{if(localStorage.getItem("skora-theme")==="light"){document.documentElement.classList.add("light")}}catch(e){}',
+          }}
+        />
         <SiteContentProvider>
           <ScrollToTop />
           {children}

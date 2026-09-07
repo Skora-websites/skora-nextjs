@@ -188,7 +188,7 @@ export default function BrandingPage() {
               <div className="w-8 h-8 rounded-full glass-pill flex items-center justify-center shrink-0 mt-0.5">
                 <Check size={16} />
               </div>
-              <p className="text-sm font-bold text-[#CBD5E1] leading-snug">{item}</p>
+              <p className="text-sm font-bold text-sub leading-snug">{item}</p>
             </motion.div>
           ))}
         </div>

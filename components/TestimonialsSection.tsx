@@ -15,7 +15,7 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <section className="relative overflow-hidden border-t border-white/10 bg-main py-24">
+    <section className="relative overflow-hidden border-t border-line bg-main py-24">
       <style>{`
         @keyframes scrollMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .animate-scroll-marquee { display: flex; width: max-content; animation: scrollMarquee 42s linear infinite; }
@@ -46,8 +46,8 @@ export default function TestimonialsSection() {
                   <Star key={star} size={15} className="fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <p className="mt-5 min-h-28 text-[15px] font-medium leading-relaxed text-[#CBD5E1]">&ldquo;{item.quote}&rdquo;</p>
-              <div className="mt-7 flex items-center justify-between border-t border-white/10 pt-5">
+              <p className="mt-5 min-h-28 text-[15px] font-medium leading-relaxed text-sub">&ldquo;{item.quote}&rdquo;</p>
+              <div className="mt-7 flex items-center justify-between border-t border-line pt-5">
                 <div className="flex items-center gap-3">
                   <img
                     src={item.avatar}

@@ -104,7 +104,7 @@ export default function ContactModal({
   const labelCls = "text-xs font-mono font-bold uppercase tracking-wider text-faint block";
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-scrim backdrop-blur-md overflow-y-auto animate-fade-in">
       {/* Backdrop Click to Close */}
       <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
 
@@ -115,7 +115,7 @@ export default function ContactModal({
           type="button"
           onClick={onClose}
           aria-label="Close Modal"
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-sub flex items-center justify-center transition-colors cursor-pointer z-20"
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-ink/5 hover:bg-ink/10 text-sub flex items-center justify-center transition-colors cursor-pointer z-20"
         >
           <X className="w-5 h-5" />
         </button>
@@ -173,7 +173,7 @@ export default function ContactModal({
                       className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
                           ? "bg-accent text-white border-accent shadow-md"
-                          : "bg-white/5 text-sub border-white/10 hover:border-accent/60 hover:text-ink"
+                          : "bg-ink/5 text-sub border-line hover:border-accent/60 hover:text-ink"
                       }`}
                     >
                       {svc}

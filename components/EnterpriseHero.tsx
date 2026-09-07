@@ -64,7 +64,7 @@ export const EnterpriseBackground = () => (
     {/* Electric blue radial halo */}
     <motion.div animate={{ opacity: [0.35, 0.9, 0.35], scale: [0.96, 1.1, 0.96] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-28 bg-[radial-gradient(ellipse_at_50%_40%,rgba(37,99,235,.45)_0%,rgba(29,78,216,.3)_31%,rgba(5,7,14,0)_70%)] blur-[42px]" />
     <motion.div animate={{ x: ["-32%", "32%", "-32%"], opacity: [0.04, 0.32, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-[35%] -left-[42%] h-[145%] w-[118%] rotate-[14deg] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent blur-[48px]" />
-    <motion.div animate={{ opacity: [0.6, 0.14, 0.6], x: [0, -28, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-64 -left-48 h-[40rem] w-[40rem] rounded-full bg-[#0B0F19] blur-[145px]" />
+    <motion.div animate={{ opacity: [0.6, 0.14, 0.6], x: [0, -28, 0], y: [0, 20, 0] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-64 -left-48 h-[40rem] w-[40rem] rounded-full bg-glow/20 blur-[145px]" />
     <motion.div animate={{ opacity: [0.04, 0.4, 0.04] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(96,165,250,.3)_0%,rgba(5,7,14,0)_58%)]" />
 
     <motion.svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" animate={{ x: [0, -24, 0], y: [0, 12, 0], opacity: [0.08, 0.32, 0.08], filter: ["blur(4px)", "blur(1.4px)", "blur(4px)"] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} className="absolute -inset-[8%] h-[116%] w-[116%]">
@@ -126,7 +126,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
   return (
     <section
       ref={heroRef}
-      className="relative min-h-[720px] overflow-hidden border-b border-white/10 pt-20 lg:pt-24 pb-12 [perspective:1200px]"
+      className="relative min-h-[720px] overflow-hidden border-b border-line pt-20 lg:pt-24 pb-12 [perspective:1200px]"
     >
       {/* SVG Social & Tech Icon Pattern Background */}
       <EnterpriseBackground />
@@ -134,13 +134,13 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
 
         {/* Kinetic Hero Title */}
-        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-extrabold leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-[5.4rem] drop-shadow-[0_10px_35px_rgba(0,0,0,0.5)]">
+        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-extrabold leading-[1.03] tracking-tight text-ink sm:text-6xl lg:text-[5.4rem] drop-shadow-[0_10px_35px_rgba(37,99,235,0.15)]">
           Innovation doesn&apos;t wait.<br />
           Neither does <span className="text-accent-light drop-shadow-[0_0_30px_rgba(96,165,250,0.6)]">Skora.</span>
         </h1>
 
         {/* Subtitle */}
-        <div className="gsap-hero-title mx-auto mt-5 max-w-2xl text-base sm:text-lg lg:text-xl font-medium leading-relaxed text-[#CBD5E1]">
+        <div className="gsap-hero-title mx-auto mt-5 max-w-2xl text-base sm:text-lg lg:text-xl font-medium leading-relaxed text-sub">
           We architect custom enterprise platforms, dedicated healthcare IT solutions, high-converting digital marketing, and scalable cloud architectures.
         </div>
 
@@ -184,7 +184,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
                     </span>
                   </div>
                   <div className="px-1 pb-1 pt-3">
-                    <h2 className="text-sm font-bold text-white truncate">{card.title}</h2>
+                    <h2 className="text-sm font-bold text-ink truncate">{card.title}</h2>
                     <p className="mt-1 text-[11px] font-semibold text-accent-light truncate">{card.role}</p>
                   </div>
                 </Card3D>

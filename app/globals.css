@@ -2,18 +2,25 @@
 
 /* ============================================================
    SKORA — "Electric Blue Cyber" Design Tokens
-   Single source of truth for the unified dark marketing site.
-   @theme registers tokens as Tailwind utilities:
-   bg-main / bg-surface / bg-elevated / bg-accent / text-ink /
-   text-sub / text-faint / text-accent / border-accent / text-clinic ...
+   Single source of truth for the marketing site.
+
+   TWO THEMES, one token set:
+   - Dark (default): :root values below.
+   - Light: `html.light` overrides in the base layer + unlayered
+     `html.light` block at the bottom of this file.
+
+   Tailwind v4 emits @theme tokens as CSS custom properties and
+   utilities reference them (bg-main → var(--color-main)), so
+   overriding the variables flips the whole site at runtime.
    ============================================================ */
 @theme {
   /* Canvas & surfaces */
   --color-main: #05070e;
   --color-surface: #0b0f19;
   --color-elevated: #111827;
+  --color-main-deep: #081226; /* mid-gradient depth band */
 
-  /* Electric blue accent scale */
+  /* Electric blue accent scale (theme-invariant) */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
   --color-glow: #3b82f6;
@@ -23,6 +30,10 @@
   --color-ink: #f8fafc;
   --color-sub: #94a3b8;
   --color-faint: #64748b;
+
+  /* Hairlines & scrims (theme-aware) */
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-scrim: rgba(0, 0, 0, 0.8);
 
   /* Reserved accents */
   --color-gold: #f59e0b;
@@ -36,7 +47,7 @@
     --bg-main: #05070e;
     --bg-surface: #0b0f19;
     --bg-surface-elevated: #111827;
-    --bg-glass: rgba(15, 23, 42, 0.65);
+    --bg-glass: rgba(11, 15, 25, 0.8);
 
     --accent-primary: #2563eb;
     --accent-primary-hover: #1d4ed8;
@@ -49,12 +60,22 @@
     --text-muted: #64748b;
 
     --border-light: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.18);
     --border-accent: rgba(37, 99, 235, 0.4);
     --border-divider: rgba(255, 255, 255, 0.05);
 
     --glow-radial: radial-gradient(circle at center, rgba(37, 99, 235, 0.35) 0%, rgba(5, 7, 14, 0) 70%);
     --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     --shadow-button-glow: 0 0 25px rgba(37, 99, 235, 0.5);
+
+    /* Component-level surface vars */
+    --btn-secondary-bg: rgba(255, 255, 255, 0.05);
+    --btn-secondary-bg-hover: rgba(255, 255, 255, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-bg-focus: rgba(255, 255, 255, 0.07);
+
+    /* FeelTheMarket radial light mesh */
+    --market-halo: radial-gradient(circle at center, rgba(37, 99, 235, 0.25) 0%, var(--bg-main) 80%);
   }
 
   html {
@@ -77,12 +98,97 @@
   }
 }
 
+/* ============================================================
+   LIGHT THEME — overrides
+   (html.light out-specifies :root; also placed later in base)
+   ============================================================ */
+@layer base {
+  html.light {
+    /* Canvas & surfaces */
+    --color-main: #f4f7fb;
+    --color-surface: #ffffff;
+    --color-elevated: #eef2f9;
+    --color-main-deep: #e4ebf6;
+    --color-line: rgba(11, 18, 32, 0.1);
+    --color-scrim: rgba(15, 23, 42, 0.45);
+
+    /* Readable accent text on light canvas */
+    --color-accent-light: #1d4ed8;
+
+    /* Text */
+    --color-ink: #0b1220;
+    --color-sub: #475569;
+    --color-faint: #64748b;
+
+    /* Legacy vars */
+    --bg-main: #f4f7fb;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #eef2f9;
+    --bg-glass: rgba(255, 255, 255, 0.82);
+
+    --accent-cyan-light: #1d4ed8;
+
+    --text-primary: #0b1220;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+
+    --border-light: rgba(11, 18, 32, 0.1);
+    --border-strong: rgba(11, 18, 32, 0.2);
+    --border-accent: rgba(37, 99, 235, 0.35);
+    --border-divider: rgba(11, 18, 32, 0.06);
+
+    --shadow-card: 0 10px 30px -12px rgba(15, 23, 42, 0.15);
+
+    --btn-secondary-bg: rgba(11, 18, 32, 0.04);
+    --btn-secondary-bg-hover: rgba(11, 18, 32, 0.08);
+    --input-bg: rgba(11, 18, 32, 0.04);
+    --input-bg-focus: rgba(11, 18, 32, 0.06);
+
+    --market-halo: radial-gradient(circle at center, rgba(37, 99, 235, 0.12) 0%, var(--bg-main) 80%);
+  }
+}
+
+/* Unlayered safety net: these MUST beat any layered rule */
+html.light {
+  color-scheme: light;
+  --color-main: #f4f7fb;
+  --color-surface: #ffffff;
+  --color-elevated: #eef2f9;
+  --color-main-deep: #e4ebf6;
+  --color-line: rgba(11, 18, 32, 0.1);
+  --color-scrim: rgba(15, 23, 42, 0.45);
+  --color-accent-light: #1d4ed8;
+  --color-ink: #0b1220;
+  --color-sub: #475569;
+  --color-faint: #64748b;
+  --bg-main: #f4f7fb;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #eef2f9;
+  --bg-glass: rgba(255, 255, 255, 0.82);
+  --accent-cyan-light: #1d4ed8;
+  --text-primary: #0b1220;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-light: rgba(11, 18, 32, 0.1);
+  --border-strong: rgba(11, 18, 32, 0.2);
+  --border-accent: rgba(37, 99, 235, 0.35);
+  --border-divider: rgba(11, 18, 32, 0.06);
+  --glow-radial: radial-gradient(circle at center, rgba(37, 99, 235, 0.14) 0%, rgba(244, 247, 251, 0) 70%);
+  --shadow-card: 0 10px 30px -12px rgba(15, 23, 42, 0.15);
+  --shadow-button-glow: 0 0 25px rgba(37, 99, 235, 0.35);
+  --btn-secondary-bg: rgba(11, 18, 32, 0.04);
+  --btn-secondary-bg-hover: rgba(11, 18, 32, 0.08);
+  --input-bg: rgba(11, 18, 32, 0.04);
+  --input-bg-focus: rgba(11, 18, 32, 0.06);
+  --market-halo: radial-gradient(circle at center, rgba(37, 99, 235, 0.12) 0%, var(--bg-main) 80%);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #05070e;
+  background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(37, 99, 235, 0.3);
@@ -93,16 +199,16 @@
 }
 
 /* ============================================================
-   Shared component classes (overridable by Tailwind utilities)
+   Shared component classes (theme-aware via vars)
    ============================================================ */
 @layer components {
-  /* Glassmorphic dark card — the one card style */
+  /* Glassmorphic card — the one card style */
   .glass-card {
-    background: rgba(11, 15, 25, 0.8);
+    background: var(--bg-glass);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-card);
   }
 
   .glass-card-hover {
@@ -119,12 +225,12 @@
   .glass-pill {
     background: rgba(37, 99, 235, 0.1);
     border: 1px solid rgba(59, 130, 246, 0.3);
-    color: #60a5fa;
+    color: var(--accent-cyan-light);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
 
-  /* Primary electric blue button */
+  /* Primary electric blue button (theme-invariant) */
   .btn-primary {
     background-color: #2563eb;
     color: #ffffff;
@@ -155,9 +261,9 @@
 
   /* Glass secondary button */
   .btn-secondary {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
+    background: var(--btn-secondary-bg);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
     font-weight: 700;
     padding: 12px 24px;
     border-radius: 12px;
@@ -170,50 +276,61 @@
   }
 
   .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background: var(--btn-secondary-bg-hover);
+    border-color: var(--border-strong);
   }
 
   /* The one input style for all marketing forms/modals */
   .input-dark {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--input-bg);
+    border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 12px 16px;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-weight: 500;
     outline: none;
     transition: border-color 0.2s ease, background 0.2s ease;
   }
 
   .input-dark::placeholder {
-    color: #64748b;
+    color: var(--text-muted);
   }
 
   .input-dark:focus {
-    border-color: #3b82f6;
-    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--accent-glow);
+    background: var(--input-bg-focus);
+  }
+
+  /* Icon-only ghost button (close buttons, toggles) */
+  .btn-icon-ghost {
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-icon-ghost:hover {
+    background: var(--btn-secondary-bg-hover);
+    color: var(--text-primary);
   }
 
   /* Gradient typography utilities */
   .text-gradient {
-    background: linear-gradient(135deg, #ffffff 0%, #60a5fa 50%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan-light) 50%, var(--accent-primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-cyan {
-    background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #3b82f6 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, #38bdf8 50%, #3b82f6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, #ffffff 0%, #fbbf24 50%, #f59e0b 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, #fbbf24 50%, #f59e0b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -221,11 +338,16 @@
 
   /* Background radial halos */
   .bg-radial-halo {
-    background: radial-gradient(circle at center, rgba(37, 99, 235, 0.3) 0%, rgba(5, 7, 14, 0) 70%);
+    background: radial-gradient(circle at center, rgba(37, 99, 235, 0.3) 0%, transparent 70%);
   }
 
   .bg-radial-halo-subtle {
-    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, rgba(5, 7, 14, 0) 75%);
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 75%);
+  }
+
+  /* FeelTheMarket radial light mesh (theme-aware) */
+  .market-halo {
+    background: var(--market-halo);
   }
 }
 

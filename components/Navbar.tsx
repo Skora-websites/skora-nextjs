@@ -22,6 +22,7 @@ import {
   X,
   ArrowLeft,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const services = [
   {
@@ -111,12 +112,12 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
   const isTransparentNav = isLandingPage && !isScrolled;
 
   const textClass = isTransparentNav
-    ? "text-white hover:text-accent-light"
+    ? "text-ink hover:text-accent-light"
     : "text-ink hover:text-accent-light";
-  const logoTextClass = "text-white";
+  const logoTextClass = "text-ink";
   const headerBgClass = isTransparentNav
     ? "bg-transparent border-transparent"
-    : "glass-card border-b border-white/10";
+    : "glass-card border-b border-line";
 
   const siteContent = useSiteContent();
   const whatsappNumber = (siteContent.phone || "+919217375835").replace(/[^0-9]/g, "");
@@ -240,6 +241,8 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
             </nav>
 
             <div className="hidden items-center gap-4 lg:flex">
+              <ThemeToggle />
+
               <button
                 type="button"
                 onClick={() => setIsAuditOpen(true)}
@@ -262,8 +265,8 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               type="button"
               className={`relative z-50 rounded-xl p-2 transition cursor-pointer lg:hidden border ${
                 isTransparentNav
-                  ? "border-white/30 text-white hover:bg-white/10"
-                  : "border-white/15 bg-white/5 text-ink hover:bg-white/10"
+                  ? "border-ink/30 text-ink hover:bg-ink/10"
+                  : "border-line bg-ink/5 text-ink hover:bg-ink/10"
               }`}
               onClick={() => setMobileMenuOpen((current) => !current)}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -295,7 +298,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
 
               <button
                 onClick={closeServices}
-                className="flex h-11 w-11 items-center justify-center rounded-full glass-card text-ink transition hover:bg-white/10 hover:rotate-90 cursor-pointer"
+                className="flex h-11 w-11 items-center justify-center rounded-full glass-card text-ink transition hover:bg-ink/10 hover:rotate-90 cursor-pointer"
               >
                 <X size={22} />
               </button>
@@ -337,7 +340,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                         alt={item.name}
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#05070E] via-[#05070E]/90 to-[#05070E]/40 transition-opacity group-hover:from-[#05070E]" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-main via-main/90 to-main/40 transition-opacity group-hover:from-main" />
                       <div className="relative z-10 p-8">
                         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl glass-pill transition-colors group-hover:bg-accent group-hover:text-white group-hover:border-accent">
                           <item.icon size={28} />
@@ -375,7 +378,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <div className="flex flex-col gap-6 flex-grow">
                 <Link
                   href="/"
-                  className={`border-b border-white/10 pb-4 text-xl font-bold ${
+                  className={`border-b border-line pb-4 text-xl font-bold ${
                     isHomePage ? "text-accent-light font-extrabold" : "text-ink"
                   }`}
                 >
@@ -386,7 +389,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                     setMobileMenuOpen(false);
                     setIsServicesOpen(true);
                   }}
-                  className="flex w-full justify-between items-center border-b border-white/10 pb-4 text-xl font-bold text-ink cursor-pointer"
+                  className="flex w-full justify-between items-center border-b border-line pb-4 text-xl font-bold text-ink cursor-pointer"
                 >
                   Services <ArrowRight size={20} className="text-accent-light" />
                 </button>
@@ -403,12 +406,15 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 </Link>
                 <button
                   onClick={() => onOpenConsultation?.()}
-                  className="border-b border-white/10 pb-4 text-xl font-bold text-ink text-left mt-2"
+                  className="border-b border-line pb-4 text-xl font-bold text-ink text-left mt-2"
                 >
                   Contact
                 </button>
               </div>
               <div className="mt-8 flex flex-col gap-3">
+                <div className="flex justify-center pb-2">
+                  <ThemeToggle />
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -441,7 +447,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeAudit}
-              className="absolute inset-0 cursor-pointer bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 cursor-pointer bg-scrim backdrop-blur-md"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.98, y: 10 }}
@@ -451,7 +457,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               className="relative z-10 my-auto flex max-h-[85vh] sm:max-h-[88vh] w-full max-w-2xl flex-col overflow-y-auto rounded-3xl glass-card shadow-2xl"
             >
               {/* Top Navigation Bar inside Modal */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-line">
                 <button
                   type="button"
                   onClick={closeAudit}
@@ -464,13 +470,13 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 <button
                   type="button"
                   onClick={closeAudit}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-sub transition-colors hover:bg-white/10 hover:text-ink cursor-pointer"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink/5 text-sub transition-colors hover:bg-ink/10 hover:text-ink cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="border-b border-white/10 px-7 py-6 sm:px-9">
+              <div className="border-b border-line px-7 py-6 sm:px-9">
                 <div className="mb-3">
                   <span className="glass-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest">
                     <CalendarClock size={14} /> 30-minute consultation
@@ -594,7 +600,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                   Request My Free Skora Audit{" "}
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </button>
-                <div className="flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center sm:flex-row sm:justify-center">
+                <div className="flex flex-col items-center gap-2 border-t border-line pt-6 text-center sm:flex-row sm:justify-center">
                   <span className="text-sm text-sub">Prefer WhatsApp?</span>
                   <a
                     href={whatsappHref}

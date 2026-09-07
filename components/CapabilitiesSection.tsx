@@ -56,7 +56,7 @@ export default function CapabilitiesSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="capabilities" className="bg-main py-24 border-t border-white/10 [perspective:1200px]">
+    <section ref={sectionRef} id="capabilities" className="bg-main py-24 border-t border-line [perspective:1200px]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeader
           badge="MNC ENTERPRISE CAPABILITIES"
@@ -93,7 +93,7 @@ export default function CapabilitiesSection() {
 
                   <div className="mt-8 space-y-3 [transform:translateZ(25px)]">
                     {["Multi-Tenant Systems", "Automated Stripe Billing", "Role-Based Access Controls"].map((feat, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm font-semibold text-[#CBD5E1]">
+                      <div key={i} className="flex items-center gap-2 text-sm font-semibold text-sub">
                         <CheckCircle2 size={16} className="text-accent-light" />
                         <span>{feat}</span>
                       </div>
@@ -101,7 +101,7 @@ export default function CapabilitiesSection() {
                   </div>
                 </div>
 
-                <div className="mt-10 pt-6 border-t border-white/10 flex items-center justify-between font-bold text-accent-light group-hover:text-glow [transform:translateZ(30px)]">
+                <div className="mt-10 pt-6 border-t border-line flex items-center justify-between font-bold text-accent-light group-hover:text-glow [transform:translateZ(30px)]">
                   <span>Explore Enterprise Solutions</span>
                   <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
                 </div>

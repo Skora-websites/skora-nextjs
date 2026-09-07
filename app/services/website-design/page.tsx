@@ -178,7 +178,7 @@ export default function WebsiteDesignPage() {
           </h4>
           <div className="flex flex-wrap gap-3">
             {techStack.map((tech, idx) => (
-              <span key={idx} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-[#CBD5E1]">
+              <span key={idx} className="px-4 py-2 rounded-xl bg-ink/5 border border-line text-xs font-bold text-sub">
                 ⚡ {tech}
               </span>
             ))}
@@ -204,7 +204,7 @@ export default function WebsiteDesignPage() {
               <div className="w-8 h-8 rounded-full glass-pill flex items-center justify-center shrink-0 mt-0.5">
                 <Check size={16} />
               </div>
-              <p className="text-sm font-bold text-[#CBD5E1] leading-snug">{item}</p>
+              <p className="text-sm font-bold text-sub leading-snug">{item}</p>
             </motion.div>
           ))}
         </div>

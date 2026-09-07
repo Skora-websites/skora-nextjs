@@ -78,11 +78,11 @@ export default function TermsPage() {
       <section className="pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
         <div className="p-8 sm:p-12 rounded-[2.5rem] glass-card space-y-8">
           {clauses.map((clause, idx) => (
-            <div key={clause.num} className={`space-y-3 ${idx > 0 ? "pt-6 border-t border-white/10" : ""}`}>
+            <div key={clause.num} className={`space-y-3 ${idx > 0 ? "pt-6 border-t border-line" : ""}`}>
               <h2 className="text-xl font-extrabold text-ink uppercase flex items-center gap-2">
                 <span className="text-accent-light">{clause.num}</span> {clause.title}
               </h2>
-              <p className="text-xs sm:text-sm text-[#CBD5E1] font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm text-sub font-medium leading-relaxed">
                 {clause.body}
               </p>
             </div>

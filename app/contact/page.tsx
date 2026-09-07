@@ -131,14 +131,14 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/10 space-y-4">
+              <div className="pt-6 border-t border-line space-y-4">
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-accent-light" />
-                  <span className="text-xs font-bold text-[#CBD5E1]">{siteContent.responseGuarantee}</span>
+                  <span className="text-xs font-bold text-sub">{siteContent.responseGuarantee}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="w-5 h-5 text-accent-light" />
-                  <span className="text-xs font-bold text-[#CBD5E1]">Strict Non-Disclosure &amp; Data Privacy</span>
+                  <span className="text-xs font-bold text-sub">Strict Non-Disclosure &amp; Data Privacy</span>
                 </div>
               </div>
             </div>

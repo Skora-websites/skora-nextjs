@@ -130,9 +130,9 @@ export default function FeelTheMarket() {
   }, []);
 
   return (
-    <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-main via-[#081226] to-main flex items-center justify-center border-t border-blue-900/30">
+    <section className="relative h-[820px] w-full overflow-hidden bg-gradient-to-b from-main via-surface to-main flex items-center justify-center border-t border-accent/20">
       {/* Radial Blue Light Mesh Overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.25)_0%,rgba(5,7,14,1)_80%)] pointer-events-none" />
+      <div className="absolute inset-0 market-halo pointer-events-none" />
 
       {/* 3D RUSTY/FROSTY DROPPING ICE CUBES LOOP WITH MELTING DRIP PARTICLES */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
@@ -184,10 +184,10 @@ export default function FeelTheMarket() {
           whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-[3.5rem] font-extrabold tracking-tight text-white sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.95]"
+          className="text-[3.5rem] font-extrabold tracking-tight text-ink sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.95]"
         >
           feel the market <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-blue-500 drop-shadow-[0_0_35px_rgba(56,189,248,0.6)]">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-light via-glow to-accent drop-shadow-[0_0_35px_rgba(56,189,248,0.6)]">
             in your favour.
           </span>
         </motion.h2>
