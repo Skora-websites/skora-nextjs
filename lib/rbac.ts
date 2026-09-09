@@ -230,22 +230,34 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
 };
 
 export const ROUTE_ACCESS: Record<string, Role[]> = {
-  "/dashboard": ["super_admin", "hr_admin", "admin", "manager", "employee"],
-  "/employee": ["super_admin", "hr_admin", "admin", "manager", "employee"],
-  "/manager": ["super_admin", "manager"],
-  "/superadmin": ["super_admin"],
-  "/hr-admin": ["hr_admin", "admin", "super_admin"],
-  "/hr-admin/employees": ["hr_admin", "admin", "super_admin"],
-  "/hr-admin/onboarding": ["hr_admin", "admin", "super_admin"],
-  "/hr-admin/payroll": ["hr_admin", "admin", "super_admin"],
-  "/hr-admin/projects": ["hr_admin", "admin", "super_admin"],
-  "/hr-admin/leave-policies": ["hr_admin", "admin", "super_admin"],
-  "/hr-admin/attendance": ["hr_admin", "admin", "super_admin"],
-  "/hr-admin/settings": ["hr_admin", "admin", "super_admin"],
-  "/manager/projects": ["manager", "super_admin"],
-  "/manager/timesheets": ["manager", "super_admin"],
-  "/manager/approvals": ["manager", "super_admin"],
-  "/manager/analytics": ["manager", "super_admin"],
+  // ── Role-gated areas — MUST mirror middleware.ts ROLE_GATED_ROUTES ──
+  "/hrms/superadmin": ["super_admin"],
+  "/hrms/hr-admin": ["hr_admin", "admin"],
+  "/hrms/manager": ["manager"],
+  "/hrms/employee": ["employee"],
+
+  // ── Shared pages — middleware protects them (session required) but does
+  //    not role-gate them, so every role may pass the client guard too. ──
+  "/hrms/dashboard": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/employees": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/attendance": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/leaves": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/payroll": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/organization": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/documents": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/assets": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/holidays": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/onboarding": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/probation": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/exit": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/engage": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/tasks": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/tickets": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/projects": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/recruitment": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/performance": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/reports": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/settings": ["super_admin", "hr_admin", "admin", "manager", "employee"],
 };
 
 export function hasPermission(userRole: string, permissionKey: string, rolePermissions?: Record<string, string[]>): boolean {
@@ -289,16 +301,22 @@ export function canAccessRoute(
   const normalized = normalizeRole(role);
   if (normalized === "super_admin") return true;
 
-  const allowedRoles = ROUTE_ACCESS[path];
-  if (allowedRoles?.includes(normalized)) return true;
+  // Exact match first
+  const exact = ROUTE_ACCESS[path];
+  if (exact) return exact.includes(normalized);
 
-  for (const [route, roles] of Object.entries(ROUTE_ACCESS)) {
-    if (path.startsWith(route + "/") || path === route) {
-      if (roles.includes(normalized)) return true;
-    }
+  // Longest-prefix match so e.g. /hrms/employee/leaves is governed by
+  // the /hrms/employee rule.
+  const matches = Object.keys(ROUTE_ACCESS)
+    .filter((route) => path.startsWith(route + "/"))
+    .sort((a, b) => b.length - a.length);
+  if (matches.length > 0) {
+    return ROUTE_ACCESS[matches[0]].includes(normalized);
   }
 
-  return false;
+  // Not listed: middleware is the authoritative server-side gate and already
+  // allowed this navigation, so the client guard must not be stricter.
+  return true;
 }
 
 /**
