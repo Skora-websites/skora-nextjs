@@ -61,3 +61,6 @@ next-env.d.ts
 
 # Stale full project copy nested inside the repo
 /skora-nextjs/
+
+# Large local archives
+*.zip
