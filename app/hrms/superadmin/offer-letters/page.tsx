@@ -11,6 +11,7 @@ import {
   Send,
   Search,
   Download,
+  Copy,
 } from "lucide-react";
 
 interface OfferLetter {
@@ -28,6 +29,7 @@ interface OfferLetter {
   createdAt: string;
   releasedAt: string | null;
   downloadedAt: string | null;
+  emailSent?: boolean;
 }
 
 export default function SuperAdminOfferLettersPage() {
@@ -41,6 +43,9 @@ export default function SuperAdminOfferLettersPage() {
   const [offerContentText, setOfferContentText] = useState("");
   const [search, setSearch] = useState("");
   const [bulkReleasing, setBulkReleasing] = useState(false);
+  const [showPwModal, setShowPwModal] = useState(false);
+  const [password, setPassword] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     loadLetters();
@@ -123,6 +128,29 @@ export default function SuperAdminOfferLettersPage() {
     loadLetters();
   };
 
+  const handleDownload = async (offer: OfferLetter) => {
+    try {
+      const res = await fetch("/api/hrm/v2/offer-letters/download?id=" + offer.id);
+      if (res.ok) {
+        const pw = res.headers.get("X-Offer-Letter-Password");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "offer-letter-" + offer.employeeName.replace(/\s+/g, "-") + ".pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        if (pw) {
+          setPassword(pw);
+          setShowPwModal(true);
+        }
+        loadLetters();
+      }
+    } catch { /* empty */ }
+  };
+
   const pendingIds = filtered.filter((l) => l.status === "pending_ceo").map((l) => l.id);
   const pendingCount = letters.filter((l) => l.status === "pending_ceo").length;
   const releasedCount = letters.filter((l) => l.status === "released").length;
@@ -203,13 +231,31 @@ export default function SuperAdminOfferLettersPage() {
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{offer.employeeName}</p>
                   <p className="text-[10px] text-slate-500 truncate">{offer.employeeEmail} · {offer.department} · {offer.designation}</p>
                   <p className="text-[10px] text-slate-400">Requested {new Date(offer.createdAt).toLocaleDateString("en-IN")}</p>
+                {offer.status === "released" && (
+                  <p className="text-[10px] font-semibold mt-0.5">
+                    {offer.emailSent ? (
+                      <span className="text-emerald-600 dark:text-emerald-400">✓ Emailed to employee</span>
+                    ) : (
+                      <span className="text-amber-600 dark:text-amber-400">Email not sent (auto-email off or not configured)</span>
+                    )}
+                  </p>
+                )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {offer.salary && <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">₹{offer.salary.toLocaleString("en-IN")}</span>}
                   {offer.status === "released" ? (
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
-                      RELEASED
-                    </span>
+                    <>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+                        RELEASED
+                      </span>
+                      <button
+                        onClick={() => handleDownload(offer)}
+                        title="Download PDF"
+                        className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </>
                   ) : (
                     <button
                       onClick={() => {
@@ -259,6 +305,27 @@ export default function SuperAdminOfferLettersPage() {
                 Release Offer Letter
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Modal */}
+      {showPwModal && password && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowPwModal(false)}>
+          <div className="bg-white dark:bg-[#0B0F19] border border-gray-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 shadow-2xl text-slate-900 dark:text-white" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <FileText className="h-10 w-10 mx-auto text-blue-500 mb-3" />
+              <h3 className="font-bold text-lg">Offer Letter Downloaded</h3>
+              <p className="text-xs text-slate-500 mt-1">Use this password to open the PDF</p>
+            </div>
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-slate-100 dark:bg-black/40 border border-gray-200 dark:border-white/10 mb-4">
+              <span className="font-mono text-sm font-bold flex-1 text-center select-all">{password}</span>
+              <button onClick={() => { navigator.clipboard.writeText(password); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+                <Copy className="h-4 w-4" />
+              </button>
+            </div>
+            {copied && <p className="text-xs text-emerald-600 text-center mb-3">Copied!</p>}
+            <button onClick={() => setShowPwModal(false)} className="w-full bg-primary text-white font-bold py-2.5 rounded-xl text-sm">Done</button>
           </div>
         </div>
       )}

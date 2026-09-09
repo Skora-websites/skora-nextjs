@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       createdAt: l.createdAt,
       releasedAt: l.releasedAt || null,
       downloadedAt: l.downloadedAt || null,
+      emailSent: l.emailSent === true,
     }));
 
     return NextResponse.json({ data });
@@ -182,15 +183,24 @@ export async function PATCH(request: NextRequest) {
           const cfg = settingsDoc?.settings || {};
           if (cfg.autoEmailOnRelease && letter.employeeEmail) {
             const origin = request.headers.get("origin") || "https://skora-nextjs.vercel.app";
-            await sendOfferLetterEmail({
+            const emailSent = await sendOfferLetterEmail({
               to: letter.employeeEmail,
               employeeName: letter.employeeName,
               salary: letter.salary,
               joiningDate: letter.joiningDate,
               companyName: cfg.companyName || "SKORA",
+              companyTagline: cfg.companyTagline || "",
               signatoryName: cfg.signatoryName || "Vishal Srivastava",
+              signatoryTitle: cfg.signatoryTitle || "",
               downloadUrl: origin + "/hrms/employee/offer-letters",
+              subjectTemplate: cfg.emailSubject || undefined,
+              bodyTemplate: cfg.emailBody || undefined,
             });
+            // Record whether the email actually fired so the CEO can see it.
+            await db.collection("offerLetters").updateOne(
+              { _id: new ObjectId(id) },
+              { $set: { emailSentAt: emailSent ? new Date() : null, emailSent: emailSent === true } }
+            );
           }
         } catch (emailErr) {
           console.warn("Offer letter email failed:", emailErr);

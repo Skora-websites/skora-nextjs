@@ -33,8 +33,14 @@ interface OfferLetterEmailInput {
   salary?: number | null;
   joiningDate?: string | null;
   companyName: string;
+  companyTagline?: string;
   signatoryName: string;
+  signatoryTitle?: string;
   downloadUrl: string;
+  /** Custom subject template from settings; supports {{companyName}} and {{employeeName}} */
+  subjectTemplate?: string;
+  /** Custom body template from settings; supports {{employeeName}}, {{companyName}}, {{signatoryName}}, {{salary}}, {{joiningDate}} */
+  bodyTemplate?: string;
 }
 
 /**
@@ -47,19 +53,38 @@ export async function sendOfferLetterEmail({
   salary,
   joiningDate,
   companyName,
+  companyTagline,
   signatoryName,
+  signatoryTitle,
   downloadUrl,
+  subjectTemplate,
+  bodyTemplate,
 }: OfferLetterEmailInput): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) return false;
 
   const salaryStr = salary
-    ? `<p><strong>Annual Salary:</strong> ₹${salary.toLocaleString("en-IN")}</p>`
+    ? `<p><strong>Annual Salary:</strong> Rs. ${salary.toLocaleString("en-IN")}</p>`
     : "";
   const joinStr = joiningDate
     ? `<p><strong>Joining Date:</strong> ${joiningDate}</p>`
     : "";
+
+  // Resolve custom templates with placeholders; fall back to the built-in layout.
+  const fill = (tpl: string) =>
+    tpl
+      .replace(/{{employeeName}}/g, employeeName)
+      .replace(/{{companyName}}/g, companyName)
+      .replace(/{{signatoryName}}/g, signatoryName)
+      .replace(/{{salary}}/g, salary ? `Rs. ${salary.toLocaleString("en-IN")}` : "")
+      .replace(/{{joiningDate}}/g, joiningDate || "");
+
+  const subject = subjectTemplate
+    ? fill(subjectTemplate)
+    : `Your Offer Letter from ${companyName}`;
+
+  const customBody = bodyTemplate ? `<p>${fill(bodyTemplate).replace(/\n/g, "<br>")}</p>` : null;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -70,22 +95,23 @@ export async function sendOfferLetterEmail({
     body: JSON.stringify({
       from,
       to: [to],
-      subject: `Your Offer Letter from ${companyName}`,
+      subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; border-bottom: 3px double #2563eb; padding-bottom: 20px; margin-bottom: 20px;">
             <h1 style="color: #2563eb; letter-spacing: 2px; margin: 0;">${companyName}</h1>
-            <p style="color: #666; font-size: 12px; margin-top: 5px;">Innovation · Excellence · Growth</p>
+            <p style="color: #666; font-size: 12px; margin-top: 5px;">${companyTagline || "Innovation · Excellence · Growth"}</p>
           </div>
+          ${customBody ?? `
           <p>Dear <strong>${employeeName}</strong>,</p>
           <p>We are pleased to inform you that your offer letter has been released and is ready for download.</p>
           ${salaryStr}
-          ${joinStr}
+          ${joinStr}`}
           <div style="text-align: center; margin: 30px 0;">
             <a href="${downloadUrl}" style="background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Download Offer Letter</a>
           </div>
           <p>Please review the offer letter carefully. If you have any questions, do not hesitate to reach out.</p>
-          <p>Warm regards,<br><strong>${signatoryName}</strong><br>${companyName}</p>
+          <p>Warm regards,<br><strong>${signatoryName}</strong>${signatoryTitle ? `<br>${signatoryTitle}` : ""}<br>${companyName}</p>
           <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 30px; font-size: 11px; color: #999; text-align: center;">
             <p>This is a confidential document. Unauthorized distribution is prohibited.</p>
           </div>

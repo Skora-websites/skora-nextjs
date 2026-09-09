@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
       ["Department", letter.department || "N/A"],
       ["Designation", letter.designation || "N/A"],
     ];
-    if (letter.salary) details.push(["Annual Salary", `₹ ${letter.salary.toLocaleString("en-IN")}`]);
+    if (letter.salary) details.push(["Annual Salary", `Rs. ${letter.salary.toLocaleString("en-IN")}`]);
     if (letter.joiningDate) details.push(["Joining Date", letter.joiningDate]);
 
     details.forEach(([label, value], i) => {
@@ -186,7 +186,25 @@ export async function GET(request: NextRequest) {
     doc.end();
     const pdfBuffer = await pdfReady;
 
-    return new NextResponse(new Uint8Array(pdfBuffer), {
+    // ── Encrypt the PDF (pdfkit cannot encrypt; use pdf-lib-plus-encrypt) ──
+    const { PDFDocument: PdfLibDocument } = await import("pdf-lib-plus-encrypt");
+    const encryptedDoc = await PdfLibDocument.load(pdfBuffer);
+    await encryptedDoc.encrypt({
+      userPassword: password,
+      ownerPassword: password + "-owner",
+      permissions: {
+        printing: "highResolution",
+        modifying: false,
+        copying: false,
+        annotating: false,
+        fillingForms: false,
+        contentAccessibility: true,
+        documentAssembly: false,
+      },
+    });
+    const encryptedBytes = await encryptedDoc.save({ useObjectStreams: false });
+
+    return new NextResponse(new Uint8Array(encryptedBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
