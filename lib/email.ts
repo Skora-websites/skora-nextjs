@@ -1,30 +1,112 @@
 import "server-only";
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 
 interface ResetEmailInput {
   to: string;
   resetUrl: string;
 }
 
-export async function sendPasswordResetEmail({ to, resetUrl }: ResetEmailInput): Promise<boolean> {
+// ── Transport resolution ──────────────────────────────────────────
+// SMTP is primary (any provider: Gmail/Workspace, Outlook, Zoho, Hostinger,
+// cPanel webmail). Resend HTTP API is the fallback if SMTP is not configured.
+
+interface SmtpConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+  from: string;
+}
+
+function getSmtpConfig(): SmtpConfig | null {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || process.env.RESEND_FROM_EMAIL;
+  if (!host || !user || !pass || !from) return null;
+  const port = Number(process.env.SMTP_PORT || 587);
+  // Port 465 uses implicit TLS; everything else uses STARTTLS (or none for 25).
+  const secure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465;
+  return { host, port, secure, user, pass, from };
+}
+
+let transporterCache: Transporter | null = null;
+
+async function getTransporter(): Promise<Transporter | null> {
+  const cfg = getSmtpConfig();
+  if (!cfg) return null;
+  if (transporterCache) return transporterCache;
+  transporterCache = nodemailer.createTransport({
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure,
+    auth: { user: cfg.user, pass: cfg.pass },
+    // Serverless-safe timeouts so a dead SMTP host can't hang a request.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
+  });
+  return transporterCache;
+}
+
+export interface MailOptions {
+  to: string;
+  subject: string;
+  html: string;
+}
+
+/**
+ * Send an email via SMTP if configured, otherwise via the Resend API.
+ * Returns true only when a transport actually accepted the message.
+ */
+export async function sendMail({ to, subject, html }: MailOptions): Promise<boolean> {
+  // ── 1. SMTP (primary) ──
+  const transporter = await getTransporter();
+  if (transporter) {
+    const cfg = getSmtpConfig()!;
+    try {
+      await transporter.sendMail({
+        from: cfg.from,
+        to,
+        subject,
+        html,
+      });
+      return true;
+    } catch (err) {
+      console.error("SMTP send failed, falling back to Resend:", err);
+      // fall through to Resend
+    }
+  }
+
+  // ── 2. Resend HTTP API (fallback) ──
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) return false;
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject: "Reset your Skora HRMS password",
-      html: `<p>We received a request to reset your Skora HRMS password.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 1 hour. If you did not request this, you can ignore this email.</p>`,
-    }),
-  });
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from, to: [to], subject, html }),
+    });
+    return response.ok;
+  } catch (err) {
+    console.error("Resend send failed:", err);
+    return false;
+  }
+}
 
-  return response.ok;
+export async function sendPasswordResetEmail({ to, resetUrl }: ResetEmailInput): Promise<boolean> {
+  return sendMail({
+    to,
+    subject: "Reset your Skora HRMS password",
+    html: `<p>We received a request to reset your Skora HRMS password.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 1 hour. If you did not request this, you can ignore this email.</p>`,
+  });
 }
 
 interface OfferLetterEmailInput {
@@ -45,7 +127,8 @@ interface OfferLetterEmailInput {
 
 /**
  * Send offer letter notification email to employee when CEO releases it.
- * Uses Resend API. Returns false if RESEND_API_KEY is not configured.
+ * Uses SMTP (any provider) with Resend API fallback.
+ * Returns false if no transport is configured or sending failed.
  */
 export async function sendOfferLetterEmail({
   to,
@@ -60,10 +143,6 @@ export async function sendOfferLetterEmail({
   subjectTemplate,
   bodyTemplate,
 }: OfferLetterEmailInput): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from) return false;
-
   const salaryStr = salary
     ? `<p><strong>Annual Salary:</strong> Rs. ${salary.toLocaleString("en-IN")}</p>`
     : "";
@@ -86,17 +165,7 @@ export async function sendOfferLetterEmail({
 
   const customBody = bodyTemplate ? `<p>${fill(bodyTemplate).replace(/\n/g, "<br>")}</p>` : null;
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject,
-      html: `
+  const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; border-bottom: 3px double #2563eb; padding-bottom: 20px; margin-bottom: 20px;">
             <h1 style="color: #2563eb; letter-spacing: 2px; margin: 0;">${companyName}</h1>
@@ -116,9 +185,7 @@ export async function sendOfferLetterEmail({
             <p>This is a confidential document. Unauthorized distribution is prohibited.</p>
           </div>
         </div>
-      `,
-    }),
-  });
+      `;
 
-  return response.ok;
+  return sendMail({ to, subject, html });
 }
