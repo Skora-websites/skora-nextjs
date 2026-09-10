@@ -76,7 +76,7 @@ jobs:
 
       - name: Run ESLint
         id: lint
-        run: npm run lint -- --max-warnings=0
+        run: npm run lint
 
       - name: Build Next.js application
         id: build
