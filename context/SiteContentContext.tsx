@@ -31,7 +31,7 @@ export interface SiteContent {
 }
 
 const defaultContent: SiteContent = {
-  phone: "+44 7756 083473",
+  phone: "+44 07756083473",
   email: "info@skorainfotech.com",
   healthcareEmail: "info@skorainfotech.com",
   address: "5 Market Square, High Street, Uxbridge, UB8 1LH, London",
