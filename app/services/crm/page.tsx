@@ -1,222 +1,55 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import ScrollProgressBar from "@/components/ScrollProgressBar";
-import ContactModal from "@/components/ContactModal";
-import Card3D from "@/components/Card3D";
-import { MessageCircle, ArrowRight, Check } from "lucide-react";
-import { motion } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import { Users } from "lucide-react";
+import ServicePageTemplate from "@/components/landing/ServicePageTemplate";
 
 export default function CrmPage() {
-  const [consultationModalOpen, setConsultationModalOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const capabilities = [
-    {
-      title: "WhatsApp Cloud API Automated Sequences",
-      desc: "Trigger instant personalized WhatsApp confirmation messages, appointment follow-ups, and promotional offers within 5 seconds of form fill.",
-      metrics: "5s Response Time",
-    },
-    {
-      title: "Omnichannel Lead Pipeline Centralization",
-      desc: "Consolidate lead inquiries from Meta Lead Ads, Google PPC, website forms, and phone calls into a single real-time sales pipeline.",
-      metrics: "100% Lead Capture",
-    },
-    {
-      title: "Automated Lead Scoring & Agent Routing",
-      desc: "Route high-intent leads to specific sales representatives or clinicians based on geographic location, service requested, and lead score.",
-      metrics: "Smart Lead Routing",
-    },
-    {
-      title: "Real-Time Sales Conversion Analytics",
-      desc: "Track pipeline velocity, sales agent conversion rates, cost-per-acquisition (CPA), and revenue attribution dashboards.",
-      metrics: "Full Attribution",
-    },
-  ];
-
-  const deliverables = [
-    "Custom CRM Pipeline & Lead Stage Architecture",
-    "WhatsApp Business Cloud API Automation Setup",
-    "Meta Ads & Google Lead Form Webhook Integrations",
-    "Lead Scoring Rules & Automated Agent Routing Engine",
-    "Real-time Analytics Dashboard & Sales Reports",
-    "SMS & Email Drip Sequence Automation",
-  ];
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !containerRef.current) return;
-    const ctx = gsap.context(() => {
-      ScrollTrigger.refresh();
-      gsap.utils.toArray<HTMLElement>(".gsap-scroll-card").forEach((card) => {
-        gsap.fromTo(
-          card,
-          { y: 40, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: card,
-              start: "top 88%",
-            },
-          }
-        );
-      });
-    }, containerRef);
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <main ref={containerRef} className="min-h-screen bg-main text-ink font-sans relative overflow-x-hidden">
-      <ScrollProgressBar />
-      <Navbar onOpenConsultation={() => setConsultationModalOpen(true)} />
-
-      {/* Hero Header */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="max-w-3xl space-y-6"
-        >
-          <div className="glass-pill inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold">
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>✦ CUSTOM CRM &amp; WHATSAPP AUTOMATIONS ✦</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-ink tracking-tight leading-[1.02]">
-            CONSOLIDATING LEADS &amp; <br />
-            <span className="text-gradient">AUTOMATING WHATSAPP PIPELINES</span>
-          </h1>
-
-          <p className="text-lg text-sub font-medium leading-relaxed">
-            Consolidate inquiries from Meta Ads, Google PPC, and website forms into a unified sales pipeline with instant automated WhatsApp &amp; email nurture sequences.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4 pt-4">
-            <button
-              onClick={() => setConsultationModalOpen(true)}
-              className="btn-primary group"
-            >
-              <span>Build Custom CRM Engine</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Feature Gallery Banner */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-16 rounded-[2.5rem] overflow-hidden glass-card group cursor-pointer relative"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80"
-            alt="Custom CRM Software"
-            className="w-full h-[400px] sm:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
-          />
-        </motion.div>
-      </section>
-
-      {/* Capabilities Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-left mb-12">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-accent-light">
-            Pipeline Engine /
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink mt-1">
-            CRM &amp; AUTOMATION CAPABILITIES
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {capabilities.map((cap, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className="gsap-scroll-card"
-            >
-              <Card3D maxTilt={10} className="p-8 rounded-[2.2rem] glass-card glass-card-hover space-y-4 h-full">
-                <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full glass-pill text-xs font-bold font-mono">
-                    {cap.metrics}
-                  </span>
-                </div>
-                <h3 className="text-xl font-extrabold text-ink">{cap.title}</h3>
-                <p className="text-sm text-sub font-medium leading-relaxed">{cap.desc}</p>
-              </Card3D>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Light Glass Deliverables Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto glass-card rounded-[3rem] my-12">
-        <div className="text-left mb-16">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-accent-light">
-            Deliverables /
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-ink mt-1">
-            CRM DELIVERABLES
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {deliverables.map((item, idx) => (
-            <motion.div
-              key={idx}
-              whileHover={{ y: -6, scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="gsap-scroll-card p-6 rounded-2xl glass-card glass-card-hover flex items-start gap-4 transition-colors"
-            >
-              <div className="w-8 h-8 rounded-full glass-pill flex items-center justify-center shrink-0 mt-0.5">
-                <Check size={16} />
-              </div>
-              <p className="text-sm font-bold text-sub leading-snug">{item}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Liquid Emerald CTA Banner */}
-        <div className="mt-24 relative rounded-[3rem] overflow-hidden bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#3B82F6] p-10 sm:p-16 text-center text-white border border-[#2563EB]/30 shadow-2xl">
-          <div className="max-w-2xl mx-auto space-y-6">
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-              READY TO AUTOMATE YOUR LEAD CONVERSION?
-            </h2>
-            <p className="text-white/90 text-sm font-medium">
-              Talk to our automation engineers to connect your lead sources to WhatsApp workflows.
-            </p>
-            <div className="pt-4 flex justify-center">
-              <button
-                onClick={() => setConsultationModalOpen(true)}
-                className="px-10 py-4 rounded-xl bg-white hover:bg-blue-50 text-[#1D4ED8] font-extrabold text-sm shadow-xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
-              >
-                Schedule CRM Consultation
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Footer onOpenConsultation={() => setConsultationModalOpen(true)} />
-      <ContactModal
-        isOpen={consultationModalOpen}
-        onClose={() => setConsultationModalOpen(false)}
-        defaultService="Custom CRM & Automations"
-      />
-    </main>
+    <ServicePageTemplate
+      pillIcon={Users}
+      pill="CRM development"
+      title={<>A CRM that matches how your team sells</>}
+      lead="Leads, follow-ups, and WhatsApp updates organized around your pipeline, with imports from spreadsheets and old tools."
+      primaryCta="Map my sales process"
+      heroImage="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80"
+      heroImageAlt="Sales team reviewing pipeline"
+      capabilitiesTitle="CRM scope"
+      capabilities={[
+        {
+          title: "Pipeline and stages",
+          description: "Custom stages, lost reasons, and assignment rules based on your current process.",
+          metric: "Process mapped",
+        },
+        {
+          title: "Follow-ups and reminders",
+          description: "Tasks, overdue alerts, and daily lists so no lead waits more than a day.",
+          metric: "Daily lists",
+        },
+        {
+          title: "WhatsApp and email updates",
+          description: "Templates and triggers for new leads, follow-ups, and payment reminders.",
+          metric: "Templates included",
+        },
+        {
+          title: "Reports",
+          description: "Source-wise leads, stage conversion, and team activity in one weekly view.",
+          metric: "Weekly report",
+        },
+      ]}
+      stack={["Next.js", "Node.js", "MongoDB", "WhatsApp API", "Email SMTP", "CSV import", "Role access", "Exports"]}
+      deliverablesTitle="Deliverables"
+      deliverables={[
+        "Pipeline mapped to your stages",
+        "Lead import from sheets or old CRM",
+        "Follow-up tasks and reminders",
+        "WhatsApp and email templates",
+        "Team activity and conversion reports",
+        "Training session and user guide",
+      ]}
+      ctaTitle="Losing track of follow-ups?"
+      ctaDescription="Describe your lead sources and team size. We suggest pipeline and automation."
+      ctaButton="Request CRM estimate"
+      modalServiceName="CRM development"
+    />
   );
 }

@@ -8,6 +8,7 @@ import EnterpriseHero from "@/components/EnterpriseHero";
 import CapabilitiesSection from "@/components/CapabilitiesSection";
 import FeelTheMarket from "@/components/FeelTheMarket";
 import TechExpertiseSection from "@/components/TechExpertiseSection";
+import ProcessSection from "@/components/ProcessSection";
 import LaptopSlider from "@/components/LaptopSlider";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
@@ -38,30 +39,35 @@ export default function Home() {
       {/* Navbar with white-glass scroll treatment */}
       <Navbar onOpenConsultation={handleOpenConsultation} />
 
-      {/* 1. ENTERPRISE HERO — Electric Blue Theme & 5 Front Showcase 3D Cards */}
+      {/* 1. Hero */}
       <EnterpriseHero onOpenConsultation={handleOpenConsultation} />
 
-      {/* 2. WHAT WE BUILD AT SKORA — MNC Corporate Glassmorphism Capabilities */}
+      {/* 2. Services overview */}
       <ScrollReveal variant="fade-up" duration={800}>
         <CapabilitiesSection />
       </ScrollReveal>
 
-      {/* 3. FEEL THE MARKET IN YOUR FAVOUR — 3D Rusty Frosty Ice Cubes & Melting Water Drip Loop */}
+      {/* 3. Why teams choose Skora */}
       <ScrollReveal variant="fade-up" duration={800}>
         <FeelTheMarket />
       </ScrollReveal>
 
-      {/* 4. OUR TECH & MEDIA EXPERTISE — Pure White Background */}
+      {/* 4. Process */}
+      <ScrollReveal variant="fade-up" duration={800}>
+        <ProcessSection />
+      </ScrollReveal>
+
+      {/* 5. Technology expertise */}
       <ScrollReveal variant="fade-up" duration={800}>
         <TechExpertiseSection />
       </ScrollReveal>
 
-      {/* 5. 3D 6-LAPTOP CAROUSEL WHEEL */}
+      {/* 5. Selected work */}
       <ScrollReveal variant="zoom" duration={900}>
         <LaptopSlider />
       </ScrollReveal>
 
-      {/* 6. TESTIMONIALS SECTION ("Partnered with the Best") */}
+      {/* 6. Client feedback */}
       <ScrollReveal variant="fade-up" duration={800}>
         <TestimonialsSection />
       </ScrollReveal>

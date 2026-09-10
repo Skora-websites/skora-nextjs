@@ -34,7 +34,7 @@ const services = [
     name: "Digital Marketing & Local SEO",
     icon: Video,
     link: "/services/digital-marketing",
-    desc: "Google Maps #1 ranking, Meta Ads & AI search optimization.",
+    desc: "Local SEO, Meta and Google ads, and content that brings enquiries.",
   },
   {
     name: "Branding & Visual Identity",
@@ -120,10 +120,13 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    setMobileMenuOpen(false);
-    setIsServicesOpen(false);
-  }, [pathname]);
+  // Reset menus on navigation via render-phase adjustment (no effect needed).
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (mobileMenuOpen) setMobileMenuOpen(false);
+    if (isServicesOpen) setIsServicesOpen(false);
+  }
 
   const closeAudit = () => setIsAuditOpen(false);
   const closeServices = () => setIsServicesOpen(false);
@@ -142,14 +145,16 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
         <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             {/* Skora Logo -> Redirects to Landing Page (/) */}
-            <Link
-              href="/"
-              className={`relative z-50 flex items-center gap-1.5 text-2xl font-extrabold tracking-tight transition-colors duration-300 text-ink`}
-            >
-              Skora{" "}
-              <span className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-            </Link>
-
+<Link
+  href="/"
+  className="relative z-50 flex items-center transition-colors duration-300"
+>
+  <img 
+    src="/skora-logo.png" 
+    alt="Skora Infotech Logo" 
+    className="h-10 w-auto" 
+  />
+</Link>
             <nav className="hidden h-full items-center gap-8 lg:flex">
               {/* Home Link -> Highlighted if on / */}
               <Link
@@ -188,23 +193,20 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
                 />
               </button>
 
-              {/* Healthcare IT Link (emerald reserved for healthcare content) */}
+              {/* Healthcare link (emerald reserved for healthcare content) */}
               <Link
                 href="/healthcare"
                 className={`group relative flex h-full items-center gap-1.5 text-[15px] font-semibold transition-colors duration-300 ${
                   isHealthcarePage
-                    ? "text-emerald-600 font-extrabold"
-                    : "text-emerald-600/80 hover:text-emerald-600"
+                    ? "text-emerald-700 font-extrabold"
+                    : "text-emerald-700/80 hover:text-emerald-700"
                 }`}
               >
-                <Activity
-                  size={16}
-                  className={isHealthcarePage ? "animate-spin text-emerald-600" : ""}
-                />
-                <span>Healthcare IT</span>
+                <Activity size={16} className="text-emerald-600" />
+                <span>Healthcare</span>
                 {isHealthcarePage && (
-                  <span className="ml-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-700">
-                    ACTIVE
+                  <span className="ml-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                    You are here
                   </span>
                 )}
                 <span
@@ -233,17 +235,17 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setIsAuditOpen(true)}
-                className="btn-secondary px-5 py-2.5 text-[14px]"
+                className="link-fill px-1 py-2 text-[14px] font-bold text-ink"
               >
-                <ShieldCheck size={16} /> Free SKORA Audit
+                Free audit
               </button>
 
               <button
                 type="button"
                 onClick={() => onOpenConsultation?.()}
-                className="btn-primary group px-6 py-2.5 text-[14px]"
+                className="btn-primary group rounded-full px-6 py-2.5 text-[14px]"
               >
-                <span>Start Project</span>
+                <span>Start a project</span>
                 <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
               </button>
             </div>

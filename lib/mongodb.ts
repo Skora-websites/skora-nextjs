@@ -49,13 +49,13 @@ async function resolveSRV(srvUri: string): Promise<string> {
     const mergedMap = new Map<string, string>();
     if (txtParams) {
       txtParams.split("&").forEach(function(p) {
-        var eq = p.indexOf("=");
+        const eq = p.indexOf("=");
         if (eq > 0) mergedMap.set(p.substring(0, eq), p.substring(eq + 1));
       });
     }
     if (existingQuery) {
       existingQuery.split("&").forEach(function(p) {
-        var eq = p.indexOf("=");
+        const eq = p.indexOf("=");
         if (eq > 0) mergedMap.set(p.substring(0, eq), p.substring(eq + 1));
         else if (p) mergedMap.set(p, "");
       });
@@ -65,13 +65,14 @@ async function resolveSRV(srvUri: string): Promise<string> {
       .map(function(e) { return e[0] + "=" + e[1]; })
       .join("&");
 
-    var directUri = "mongodb://" + credentials + "@" + hosts + "/" + dbPath;
+    let directUri = "mongodb://" + credentials + "@" + hosts + "/" + dbPath;
     if (mergedParams) directUri += "?" + mergedParams;
 
     console.log("[MongoDB] Resolved SRV to", srvRecords.length, "direct hosts");
     return directUri;
-  } catch (err: any) {
-    console.warn("[MongoDB] SRV resolution failed, using original URI:", err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn("[MongoDB] SRV resolution failed, using original URI:", message);
     return srvUri;
   }
 }
@@ -81,7 +82,7 @@ const clientOptions: MongoClientOptions = {
   connectTimeoutMS: 15000,
   tls: true,
   retryWrites: true,
-  w: "majority" as any,
+  w: "majority" as MongoClientOptions["w"],
 };
 
 async function connectWithRetry(retries = 2): Promise<MongoClient | null> {
@@ -98,8 +99,9 @@ async function connectWithRetry(retries = 2): Promise<MongoClient | null> {
       await client.connect();
       console.log("[MongoDB] Connected successfully (attempt " + (attempt + 1) + ")");
       return client;
-    } catch (err: any) {
-      console.warn("[MongoDB] Connection attempt " + (attempt + 1) + " failed:", err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn("[MongoDB] Connection attempt " + (attempt + 1) + " failed:", message);
       if (attempt < retries) {
         await new Promise(function(r) { setTimeout(r, 1000 * (attempt + 1)); });
       }

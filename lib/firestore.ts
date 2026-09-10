@@ -1,9 +1,90 @@
-// This file re-exports CRM services from MongoDB service layer.
-// HRM services use lib/hrm/firestore.ts (which also uses MongoDB).
-// This file is kept for CRM imports (leads, customers, deals, etc.)
+// CRM service layer backed by MongoDB.
+// Kept for CRM imports (leads, customers, deals, etc.)
 
 import "server-only";
-import { createMongoService } from "@/lib/hrm/mongo";
+import { getDb } from "@/lib/db/mongo-helper";
+import { ObjectId, type Filter, type Sort, type Document } from "mongodb";
+
+/**
+ * Minimal typed MongoDB service used by the CRM collections.
+ * (Previously this delegated to @/lib/hrm/mongo, which was removed.)
+ */
+export function createMongoService<T extends { id?: string }>(collectionName: string) {
+  async function col() {
+    const db = await getDb();
+    if (!db) throw new Error("MongoDB not connected");
+    return db.collection(collectionName);
+  }
+
+  async function findOne(field: string, value: unknown): Promise<T | null> {
+    const c = await col();
+    const doc = await c.findOne({ [field]: value } as Filter<Document>);
+    return doc ? (serializeId(doc) as T) : null;
+  }
+
+  return {
+    async findById(id: string): Promise<T | null> {
+      const c = await col();
+      try {
+        const doc = await c.findOne({ _id: new ObjectId(id) });
+        return doc ? (serializeId(doc) as T) : null;
+      } catch {
+        const doc = await c.findOne({ id } as Filter<Document>);
+        return doc ? (serializeId(doc) as T) : null;
+      }
+    },
+    async findMany(options: { where?: Filter<Document>; orderByField?: string; orderByDirection?: "asc" | "desc"; limitCount?: number } = {}): Promise<T[]> {
+      const c = await col();
+      let q = c.find(options.where ?? {});
+      q = q.sort((options.orderByField ? { [options.orderByField]: options.orderByDirection === "desc" ? -1 : 1 } : { createdAt: -1 }) as Sort);
+      if (options.limitCount) q = q.limit(options.limitCount);
+      const docs = await q.toArray();
+      return docs.map((d) => serializeId(d) as T);
+    },
+    async create(data: Partial<T>): Promise<T> {
+      const c = await col();
+      const now = new Date();
+      const doc = { ...data, createdAt: now, updatedAt: now } as Document;
+      const result = await c.insertOne(doc);
+      return { ...doc, id: result.insertedId.toString() } as unknown as T;
+    },
+    async update(id: string, data: Partial<T>): Promise<T | null> {
+      const c = await col();
+      const updateRecord = { ...data, updatedAt: new Date() } as Record<string, unknown>;
+      delete updateRecord.id;
+      delete updateRecord._id;
+      try {
+        const r = await c.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: updateRecord }, { returnDocument: "after" });
+        return r ? (serializeId(r) as T) : null;
+      } catch {
+        const r = await c.findOneAndUpdate({ id } as Filter<Document>, { $set: updateRecord }, { returnDocument: "after" });
+        return r ? (serializeId(r) as T) : null;
+      }
+    },
+    async delete(id: string): Promise<boolean> {
+      const c = await col();
+      try {
+        const r = await c.deleteOne({ _id: new ObjectId(id) });
+        return r.deletedCount > 0;
+      } catch {
+        const r = await c.deleteOne({ id } as Filter<Document>);
+        return r.deletedCount > 0;
+      }
+    },
+    findOne,
+  };
+}
+
+function serializeId(doc: unknown): unknown {
+  if (!doc || typeof doc !== "object") return doc;
+  const out: Record<string, unknown> = { ...(doc as Record<string, unknown>) };
+  const rawId: unknown = out._id;
+  if (rawId !== undefined && rawId !== null) {
+    out.id = typeof rawId === "object" ? String(rawId) : rawId;
+    delete out._id;
+  }
+  return out;
+}
 
 // ── Collection Names ───────────────────────────────────
 

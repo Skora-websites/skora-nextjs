@@ -7,38 +7,38 @@ import "./LaptopSlider.css";
 const slideData = [
   {
     id: 1,
-    title: "Edskora Platform",
-    description: "Next-generation multi-user institutional management system.",
+    title: "Institution management platform",
+    description: "Multi-user system with roles, attendance, and reports.",
     image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80",
   },
   {
     id: 2,
-    title: "Osborn Clinic",
-    description: "Cinematic promotional web experience and medical staff recruitment.",
+    title: "Clinic website and recruitment",
+    description: "Service pages, doctor profiles, and application flow.",
     image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
   },
   {
     id: 3,
-    title: "Before You Buy India",
-    description: "High-engagement product reviews and affiliate marketing hub.",
+    title: "Product review portal",
+    description: "Article publishing, search, and affiliate tracking.",
     image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80",
   },
   {
     id: 4,
-    title: "Particle Engine",
-    description: "Advanced interactive background effects and user experiences.",
+    title: "Business dashboard",
+    description: "Orders, customers, and day-to-day operations in one view.",
     image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80",
   },
   {
     id: 5,
-    title: "Cinematic Transitions",
-    description: "Glassmorphism layouts with premium, fluid navigation.",
+    title: "Marketing website",
+    description: "Fast pages with clear calls to action and analytics.",
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80",
   },
   {
     id: 6,
-    title: "Vertical Video Studio",
-    description: "9:16 aspect ratio content delivery and thumbnail generation.",
+    title: "Video and content library",
+    description: "Organized video content with thumbnails and search.",
     image: "https://images.unsplash.com/photo-1616469829581-73993eb86b02?w=800&q=80",
   },
 ];
@@ -64,6 +64,8 @@ export default function LaptopSlider() {
   const activeSlide = slideData[currentIndex];
 
   useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsInView(entry.isIntersecting);
@@ -71,21 +73,11 @@ export default function LaptopSlider() {
       { threshold: 0.4 }
     );
 
-    if (sectionRef.current) observer.observe(sectionRef.current);
+    observer.observe(node);
     return () => {
-      if (sectionRef.current) observer.disconnect();
+      observer.disconnect();
     };
   }, []);
-
-  const playRapidSound = () => {
-    if (audioRef.current && !isMuted) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.volume = 0.4;
-      audioRef.current.play().catch(() => {
-        setIsMuted(true);
-      });
-    }
-  };
 
   useEffect(() => {
     if (isHovered || !isInView) return;
@@ -96,10 +88,15 @@ export default function LaptopSlider() {
   }, [isHovered, isInView]);
 
   useEffect(() => {
-    if (rotationCount > 0 && isInView) {
-      playRapidSound();
+    if (rotationCount > 0 && isInView && audioRef.current && !isMuted) {
+      const audio = audioRef.current;
+      audio.currentTime = 0;
+      audio.volume = 0.4;
+      audio.play().catch(() => {
+        setIsMuted(true);
+      });
     }
-  }, [rotationCount, isInView]);
+  }, [rotationCount, isInView, isMuted]);
 
   return (
     <div className="cred-carousel-section" ref={sectionRef}>

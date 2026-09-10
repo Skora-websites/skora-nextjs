@@ -21,6 +21,8 @@ export default function ScrollReveal({
   const elementRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const node = elementRef.current;
+    if (!node) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -34,14 +36,10 @@ export default function ScrollReveal({
       }
     );
 
-    if (elementRef.current) {
-      observer.observe(elementRef.current);
-    }
+    observer.observe(node);
 
     return () => {
-      if (elementRef.current) {
-        observer.unobserve(elementRef.current);
-      }
+      observer.disconnect();
     };
   }, []);
 

@@ -2,69 +2,92 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Star, Quote, Hexagon, Activity, Triangle, CircleDot, Cloud } from "lucide-react";
-import Pill from "./landing/Pill";
+import { Star } from "lucide-react";
 
 const testimonials = [
-  { quote: "Skora didn't just build our platform; they re-engineered our entire digital architecture. The cloud scalability they achieved is entirely unmatched.", name: "Elena Rodriguez", role: "Chief Technology Officer", Logo: Hexagon, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" },
-  { quote: "HIPAA compliance was our biggest hurdle. Skora delivered a seamless, ultra-secure EHR portal that our clinicians actually love using every day.", name: "Dr. James Carter", role: "Director of Health IT", Logo: Activity, avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80" },
-  { quote: "Their cinematic UI approach completely elevated our brand. We saw a 300% increase in user retention within the first month of launching.", name: "Sarah Lin", role: "VP of Product", Logo: Triangle, avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80" },
-  { quote: "Flawless cross-platform execution. Skora delivered our iOS and Android applications ahead of schedule without sacrificing any performance.", name: "Marcus Johnson", role: "Founder & CEO", Logo: CircleDot, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" },
-  { quote: "The architectural precision of the Skora team is phenomenal. They handled our AWS migration with zero downtime during peak operations.", name: "Priya Patel", role: "Lead Architect", Logo: Cloud, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" },
+  {
+    quote: "Skora rebuilt our platform and documented everything. Our team now ships updates without waiting on external help.",
+    name: "Elena Rodriguez",
+    role: "Chief Technology Officer",
+  },
+  {
+    quote: "They delivered our clinic portal with attention to privacy and clinician workflows. Training took one session.",
+    name: "Dr. James Carter",
+    role: "Director of Health IT",
+  },
+  {
+    quote: "The new website is faster and easier to update. Enquiries from the contact form doubled in two months.",
+    name: "Sarah Lin",
+    role: "VP of Product",
+  },
+  {
+    quote: "Our iOS and Android apps shipped on the agreed dates, with testing builds shared every week.",
+    name: "Marcus Johnson",
+    role: "Founder and CEO",
+  },
+  {
+    quote: "They moved our infrastructure to AWS over a weekend plan and stayed on call through the cutover.",
+    name: "Priya Patel",
+    role: "Lead Architect",
+  },
+  {
+    quote: "Weekly demos meant no surprises. What we approved on Friday was live on Monday.",
+    name: "Arjun Mehta",
+    role: "Operations Director",
+  },
 ];
 
 export default function TestimonialsSection() {
   return (
-    <section className="relative overflow-hidden border-t border-line bg-main py-24">
-      <style>{`
-        @keyframes scrollMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .animate-scroll-marquee { display: flex; width: max-content; animation: scrollMarquee 42s linear infinite; }
-        .marquee-track:hover .animate-scroll-marquee { animation-play-state: paused; }
-      `}</style>
+    <section className="bg-paper py-20 sm:py-28">
+      <div className="section-wrap">
+        <div className="flex flex-wrap items-end justify-between gap-6 pb-10">
+          <div className="max-w-2xl">
+            <span className="kicker">Client words</span>
+            <h2 className="display-hero mt-4 text-4xl sm:text-6xl">
+              Trusted with <span className="display-accent text-accent">real work.</span>
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="flex gap-0.5">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star key={s} size={16} className="fill-gold text-gold" />
+              ))}
+            </span>
+            <span className="text-xs font-extrabold uppercase tracking-widest text-faint">5.0 average</span>
+          </div>
+        </div>
 
-      <div aria-hidden="true" className="absolute inset-0 opacity-70" style={{ backgroundImage: "radial-gradient(#d7e0ee 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
-      <motion.div aria-hidden="true" animate={{ x: [0, 40, 0], y: [0, -25, 0] }} transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-40 top-0 h-96 w-96 rounded-full bg-blue-600/15 blur-[100px]" />
-
-      <div className="relative mx-auto mb-14 max-w-3xl px-4 text-center">
-        <Pill>
-          <Star size={14} className="fill-accent-light" /> Global Trust
-        </Pill>
-        <h2 className="mt-6 text-4xl font-extrabold tracking-tight text-ink md:text-5xl">Partnered with the Best</h2>
-        <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-sub">Hear from engineering leaders and executives who scaled their operations with Skora.</p>
-      </div>
-
-      <div className="marquee-track relative flex overflow-hidden py-4">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-main to-transparent md:w-48" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-main to-transparent md:w-48" />
-
-        <div className="animate-scroll-marquee gap-6 px-3">
-          {[...testimonials, ...testimonials].map((item, index) => (
-            <article key={`${item.name}-${index}`} className="glass-card w-[350px] shrink-0 rounded-2xl p-8">
-              <Quote size={36} className="text-accent/50" />
-              <div className="mt-5 flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} size={15} className="fill-amber-400 text-amber-400" />
-                ))}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {testimonials.map((t, i) => (
+            <motion.figure
+              key={t.name}
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: (i % 3) * 0.08 }}
+              className={`flex flex-col justify-between rounded-3xl border border-line p-7 ${
+                i === 0 ? "bg-ink-deep text-white md:col-span-2 lg:col-span-1" : "bg-surface"
+              }`}
+            >
+              <div>
+                <span className={`font-display text-5xl italic leading-none ${i === 0 ? "text-accent" : "text-accent/60"}`}>
+                  &ldquo;
+                </span>
+                <blockquote className={`-mt-2 text-[15px] font-medium leading-relaxed ${i === 0 ? "text-white/90" : "text-sub"}`}>
+                  {t.quote}
+                </blockquote>
               </div>
-              <p className="mt-5 min-h-28 text-[15px] font-medium leading-relaxed text-sub">&ldquo;{item.quote}&rdquo;</p>
-              <div className="mt-7 flex items-center justify-between border-t border-line pt-5">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={item.avatar}
-                    alt={item.name}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80";
-                    }}
-                    className="h-11 w-11 rounded-full object-cover"
-                  />
-                  <div>
-                    <h3 className="text-sm font-bold text-ink">{item.name}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-accent-light">{item.role}</p>
-                  </div>
-                </div>
-                <item.Logo size={19} className="text-accent-light" />
-              </div>
-            </article>
+              <figcaption className={`mt-6 flex items-center gap-3 border-t pt-5 ${i === 0 ? "border-white/15" : "border-line"}`}>
+                <span className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-extrabold ${i === 0 ? "bg-accent text-white" : "bg-elevated text-ink"}`}>
+                  {t.name.split(" ").map((w) => w[0]).join("")}
+                </span>
+                <span>
+                  <span className={`block text-sm font-extrabold ${i === 0 ? "text-white" : "text-ink"}`}>{t.name}</span>
+                  <span className={`block text-[11px] font-bold uppercase tracking-widest ${i === 0 ? "text-white/60" : "text-faint"}`}>{t.role}</span>
+                </span>
+              </figcaption>
+            </motion.figure>
           ))}
         </div>
       </div>

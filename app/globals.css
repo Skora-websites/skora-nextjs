@@ -32,8 +32,15 @@
 
   /* Reserved accents */
   --color-gold: #f59e0b;
-  --color-clinic: #10b981; /* healthcare content ONLY */
+  --color-clinic: #10b981; /* healthcare content ONLY — do not use on marketing pages */
   --color-clinic-deep: #059669;
+  --color-navy: #0a1633;
+  --color-navy-deep: #060d22;
+  --color-ink-deep: #060b18;
+  --color-paper: #fbfcfe;
+
+  /* Display serif for agency headlines */
+  --font-display: "Fraunces", Georgia, serif;
 }
 
 @layer base {
@@ -69,8 +76,10 @@
     --input-bg: #ffffff;
     --input-bg-focus: #ffffff;
 
-    /* FeelTheMarket radial light mesh */
-    --market-halo: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, rgba(247, 249, 252, 0) 70%);
+  /* FeelTheMarket radial light mesh */
+  --market-halo: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, rgba(247, 249, 252, 0) 70%);
+    --shadow-card-lg: 0 1px 2px rgba(11, 18, 32, 0.05), 0 24px 48px -24px rgba(11, 18, 32, 0.18);
+    --radius-card: 1.75rem;
   }
 
   html {
@@ -265,6 +274,144 @@
   /* FeelTheMarket radial light mesh */
   .market-halo {
     background: var(--market-halo);
+  }
+
+  /* Enterprise section rhythm — one consistent container */
+  .section-wrap {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 80rem;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .section-wrap { padding-inline: 1.5rem; }
+  }
+  @media (min-width: 1024px) {
+    .section-wrap { padding-inline: 2rem; }
+  }
+
+  /* Single-halo page background wash (use once per hero) */
+  .enterprise-wash {
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 0%, rgba(37, 99, 235, 0.1) 0%, rgba(247, 249, 252, 0) 70%);
+  }
+
+  /* Navy CTA band */
+  .navy-band {
+    background: linear-gradient(135deg, #0a1633 0%, #12275f 55%, #1d4ed8 100%);
+  }
+
+  /* Elevated card for proof points */
+  .card-elevated {
+    background: #ffffff;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card-lg);
+  }
+
+  /* ── Agency system ─────────────────────────────── */
+  /* Oversized editorial headline */
+  .display-hero {
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+  }
+  /* Serif italic accent word inside headlines */
+  .display-accent {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  /* Small caps kickers with rule */
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .kicker::before {
+    content: "";
+    width: 2rem;
+    height: 2px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+  }
+  /* Outlined ghost numerals */
+  .ghost-numeral {
+    font-weight: 800;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--border-strong);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    user-select: none;
+  }
+  /* Sticker badge */
+  .sticker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--text-primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    box-shadow: 0 10px 24px -10px rgba(11, 18, 32, 0.5);
+  }
+  .sticker-blue {
+    background: var(--accent-primary);
+  }
+  /* Editorial hairline rule with label */
+  .rule-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .rule-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+  /* Fine grid backdrop */
+  .bg-blueprint {
+    background-image:
+      linear-gradient(to right, rgba(11, 18, 32, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(11, 18, 32, 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  /* Underline link with animated fill */
+  .link-fill {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    padding-bottom: 2px;
+  }
+  .link-fill:hover {
+    background-size: 100% 2px;
+  }
+  /* Marquee lane */
+  .marquee-lane {
+    display: flex;
+    width: max-content;
+    animation: marquee 28s linear infinite;
+  }
+  .marquee-lane:hover {
+    animation-play-state: paused;
   }
 }
 

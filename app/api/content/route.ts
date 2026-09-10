@@ -8,7 +8,7 @@ export async function GET() {
     // Omit sensitive password hash in public responses
     const { ...publicContent } = content;
     return NextResponse.json({ success: true, content: publicContent });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to load content" }, { status: 500 });
   }
 }
@@ -21,7 +21,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { phone, email, healthcareEmail, address, responseGuarantee, packages, services, textOverrides, newUsername, newPassword } = body;
+    const { phone, email, healthcareEmail, address, responseGuarantee, packages, services, textOverrides } = body;
 
     const updated = await updateSiteContent({
       ...(phone ? { phone } : {}),
@@ -36,7 +36,7 @@ export async function PUT(request: Request) {
 
     const { ...cleanContent } = updated;
     return NextResponse.json({ success: true, content: cleanContent });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to update content" }, { status: 500 });
   }
 }

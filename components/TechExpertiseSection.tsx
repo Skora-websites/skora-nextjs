@@ -57,12 +57,15 @@ export default function TechExpertiseSection() {
       {/* Ambient blue glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative mx-auto mb-10 max-w-4xl px-4 text-center">
-        <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-ink">
-          Our <span className="text-gradient">Tech &amp; Media Expertise</span>
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-base sm:text-lg font-medium text-sub">
-          Empowering scalable digital ecosystems with industry-standard development frameworks, cloud solutions, and media platforms.
+      <div className="section-wrap relative mb-10 flex flex-wrap items-end justify-between gap-6">
+        <div className="max-w-2xl">
+          <span className="kicker">Toolbox</span>
+          <h2 className="display-hero mt-4 text-4xl sm:text-6xl">
+            Fluent in the <span className="display-accent text-accent">modern stack.</span>
+          </h2>
+        </div>
+        <p className="max-w-sm text-sm font-medium leading-relaxed text-sub">
+          The frameworks, clouds, and platforms we ship with every week — no experiments on your budget.
         </p>
       </div>
 

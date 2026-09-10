@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { hasPermission, type PermissionKey } from "@/lib/rbac";
+import { isAdminRole } from "@/lib/rbac";
 
 // ── Types ───────────────────────────────────────────────
 
@@ -9,14 +9,14 @@ type ApiHandler<T> = (context: { userId: string; role: string }) => Promise<T>;
 interface ApiRouteOptions {
   /** Require authentication. Default true. */
   requireAuth?: boolean;
-  /** Required permission to access this route. */
-  permission?: PermissionKey | string;
+  /** When set, the caller must hold an admin role to access this route. */
+  adminOnly?: boolean;
 }
 
 // ── Route Wrapper ───────────────────────────────────────
 
 /**
- * Wraps an API route handler with authentication, RBAC, and error handling.
+ * Wraps an API route handler with authentication and error handling.
  *
  * Usage:
  * ```ts
@@ -25,10 +25,10 @@ interface ApiRouteOptions {
  *   return leads;
  * });
  *
- * // With permission check:
+ * // Admin-only route:
  * export const POST = apiRoute(
  *   async () => { ... },
- *   { permission: "employees.create" }
+ *   { adminOnly: true }
  * );
  * ```
  */
@@ -36,7 +36,7 @@ export function apiRoute<T>(
   handler: ApiHandler<T>,
   options: ApiRouteOptions = {}
 ) {
-  const { requireAuth = true, permission } = options;
+  const { requireAuth = true, adminOnly = false } = options;
 
   return async function () {
     try {
@@ -54,15 +54,11 @@ export function apiRoute<T>(
         userId = session.user.id;
         role = session.user.role;
 
-        // Permission check (RBAC)
-        if (permission) {
-          const hasAccess = hasPermission(role, permission);
-          if (!hasAccess) {
-            return NextResponse.json(
-              { error: "Forbidden: insufficient permissions" },
-              { status: 403 }
-            );
-          }
+        if (adminOnly && !isAdminRole(role)) {
+          return NextResponse.json(
+            { error: "Forbidden: admin access required" },
+            { status: 403 }
+          );
         }
       }
 

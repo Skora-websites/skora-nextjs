@@ -2,7 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getDb } from "@/lib/db/mongo-helper";
-import { hasPermission, type PermissionKey } from "@/lib/rbac";
+import { isAdminRole } from "@/lib/rbac";
 import { normalizeRoleStrict } from "@/lib/role-utils";
 import { ObjectId } from "mongodb";
 
@@ -61,24 +61,18 @@ export async function requireAuth(): Promise<ApiAuthResult | NextResponse> {
 }
 
 export async function requirePermission(
-  permission: PermissionKey | string
+  permission: string
 ): Promise<ApiAuthResult | NextResponse> {
-  const session = await verifySession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (!hasPermission(session.role, permission)) {
-    return NextResponse.json({ error: "Forbidden: insufficient permissions" }, { status: 403 });
-  }
-  return { userId: session.userId, role: session.role, tenantId: "default" };
+  // Permission strings are deprecated; admin access is the only gate now.
+  return requireAdmin();
 }
 
-/** Require a privileged HR/admin role; managers and employees must use explicit permissions. */
+/** Require an admin role for privileged operations. */
 export async function requireAdmin(): Promise<ApiAuthResult | NextResponse> {
   const auth = await requireAuth();
   if (isErrorResponse(auth)) return auth;
-  if (!["super_admin", "hr_admin", "admin"].includes(auth.role)) {
-    return NextResponse.json({ error: "Forbidden: insufficient permissions" }, { status: 403 });
+  if (!isAdminRole(auth.role)) {
+    return NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 });
   }
   return auth;
 }

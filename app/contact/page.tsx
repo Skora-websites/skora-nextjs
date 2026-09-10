@@ -5,12 +5,21 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
 import ContactModal from "@/components/ContactModal";
-import Pill from "@/components/landing/Pill";
-import { Mail, Phone, MapPin, Send, CheckCircle2, Sparkles, Clock, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock, Mail, MapPin, Phone, Send, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSiteContent } from "@/context/SiteContentContext";
 
-const labelCls = "text-xs font-mono font-bold uppercase tracking-wider text-faint";
+const services = [
+  "Website design and development",
+  "Branding and identity",
+  "SaaS development",
+  "Mobile app development",
+  "Cloud and DevOps",
+  "CRM development",
+  "Digital marketing and SEO",
+  "Project management systems",
+  "Video production",
+];
 
 export default function ContactPage() {
   const siteContent = useSiteContent();
@@ -18,7 +27,7 @@ export default function ContactPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
-  const [service, setService] = useState("Website Design & Web Apps");
+  const [service, setService] = useState(services[0]);
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,7 +35,6 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       await fetch("/api/leads", {
         method: "POST",
@@ -34,15 +42,15 @@ export default function ContactPage() {
         body: JSON.stringify({
           fullName,
           email,
-          phone: "+91 92173 75835", // Default or user provided
+          phone: siteContent.phone || "+91 92173 75835",
           company,
           service,
           message,
-          source: "Contact Page Form",
+          source: "Contact page form",
         }),
       });
-    } catch (err) {
-      console.error(err);
+    } catch {
+      // Confirmation still shown; user can retry via email.
     } finally {
       setLoading(false);
       setSubmitted(true);
@@ -50,245 +58,196 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen bg-main text-ink font-sans relative overflow-x-hidden">
+    <main className="relative min-h-screen overflow-x-hidden bg-main font-sans text-ink">
       <ScrollProgressBar />
       <Navbar onOpenConsultation={() => setModalOpen(true)} />
 
-      {/* Hero Header */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-        <div className="absolute -top-10 left-1/4 w-[500px] h-[400px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none" />
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="text-center max-w-3xl mx-auto space-y-6 relative"
-        >
-          <Pill>
-            <Mail className="w-3.5 h-3.5" />
-            <span>✦ CONTACT SKORA DIGITAL ENTERPRISE ✦</span>
-          </Pill>
-
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-ink tracking-tight leading-[1.02]">
-            LET&apos;S BUILD SOMETHING <br />
-            <span className="text-gradient">EXTRAORDINARY TOGETHER</span>
-          </h1>
-
-          <p className="text-lg text-sub font-medium leading-relaxed">
-            Have a project in mind, need software engineering guidance, or want to scale your revenue with performance marketing? Connect with our team today.
-          </p>
-        </motion.div>
-      </section>
-
-      {/* Main Contact Grid */}
-      <section className="pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {/* Left Column: Direct Contact Info & Office Locations */}
+      <section className="relative overflow-hidden bg-paper pb-12 pt-32 sm:pt-36">
+        <div className="bg-blueprint absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black,transparent_75%)]" aria-hidden="true" />
+        <div className="section-wrap relative">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="lg:col-span-5 space-y-8"
+            transition={{ duration: 0.6 }}
+            className="mx-auto max-w-3xl space-y-5 text-center"
           >
-            <div className="p-8 rounded-[2.5rem] glass-card space-y-8">
-              <h2 className="text-2xl font-extrabold text-ink">
-                GET IN TOUCH
-              </h2>
-
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl glass-pill flex items-center justify-center shrink-0">
-                    <Mail size={20} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-mono font-bold text-faint uppercase tracking-wider">Email Us</span>
-                    <a href={`mailto:${siteContent.email}`} className="block text-base font-bold text-ink hover:text-accent-light transition-colors mt-0.5">{siteContent.email}</a>
-                    <p className="text-xs text-faint font-medium">Direct response within 4 business hours</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl glass-pill flex items-center justify-center shrink-0">
-                    <Phone size={20} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-mono font-bold text-faint uppercase tracking-wider">Call or WhatsApp</span>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <a href={`tel:${siteContent.phone.replace(/[^0-9+]/g, '')}`} className="text-base font-bold text-ink hover:text-accent-light transition-colors">{siteContent.phone}</a>
-                      <a href={`https://wa.me/${siteContent.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold font-mono hover:bg-emerald-500/20 transition-colors border border-emerald-400/30">WhatsApp</a>
-                    </div>
-                    <p className="text-xs text-faint font-medium">Mon - Sat: 9:00 AM - 8:00 PM IST</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl glass-pill flex items-center justify-center shrink-0">
-                    <MapPin size={20} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-mono font-bold text-faint uppercase tracking-wider">Noida / Delhi NCR Studio</span>
-                    <p className="text-base font-bold text-ink mt-0.5">{siteContent.address}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-line space-y-4">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-accent-light" />
-                  <span className="text-xs font-bold text-sub">{siteContent.responseGuarantee}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-5 h-5 text-accent-light" />
-                  <span className="text-xs font-bold text-sub">Strict Non-Disclosure &amp; Data Privacy</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right Column: Contact Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="lg:col-span-7"
-          >
-            <div className="p-8 sm:p-12 rounded-[2.5rem] glass-card space-y-8">
-              {submitted ? (
-                <div className="py-16 text-center space-y-6">
-                  <div className="w-20 h-20 rounded-full glass-pill flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-10 h-10" />
-                  </div>
-                  <h2 className="text-3xl font-extrabold text-ink">
-                    MESSAGE SENT SUCCESSFULLY!
-                  </h2>
-                  <p className="text-sm text-sub max-w-md mx-auto leading-relaxed font-medium">
-                    Thank you, <strong className="text-ink">{fullName}</strong>. Our senior strategy consultant will reach out to <strong className="text-ink">{email}</strong> within 4 business hours.
-                  </p>
-                  <button
-                    onClick={() => setSubmitted(false)}
-                    className="btn-secondary px-8 py-3.5 text-xs"
-                  >
-                    Send Another Message
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <span className="glass-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Start A Project Brief</span>
-                    </span>
-                    <h2 className="text-2xl font-extrabold text-ink tracking-tight">
-                      TELL US ABOUT YOUR PROJECT
-                    </h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className={labelCls}>
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="John Doe"
-                        className="input-dark text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className={labelCls}>
-                        Work Email *
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="john@company.com"
-                        className="input-dark text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className={labelCls}>
-                        Company / Brand Name
-                      </label>
-                      <input
-                        type="text"
-                        value={company}
-                        onChange={(e) => setCompany(e.target.value)}
-                        placeholder="Acme Corp"
-                        className="input-dark text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className={labelCls}>
-                        Primary Capability Needed
-                      </label>
-                      <select
-                        value={service}
-                        onChange={(e) => setService(e.target.value)}
-                        className="input-dark text-xs appearance-none cursor-pointer"
-                      >
-                        <option value="Website Design & Web Apps" className="bg-surface">Website Design & Web Apps</option>
-                        <option value="Branding & Identity System" className="bg-surface">Branding & Identity System</option>
-                        <option value="SaaS Architecture Engineering" className="bg-surface">SaaS Architecture Engineering</option>
-                        <option value="Mobile App Development" className="bg-surface">Mobile App Development</option>
-                        <option value="Cloud Infrastructure & DevOps" className="bg-surface">Cloud Infrastructure & DevOps</option>
-                        <option value="Custom CRM Engineering" className="bg-surface">Custom CRM Engineering</option>
-                        <option value="Digital Marketing & Performance SEO" className="bg-surface">Digital Marketing & Performance SEO</option>
-                        <option value="Property Mgmt Systems" className="bg-surface">Property Mgmt Systems</option>
-                        <option value="High-Impact Video Reels Studio" className="bg-surface">High-Impact Video Reels Studio</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className={labelCls}>
-                      Project Requirements &amp; Goals
-                    </label>
-                    <textarea
-                      rows={4}
-                      required
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Share details about target goals, deliverables, and deadline expectations..."
-                      className="input-dark text-xs resize-none"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary w-full py-4 text-xs"
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <span>Submit Project Brief</span>
-                        <Send className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
+            <span className="kicker justify-center">Contact Skora</span>
+            <h1 className="display-hero text-5xl sm:text-7xl">
+              Tell us about <span className="display-accent text-accent">your project.</span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-base font-medium leading-relaxed text-sub sm:text-lg">
+              Share your goals and timeline. We reply within 4 business hours with next steps and a fixed estimate.
+            </p>
           </motion.div>
         </div>
       </section>
 
+      <section className="section-wrap grid grid-cols-1 items-start gap-6 pb-20 lg:grid-cols-12">
+        <div className="space-y-7 rounded-[2rem] bg-ink-deep p-7 text-white sm:p-8 lg:col-span-5">
+          <div>
+            <span className="kicker !text-white/60">Direct lines</span>
+            <h2 className="display-hero mt-3 text-3xl text-white">Talk to <span className="display-accent">us.</span></h2>
+          </div>
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white">
+                <Mail size={19} />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-white/60">Email</p>
+                <a href={`mailto:${siteContent.email}`} className="mt-0.5 block text-base font-bold text-white hover:text-accent">
+                  {siteContent.email}
+                </a>
+                <p className="text-xs font-medium text-white/50">Replies within 4 business hours</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white">
+                <Phone size={19} />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-white/60">Phone and WhatsApp</p>
+                <a
+                  href={`tel:${siteContent.phone.replace(/[^0-9+]/g, "")}`}
+                  className="mt-0.5 block text-base font-bold text-white hover:text-accent"
+                >
+                  {siteContent.phone}
+                </a>
+                <p className="text-xs font-medium text-white/50">Mon to Sat, 9:00 AM to 8:00 PM IST</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white">
+                <MapPin size={19} />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-white/60">Office</p>
+                <p className="mt-0.5 text-base font-bold text-white">{siteContent.address}</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3 border-t border-white/15 pt-6 text-sm font-medium text-white/75">
+            <p className="flex items-center gap-2.5">
+              <Clock size={16} className="text-accent" />
+              {siteContent.responseGuarantee}
+            </p>
+            <p className="flex items-center gap-2.5">
+              <ShieldCheck size={16} className="text-accent" />
+              NDA available on request. Your details stay private.
+            </p>
+          </div>
+        </div>
+
+        <div className="glass-card rounded-[2rem] p-7 sm:p-10 lg:col-span-7">
+          {submitted ? (
+            <div className="space-y-5 py-12 text-center">
+              <div className="glass-pill mx-auto flex h-16 w-16 items-center justify-center">
+                <CheckCircle2 size={28} />
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight">Message received</h2>
+              <p className="mx-auto max-w-md text-sm font-medium leading-relaxed text-sub">
+                Thank you, {fullName}. We will reply to {email} within 4 business hours.
+              </p>
+              <button type="button" onClick={() => setSubmitted(false)} className="btn-secondary px-8 py-3 text-xs">
+                Send another message
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <h2 className="text-2xl font-extrabold tracking-tight">Project brief</h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label htmlFor="contact-name" className="text-xs font-bold uppercase tracking-wide text-faint">
+                    Full name
+                  </label>
+                  <input
+                    id="contact-name"
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Your name"
+                    className="input-dark text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="contact-email" className="text-xs font-bold uppercase tracking-wide text-faint">
+                    Work email
+                  </label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    className="input-dark text-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label htmlFor="contact-company" className="text-xs font-bold uppercase tracking-wide text-faint">
+                    Company
+                  </label>
+                  <input
+                    id="contact-company"
+                    type="text"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Company name"
+                    className="input-dark text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="contact-service" className="text-xs font-bold uppercase tracking-wide text-faint">
+                    Service needed
+                  </label>
+                  <select
+                    id="contact-service"
+                    value={service}
+                    onChange={(e) => setService(e.target.value)}
+                    className="input-dark cursor-pointer appearance-none text-sm"
+                  >
+                    {services.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="contact-message" className="text-xs font-bold uppercase tracking-wide text-faint">
+                  Requirements and timeline
+                </label>
+                <textarea
+                  id="contact-message"
+                  rows={5}
+                  required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="What do you need, and when do you need it?"
+                  className="input-dark resize-none text-sm"
+                />
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary w-full py-4 text-sm">
+                {loading ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <>
+                    <span>Send project brief</span>
+                    <Send size={15} />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
+
       <Footer onOpenConsultation={() => setModalOpen(true)} />
-      <ContactModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        defaultService="General Inquiry"
-      />
+      <ContactModal isOpen={modalOpen} onClose={() => setModalOpen(false)} defaultService="General enquiry" />
     </main>
   );
 }

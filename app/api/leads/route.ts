@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiRoute, toISO } from "@/lib/api-utils";
 import { leadsService } from "@/lib/firestore";
-import { requirePermission, isErrorResponse, type ApiAuthResult } from "@/lib/api-auth";
-import { PERMISSIONS } from "@/lib/rbac";
+import { requireAdmin, isErrorResponse, type ApiAuthResult } from "@/lib/api-auth";
 import { withErrorHandler, badRequest, notFound, created } from "@/lib/api-handler";
 
 export const GET = apiRoute(
@@ -28,11 +27,11 @@ export const GET = apiRoute(
       updatedAt: toISO(lead.updatedAt),
     }));
   },
-  { permission: "leads.view" as const }
+  { adminOnly: true }
 );
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-  const auth = await requirePermission(PERMISSIONS.LEADS_CREATE);
+  const auth = await requireAdmin();
   if (isErrorResponse(auth)) return auth;
   const { userId } = auth as ApiAuthResult;
 
@@ -73,7 +72,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 }, { label: "Leads" });
 
 export const PATCH = withErrorHandler(async (request: NextRequest) => {
-  const auth = await requirePermission(PERMISSIONS.LEADS_EDIT);
+  const auth = await requireAdmin();
   if (isErrorResponse(auth)) return auth;
 
   const { searchParams } = new URL(request.url);
@@ -108,7 +107,7 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
 }, { label: "Leads" });
 
 export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  const auth = await requirePermission(PERMISSIONS.LEADS_DELETE);
+  const auth = await requireAdmin();
   if (isErrorResponse(auth)) return auth;
 
   const { searchParams } = new URL(request.url);

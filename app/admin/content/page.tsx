@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Sliders, Save, CheckCircle2, Sparkles, Layers, Stethoscope, Plus, Trash2 } from "lucide-react";
+import { Save, CheckCircle2, Sparkles, Layers, Stethoscope, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface PackageItem {
@@ -30,22 +30,33 @@ export default function AdminContentPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    fetch("/api/content")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.content) {
-          if (data.content.packages) setPackages(data.content.packages);
-          if (data.content.services) setServices(data.content.services);
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/content");
+        const data = await res.json();
+        if (!cancelled) {
+          if (data.content) {
+            if (data.content.packages) setPackages(data.content.packages);
+            if (data.content.services) setServices(data.content.services);
+          }
+          setLoading(false);
         }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handlePackageChange = (index: number, field: keyof PackageItem, value: any) => {
+  const handlePackageChange = (index: number, field: keyof PackageItem, value: PackageItem[keyof PackageItem]) => {
     const updated = [...packages];
-    updated[index] = { ...updated[index], [field]: value };
+    const item = { ...updated[index] } as Record<string, PackageItem[keyof PackageItem]>;
+    item[field] = value;
+    updated[index] = { ...updated[index], ...item } as PackageItem;
     setPackages(updated);
   };
 
@@ -69,9 +80,11 @@ export default function AdminContentPage() {
     setPackages(updated);
   };
 
-  const handleServiceChange = (index: number, field: keyof ServiceItem, value: any) => {
+  const handleServiceChange = (index: number, field: keyof ServiceItem, value: ServiceItem[keyof ServiceItem]) => {
     const updated = [...services];
-    updated[index] = { ...updated[index], [field]: value };
+    const item = { ...updated[index] } as Record<string, ServiceItem[keyof ServiceItem]>;
+    item[field] = value;
+    updated[index] = { ...updated[index], ...item } as ServiceItem;
     setServices(updated);
   };
 
@@ -87,7 +100,7 @@ export default function AdminContentPage() {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       }
-    } catch (err) {
+    } catch {
       alert("Failed to save changes.");
     } finally {
       setSaving(false);
@@ -99,12 +112,9 @@ export default function AdminContentPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E1E6DF]">
         <div>
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EFF6FF] border border-[#2563EB]/20 text-[11px] font-mono font-bold text-[#2563EB] mb-2">
-            <Sparkles size={12} />
-            <span>✦ DYNAMIC CONTENT CONFIGURATOR ✦</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black uppercase text-[#0B1310] tracking-tight">
-            PACKAGES &amp; SERVICES MANAGER
+          <span className="kicker mb-2">Content</span>
+          <h1 className="display-hero text-3xl sm:text-5xl text-[#0B1310]">
+            Packages <span className="display-accent text-accent">&amp; services.</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
             Edit subscription amounts, package names, features, and active service pricing.

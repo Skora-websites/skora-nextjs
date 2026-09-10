@@ -1,114 +1,58 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, Globe2, Activity, Users } from "lucide-react";
 
 const metrics = [
-  {
-    Icon: TrendingUp,
-    value: "+312%",
-    label: "Average campaign ROI",
-  },
-  {
-    Icon: Globe2,
-    value: "15+",
-    label: "Global markets served",
-  },
-  {
-    Icon: Activity,
-    value: "99.99%",
-    label: "Cloud infrastructure uptime",
-  },
-  {
-    Icon: Users,
-    value: "120+",
-    label: "Brands scaled with Skora",
-  },
+  { value: "120+", label: "Projects delivered", note: "Web, software, apps and marketing" },
+  { value: "9", label: "Service practices", note: "One accountable team" },
+  { value: "15+", label: "Industries served", note: "Including healthcare" },
+  { value: "4 hrs", label: "Response time", note: "Business days, guaranteed" },
 ];
 
 export default function FeelTheMarket() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
-    <section className="relative overflow-hidden bg-main py-28 border-t border-line">
-      {/* Radial light mesh */}
-      <div className="market-halo absolute inset-0 pointer-events-none" />
+    <section className="navy-band relative overflow-hidden py-20 text-white sm:py-28">
+      <div
+        className="absolute inset-0 opacity-[0.15]"
+        aria-hidden="true"
+        style={{
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
+          maskImage: "radial-gradient(ellipse 65% 90% at 50% 50%, black, transparent 78%)",
+          WebkitMaskImage: "radial-gradient(ellipse 65% 90% at 50% 50%, black, transparent 78%)",
+        }}
+      />
+      <div className="section-wrap relative">
+        <div className="flex flex-wrap items-end justify-between gap-6 pb-12">
+          <div className="max-w-2xl">
+            <span className="kicker !text-white/60">Why Skora</span>
+            <h2 className="display-hero mt-4 text-4xl text-white sm:text-6xl">
+              Measured in <span className="display-accent text-white/90">outcomes.</span>
+            </h2>
+          </div>
+          <p className="max-w-sm text-sm font-medium leading-relaxed text-white/70">
+            No vanity metrics. Every project starts with a number we agree to move —
+            then we report against it.
+          </p>
+        </div>
 
-      {/* Soft floating orbs */}
-      {mounted && (
-        <>
-          <motion.div
-            aria-hidden="true"
-            animate={{ y: [0, -24, 0], x: [0, 18, 0] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-16 left-[8%] h-64 w-64 rounded-full bg-sky-300/20 blur-[90px] pointer-events-none"
-          />
-          <motion.div
-            aria-hidden="true"
-            animate={{ y: [0, 20, 0], x: [0, -16, 0] }}
-            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-10 right-[6%] h-72 w-72 rounded-full bg-blue-300/20 blur-[100px] pointer-events-none"
-          />
-        </>
-      )}
-
-      {/* Statement */}
-      <div className="relative z-10 mx-auto max-w-5xl px-4 text-center">
-        <motion.span
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="glass-pill inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
-        >
-          Why teams choose Skora
-        </motion.span>
-
-        <motion.h2
-          initial={{ opacity: 0, scale: 0.96, y: 20 }}
-          whileInView={{ opacity: 1, scale: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="mt-6 text-5xl font-extrabold tracking-tight text-ink sm:text-6xl lg:text-7xl leading-[1.02]"
-        >
-          feel the market <br />
-          <span className="text-gradient">in your favour.</span>
-        </motion.h2>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-relaxed text-sub"
-        >
-          Dominate every channel. Our engineered digital strategies align your enterprise with the platforms that drive absolute, quantifiable scale.
-        </motion.p>
-      </div>
-
-      {/* Metric cards */}
-      <div className="relative z-10 mx-auto mt-14 grid max-w-5xl grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map(({ Icon, value, label }, idx) => (
-          <motion.div
-            key={label}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: idx * 0.08 }}
-            className="glass-card glass-card-hover rounded-2xl p-6 text-center"
-          >
-            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
-              <Icon size={22} />
-            </div>
-            <p className="text-3xl font-extrabold tracking-tight text-ink">{value}</p>
-            <p className="mt-1.5 text-sm font-medium text-sub">{label}</p>
-          </motion.div>
-        ))}
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/15 lg:grid-cols-4">
+          {metrics.map((m, i) => (
+            <motion.div
+              key={m.label}
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: i * 0.08 }}
+              className="bg-navy-deep/60 p-7 backdrop-blur-sm sm:p-9"
+            >
+              <p className="font-display text-5xl italic sm:text-6xl">{m.value}</p>
+              <p className="mt-3 text-sm font-extrabold uppercase tracking-widest">{m.label}</p>
+              <p className="mt-1 text-xs font-medium text-white/60">{m.note}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

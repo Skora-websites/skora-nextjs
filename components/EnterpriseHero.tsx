@@ -1,115 +1,47 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Calendar, ArrowRight, Layers } from "lucide-react";
-import Card3D from "./Card3D";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight, Asterisk } from "lucide-react";
 import gsap from "gsap";
 
-const socialIconsSvg = {
-  facebook: (
-    <path d="M22.7 0H1.3C.6 0 0 .6 0 1.3v21.4C0 23.4.6 24 1.3 24h11.5v-9.3H9.7v-3.6h3.1V8.4c0-3.1 1.9-4.8 4.7-4.8 1.3 0 2.5.1 2.8.1V7l-1.9.1c-1.5 0-1.8.7-1.8 1.8v2.3h3.6l-.5 3.6h-3.1V24h6.1c.7 0 1.3-.6 1.3-1.3V1.3C24 .6 23.4 0 22.7 0Z" />
-  ),
-  instagram: (
-    <path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8 0 3.2 0 3.6-.1 4.8-.1 3.3-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1-3.2 0-3.6 0-4.8-.1-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12c0-3.2 0-3.6.1-4.8.1-3.3 1.7-4.8 4.9-4.9 1.2-.1 1.6-.1 4.8-.1ZM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.2 4.4 2.6 6.8 7 7 1.2.1 1.6.1 4.9.1s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.2-4.4-2.6-6.8-7-7C15.7 0 15.3 0 12 0Zm0 5.8a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4Zm0 10.2a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm6.4-11.8a1.4 1.4 0 1 0 0 2.9 1.4 1.4 0 0 0 0-2.9Z" />
-  ),
-  x: (
-    <path d="M18.2 2.3h3.3l-7.2 8.3 8.5 11.2h-6.7l-5.2-6.8-6 6.8H1.7l7.7-8.8L1.3 2.3H8l4.7 6.2 5.5-6.2Zm-1.2 17.5h1.8L7.1 4.1H5.1L17 19.8Z" />
-  ),
-  linkedin: (
-    <path d="M19 0H5C2.2 0 0 2.2 0 5v14c0 2.8 2.2 5 5 5h14c2.8 0 5-2.2 5-5V5c0-2.8-2.2-5-5-5ZM8 19H5V8h3v11ZM6.5 6.7c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8 1.8.8 1.8 1.8-.8 1.8-1.8 1.8ZM20 19h-3v-5.6c0-3.4-4-3.1-4 0V19h-3V8h3v1.8c1.4-2.6 7-2.8 7 2.5V19Z" />
-  ),
-};
-
-const profileCards = [
-  {
-    title: "Healthcare IT",
-    role: "Clinical Portals & EHR",
-    img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80",
-    link: "/services/pms",
-    badge: "HIPAA",
-  },
-  {
-    title: "Custom Software",
-    role: "Enterprise Platforms",
-    img: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80",
-    link: "/services/saas-development",
-    badge: "SaaS",
-  },
-  {
-    title: "Cloud Infra",
-    role: "AWS & Azure Scaling",
-    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
-    link: "/services/cloud-services",
-    badge: "Cloud",
-  },
-  {
-    title: "UI / UX Design",
-    role: "Cinematic Interfaces",
-    img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=600&q=80",
-    link: "/services/website-design",
-    badge: "Design",
-  },
-  {
-    title: "Mobile Apps",
-    role: "iOS & Android Engine",
-    img: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80",
-    link: "/services/mobile-development",
-    badge: "Mobile",
-  },
+const marqueeItems = [
+  "Website design",
+  "SaaS development",
+  "Mobile apps",
+  "Cloud and DevOps",
+  "SEO and ads",
+  "Branding",
+  "CRM systems",
+  "Video production",
 ];
 
-export const EnterpriseBackground = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden bg-main" aria-hidden="true">
-    {/* Soft sky gradient wash */}
-    <div className="absolute inset-0 bg-[linear-gradient(180deg,#eef4fd_0%,#f7f9fc_55%,#f7f9fc_100%)]" />
-
-    {/* Ambient blue halos */}
-    <motion.div
-      animate={{ opacity: [0.5, 0.8, 0.5], scale: [0.96, 1.08, 0.96] }}
-      transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute -top-40 left-1/2 h-[36rem] w-[64rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.14)_0%,rgba(37,99,235,0)_65%)] blur-2xl"
-    />
-    <motion.div
-      animate={{ x: [0, -28, 0], y: [0, 18, 0], opacity: [0.35, 0.6, 0.35] }}
-      transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute -bottom-48 -left-40 h-[34rem] w-[34rem] rounded-full bg-sky-300/25 blur-[120px]"
-    />
-    <motion.div
-      animate={{ x: [0, 26, 0], y: [0, -14, 0], opacity: [0.3, 0.55, 0.3] }}
-      transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute top-1/3 -right-44 h-[32rem] w-[32rem] rounded-full bg-blue-300/20 blur-[120px]"
-    />
-
-    {/* Faint social & tech icon pattern */}
-    <motion.svg
-      viewBox="0 0 1440 900"
-      preserveAspectRatio="xMidYMid slice"
-      animate={{ opacity: [0.05, 0.1, 0.05] }}
-      transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute -inset-[8%] h-[116%] w-[116%]"
-    >
-      <defs>
-        <pattern id="socialPlatformPattern" width="248" height="158" patternUnits="userSpaceOnUse">
-          <g fill="#2563eb" stroke="#2563eb" strokeLinecap="round" strokeLinejoin="round">
-            <g transform="translate(18 16) scale(.78)">{socialIconsSvg.facebook}</g>
-            <g transform="translate(103 13) scale(.82)">{socialIconsSvg.instagram}</g>
-            <g transform="translate(189 16) scale(.78)">{socialIconsSvg.linkedin}</g>
-            <g transform="translate(36 89)"><circle cx="12" cy="12" r="10" fill="none" strokeWidth="2" /><path d="M7 21l-3 4 5-2" fill="none" strokeWidth="2" /><path d="M9 8c1 4 3 6 7 7l2-2" fill="none" strokeWidth="2" /></g>
-            <g transform="translate(104 86)"><circle cx="12" cy="12" r="11" fill="none" strokeWidth="2" /><text x="12" y="17" textAnchor="middle" stroke="none" fontFamily="Arial, sans-serif" fontSize="16" fontWeight="700">P</text></g>
-            <g transform="translate(159 86)"><circle cx="14" cy="12" r="12" fill="none" strokeWidth="2" /><text x="14" y="17" textAnchor="middle" stroke="none" fontFamily="Georgia, serif" fontSize="16" fontWeight="700">W</text></g>
-            <g transform="translate(207 87) scale(.7)">{socialIconsSvg.x}</g>
-            <g transform="translate(63 127)"><rect x="0" y="0" width="37" height="21" rx="8" fill="none" strokeWidth="2" /><path d="M10 21l-4 5 9-5" fill="none" strokeWidth="2" /><text x="18.5" y="15" textAnchor="middle" stroke="none" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700">AI</text></g>
-          </g>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#socialPlatformPattern)" />
-    </motion.svg>
-
-    {/* Ground fade into page canvas */}
-    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-main" />
-  </div>
-);
+const workStrip = [
+  {
+    title: "Clinic growth platform",
+    tag: "Healthcare",
+    img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80",
+    link: "/healthcare",
+  },
+  {
+    title: "SaaS billing suite",
+    tag: "Software",
+    img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+    link: "/services/saas-development",
+  },
+  {
+    title: "Cloud migration",
+    tag: "Infrastructure",
+    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+    link: "/services/cloud-services",
+  },
+  {
+    title: "Marketing site",
+    tag: "Web",
+    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    link: "/services/website-design",
+  },
+];
 
 interface EnterpriseHeroProps {
   onOpenConsultation: (topic?: string) => void;
@@ -120,107 +52,131 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
 
   useEffect(() => {
     if (!heroRef.current) return;
-
     const ctx = gsap.context(() => {
-      // Kinetic Title entrance
       gsap.fromTo(
-        ".gsap-hero-title",
-        { opacity: 0, y: 45, rotateX: -25 },
-        { opacity: 1, y: 0, rotateX: 0, duration: 1.0, stagger: 0.12, ease: "power3.out" }
+        ".gsap-hero-line",
+        { yPercent: 110 },
+        { yPercent: 0, duration: 1, stagger: 0.1, ease: "power4.out" }
       );
-
-      // Buttons animation
       gsap.fromTo(
-        ".gsap-hero-btn",
-        { opacity: 0, scale: 0.88, y: 20 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.8, stagger: 0.1, delay: 0.3, ease: "back.out(1.5)" }
-      );
-
-      // Service Showcase Cards Stagger Zoom
-      gsap.fromTo(
-        ".gsap-card-item",
-        { opacity: 0, y: 40, scale: 0.88 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.08, delay: 0.45, ease: "back.out(1.3)" }
+        ".gsap-hero-fade",
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.9, stagger: 0.09, delay: 0.35, ease: "power3.out" }
       );
     }, heroRef);
-
     return () => ctx.revert();
   }, []);
 
   return (
-    <section
-      ref={heroRef}
-      className="relative min-h-[720px] overflow-hidden border-b border-line pt-20 lg:pt-24 pb-12 [perspective:1200px]"
-    >
-      {/* Soft Light Background */}
-      <EnterpriseBackground />
+    <section ref={heroRef} className="relative overflow-hidden bg-paper pb-0 pt-28 sm:pt-36">
+      <div className="bg-blueprint absolute inset-0 [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent_78%)]" aria-hidden="true" />
+      <div className="absolute -top-32 left-1/2 h-96 w-[60rem] -translate-x-1/2 rounded-full bg-accent/[0.07] blur-3xl" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
-
-        {/* Trust pill */}
-        <div className="gsap-hero-title mb-6 inline-flex items-center gap-2 rounded-full glass-pill px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-          Enterprise Digital &amp; Technology Partner
+      <div className="section-wrap relative">
+        {/* Top meta row */}
+        <div className="gsap-hero-fade flex flex-wrap items-center justify-between gap-3 pb-8">
+          <span className="kicker">Digital partner — Est. Greater Noida</span>
+          <span className="hidden items-center gap-2 text-xs font-bold text-faint sm:inline-flex">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+              <span className="h-2 w-2 rounded-full bg-accent" />
+            </span>
+            Booking new projects
+          </span>
         </div>
 
-        {/* Kinetic Hero Title */}
-        <h1 className="gsap-hero-title mx-auto max-w-5xl text-5xl font-extrabold leading-[1.03] tracking-tight text-ink sm:text-6xl lg:text-[5.2rem]">
-          Innovation doesn&apos;t wait.<br />
-          Neither does <span className="text-gradient">Skora.</span>
+        {/* Oversized headline */}
+        <h1 className="display-hero text-[13.5vw] sm:text-[11vw] lg:text-[7.5rem]">
+          <span className="block overflow-hidden pb-1">
+            <span className="gsap-hero-line block">We design, build</span>
+          </span>
+          <span className="block overflow-hidden pb-2">
+            <span className="gsap-hero-line block">
+              <span className="display-accent text-accent">and grow</span> digital
+            </span>
+          </span>
+          <span className="block overflow-hidden pb-1">
+            <span className="gsap-hero-line block">businesses<span className="text-accent">.</span></span>
+          </span>
         </h1>
 
-        {/* Subtitle */}
-        <div className="gsap-hero-title mx-auto mt-5 max-w-2xl text-base sm:text-lg lg:text-xl font-medium leading-relaxed text-sub">
-          We architect custom enterprise platforms, dedicated healthcare IT solutions, high-converting digital marketing, and scalable cloud architectures.
-        </div>
-
-        {/* CTA buttons — the two shared button styles */}
-        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <button
-            onClick={() => onOpenConsultation()}
-            className="gsap-hero-btn btn-primary group px-7 py-4 text-base"
-          >
-            <Calendar size={18} className="group-hover:rotate-12 transition-transform duration-300" />
-            <span>Schedule Consultation</span>
-            <ArrowRight size={17} className="group-hover:translate-x-1.5 transition-transform duration-300" />
-          </button>
-
-          <a href="#capabilities" className="gsap-hero-btn btn-secondary px-7 py-4 text-base">
-            <Layers size={18} className="text-accent group-hover:scale-110 transition-transform" />
-            <span>Explore Capabilities</span>
-          </a>
-        </div>
-
-        {/* 5 SERVICE SHOWCASE CARDS — white cards with soft shadows */}
-        <div className="mt-10 w-full overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex min-w-max items-stretch justify-center gap-3 px-2 lg:min-w-0 lg:flex-wrap">
-            {profileCards.map((card) => (
-              <a href={card.link} key={card.title} className="gsap-card-item block">
-                <Card3D
-                  maxTilt={14}
-                  className="group w-[178px] overflow-hidden rounded-2xl glass-card glass-card-hover p-2.5 text-left"
-                >
-                  <div className="h-26 overflow-hidden rounded-xl relative">
-                    <img
-                      src={card.img}
-                      alt={card.title}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80";
-                      }}
-                      className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-                    />
-                    <span className="absolute top-1.5 right-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent shadow-sm">
-                      {card.badge}
-                    </span>
-                  </div>
-                  <div className="px-1 pb-1 pt-3">
-                    <h2 className="text-sm font-bold text-ink truncate">{card.title}</h2>
-                    <p className="mt-1 text-[11px] font-semibold text-sub truncate">{card.role}</p>
-                  </div>
-                </Card3D>
-              </a>
-            ))}
+        {/* Sub + CTAs */}
+        <div className="mt-8 grid grid-cols-1 items-end gap-8 lg:grid-cols-12">
+          <p className="gsap-hero-fade max-w-xl text-base font-medium leading-relaxed text-sub sm:text-lg lg:col-span-6">
+            Skora is a full-service studio for websites, custom software, mobile apps,
+            and marketing — planned in the open, shipped on schedule, reported honestly.
+          </p>
+          <div className="gsap-hero-fade flex flex-wrap items-center gap-3 lg:col-span-6 lg:justify-end">
+            <button
+              type="button"
+              onClick={() => onOpenConsultation()}
+              className="btn-primary group px-7 py-4 text-sm"
+            >
+              <span>Start a project</span>
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </button>
+            <a href="#work" className="btn-secondary group px-7 py-4 text-sm">
+              <span>See the work</span>
+              <ArrowUpRight size={16} className="text-accent transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </a>
           </div>
+        </div>
+
+        {/* Stats band */}
+        <div className="gsap-hero-fade mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
+          {[
+            { value: "120+", label: "Projects shipped" },
+            { value: "9", label: "Service practices" },
+            { value: "15+", label: "Industries served" },
+            { value: "4 hrs", label: "Response time" },
+          ].map((s) => (
+            <div key={s.label} className="bg-surface px-6 py-5">
+              <p className="text-3xl font-extrabold tracking-tight sm:text-4xl">{s.value}</p>
+              <p className="mt-1 text-xs font-bold uppercase tracking-widest text-faint">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Work strip */}
+      <div id="work" className="gsap-hero-fade relative mt-12">
+        <div className="section-wrap flex items-end justify-between pb-5">
+          <p className="rule-label flex-1">Selected work</p>
+          <Link href="/services/website-design" className="link-fill ml-4 shrink-0 text-xs font-extrabold uppercase tracking-widest text-ink">
+            All services
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
+          {workStrip.map((w) => (
+            <Link key={w.title} href={w.link} className="group relative overflow-hidden rounded-2xl">
+              <img
+                src={w.img}
+                alt={w.title}
+                loading="eager"
+                className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105 sm:aspect-[3/3.4]"
+              />
+              <span className="absolute inset-0 bg-gradient-to-t from-ink-deep/85 via-ink-deep/10 to-transparent" />
+              <span className="sticker absolute left-3 top-3 !py-1.5 !text-[10px]">{w.tag}</span>
+              <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 p-4">
+                <span className="text-sm font-extrabold text-white sm:text-base">{w.title}</span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-ink transition group-hover:bg-accent group-hover:text-white">
+                  <ArrowUpRight size={16} />
+                </span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Marquee */}
+      <div className="mt-12 overflow-hidden border-y border-ink bg-ink-deep py-4 text-white" aria-hidden="true">
+        <div className="marquee-lane items-center gap-8 pr-8">
+          {[...marqueeItems, ...marqueeItems].map((item, i) => (
+            <span key={i} className="flex shrink-0 items-center gap-8 text-sm font-extrabold uppercase tracking-[0.2em]">
+              {item}
+              <Asterisk size={18} className="text-accent" />
+            </span>
+          ))}
         </div>
       </div>
     </section>

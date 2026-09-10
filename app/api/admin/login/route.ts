@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { setAdminSessionCookie } from "@/lib/auth";
 
 /**
- * Admin login API — authenticates against hrms.users collection.
+ * Admin login API — authenticates against the users collection.
  * Same logic as lib/actions/admin-auth.ts server action.
  */
 export async function POST(request: Request) {
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
     }
 
     const role = (user.role || "").toLowerCase();
-    if (role !== "super_admin" && role !== "hr_admin") {
-      return NextResponse.json({ error: `Access denied. Your role is '${role}'. Only super_admin and hr_admin can access the admin portal.` }, { status: 403 });
+    if (role !== "super_admin" && role !== "admin") {
+      return NextResponse.json({ error: `Access denied. Your role is '${role}'. Only admin and super_admin can access the admin portal.` }, { status: 403 });
     }
 
     if (user.loginStatus === "disabled") {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     await setAdminSessionCookie();
     return NextResponse.json({ success: true, message: "Authenticated successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
   }
 }

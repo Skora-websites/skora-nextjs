@@ -28,15 +28,15 @@ export default function ContactModal({
   const [loading, setLoading] = useState(false);
 
   const availableServices = [
-    "Website Design & Dev",
-    "Branding & Visual Identity",
-    "SaaS Architecture",
-    "Mobile App Development",
-    "Cloud Services & DevOps",
-    "CRM System Engineering",
-    "Digital Marketing & SEO",
-    "Property Mgmt System",
-    "Video Production & Reels",
+    "Website design and development",
+    "Branding and visual identity",
+    "SaaS development",
+    "Mobile app development",
+    "Cloud and DevOps",
+    "CRM development",
+    "Digital marketing and SEO",
+    "Property management system",
+    "Video production",
   ];
 
   useEffect(() => {
@@ -50,19 +50,22 @@ export default function ContactModal({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (serviceToPreselect) {
-      const match = availableServices.find(
-        (s) => s.toLowerCase() === serviceToPreselect.toLowerCase()
-      );
-      if (match && !selectedServices.includes(match)) {
-        setSelectedServices([match]);
-      } else if (!selectedServices.includes(serviceToPreselect)) {
-        setSelectedServices([serviceToPreselect]);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serviceToPreselect, isOpen]);
+  // Apply the preselected service when the modal opens or the topic changes
+  // (render-phase adjustment — no effect needed).
+  const [appliedPreselect, setAppliedPreselect] = useState<string | null>(null);
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) setAppliedPreselect(null);
+  }
+  const preselectKey = isOpen ? serviceToPreselect : "";
+  if (preselectKey && appliedPreselect !== preselectKey) {
+    setAppliedPreselect(preselectKey);
+    const match = availableServices.find(
+      (s) => s.toLowerCase() === preselectKey.toLowerCase()
+    );
+    setSelectedServices([match ?? preselectKey]);
+  }
 
   if (!isOpen) return null;
 
@@ -126,10 +129,10 @@ export default function ContactModal({
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-extrabold text-ink">
-              Consultation Dispatched!
+              Request received
             </h3>
             <p className="text-xs sm:text-sm text-sub max-w-md mx-auto font-medium leading-relaxed">
-              Thank you, <strong className="text-ink">{fullName}</strong>. Our senior strategy consultant will reach out to <strong className="text-ink">{email}</strong> within 4 business hours with your custom proposal.
+              Thank you, <strong className="text-ink">{fullName}</strong>. We will reply to <strong className="text-ink">{email}</strong> within 4 business hours.
             </p>
 
             <button
@@ -147,20 +150,20 @@ export default function ContactModal({
             <div className="space-y-2">
               <span className="glass-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Initialize Your Project</span>
+                <span>Project enquiry</span>
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">
-                Schedule Strategy Consultation
+                Request a consultation
               </h2>
               <p className="text-xs text-faint font-medium">
-                Select your required capabilities and project scope.
+                Select the services you need and share a short brief.
               </p>
             </div>
 
             {/* Service Multi-Select */}
             <div className="space-y-2">
               <label className={labelCls}>
-                Required Capabilities
+                Services needed
               </label>
               <div className="flex flex-wrap gap-2">
                 {availableServices.map((svc) => {
@@ -257,13 +260,13 @@ export default function ContactModal({
 
             <div className="space-y-1.5">
               <label className={labelCls}>
-                Project Brief / Requirements
+                Project details
               </label>
               <textarea
                 rows={3}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell us about your goals, timelines, and technical requirements..."
+                placeholder="Goals, timeline, and anything we should know..."
                 className="input-dark p-3 text-xs resize-none"
               />
             </div>
@@ -277,7 +280,7 @@ export default function ContactModal({
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Dispatch Consultation Request</span>
+                  <span>Request consultation</span>
                   <Send className="w-4 h-4" />
                 </>
               )}

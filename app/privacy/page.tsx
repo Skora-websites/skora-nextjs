@@ -5,15 +5,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
 import ContactModal from "@/components/ContactModal";
-import Pill from "@/components/landing/Pill";
-import { Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 const clauses = [
   {
     num: "01.",
     title: "Information We Collect",
-    body: "SKORA Digital collects personal and technical data required to deliver our services, including name, corporate email, phone number, company name, project brief parameters, server telemetry, and cookie performance analytics when interacting with our digital portals.",
+    body: "SKORA collects personal and technical data required to deliver our services, including name, corporate email, phone number, company name, project brief parameters, server telemetry, and cookie performance analytics when interacting with our digital portals.",
   },
   {
     num: "02.",
@@ -33,7 +31,7 @@ const clauses = [
   {
     num: "05.",
     title: "Your GDPR & CCPA Data Rights",
-    body: 'Under applicable privacy laws (GDPR, CCPA), you have the right to request access to your personal data, request correction of inaccurate data, or request permanent deletion ("Right to be Forgotten") from our systems by emailing privacy@skora.digital.',
+    body: 'Under applicable privacy laws (GDPR, CCPA), you have the right to request access to your personal data, request correction of inaccurate data, or request permanent deletion ("Right to be Forgotten") from our systems by emailing info@skorainfotech.com.',
   },
 ];
 
@@ -47,39 +45,38 @@ export default function PrivacyPage() {
 
       {/* Hero Header */}
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-        <div className="absolute -top-10 left-1/4 w-[500px] h-[400px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none" />
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           className="text-center max-w-3xl mx-auto space-y-6 relative"
         >
-          <Pill>
-            <Lock className="w-3.5 h-3.5" />
-            <span>✦ DATA PROTECTION &amp; PRIVACY ✦</span>
-          </Pill>
+          <span className="kicker justify-center">Data protection and privacy</span>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-ink tracking-tight leading-[1.05]">
-            PRIVACY <span className="text-gradient">POLICY</span>
+          <h1 className="display-hero text-4xl sm:text-6xl">
+            Privacy <span className="display-accent text-accent">policy.</span>
           </h1>
 
           <p className="text-sm sm:text-base text-sub font-medium leading-relaxed">
-            Effective Date: January 1, 2026 • SKORA Digital Technologies Inc.
+            Effective Date: January 1, 2026 • SKORA Technologies Inc.
           </p>
         </motion.div>
       </section>
 
       {/* Main Content Privacy Policy Clauses */}
       <section className="pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-        <div className="p-8 sm:p-12 rounded-[2.5rem] glass-card space-y-8">
-          {clauses.map((clause, idx) => (
-            <div key={clause.num} className={`space-y-3 ${idx > 0 ? "pt-6 border-t border-line" : ""}`}>
-              <h2 className="text-xl font-extrabold text-ink uppercase flex items-center gap-2">
-                <span className="text-accent-light">{clause.num}</span> {clause.title}
-              </h2>
-              <p className="text-xs sm:text-sm text-sub font-medium leading-relaxed">
-                {clause.body}
-              </p>
+        <div className="overflow-hidden rounded-[2rem] border border-line bg-surface">
+          {clauses.map((clause) => (
+            <div key={clause.num} className="grid grid-cols-[auto_1fr] gap-4 border-b border-line px-6 py-7 last:border-0 sm:gap-8 sm:px-10">
+              <span className="ghost-numeral text-3xl sm:text-4xl">{clause.num}</span>
+              <div className="space-y-2">
+                <h2 className="text-lg font-extrabold tracking-tight text-ink sm:text-xl">
+                  {clause.title}
+                </h2>
+                <p className="text-xs sm:text-sm text-sub font-medium leading-relaxed">
+                  {clause.body}
+                </p>
+              </div>
             </div>
           ))}
         </div>

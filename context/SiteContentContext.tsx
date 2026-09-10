@@ -32,9 +32,9 @@ export interface SiteContent {
 
 const defaultContent: SiteContent = {
   phone: "+91 92173 75835",
-  email: "ashish17427@gmail.com",
-  healthcareEmail: "ashish17427@gmail.com",
-  address: "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India",
+  email: "info@skorainfotech.com",
+  healthcareEmail: "info@skorainfotech.com",
+  address: "T4, Nx one, Greater Noida, U.P - 201009",
   responseGuarantee: "Rapid 4-Hour Response Guarantee",
   packages: [
     {

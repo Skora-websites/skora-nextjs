@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
+import type { OptionalId } from "mongodb";
 import clientPromise, { getMongoClient } from "./mongodb";
+
+const DB_NAME = process.env.MONGODB_DB || "skora";
 
 export interface Lead {
   id: string;
@@ -113,9 +116,9 @@ const defaultServices: ServiceItem[] = [
 
 const defaultSiteContent: SiteContent = {
   phone: "+91 92173 75835",
-  email: "ashish17427@gmail.com",
-  healthcareEmail: "ashish17427@gmail.com",
-  address: "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India",
+  email: "info@skorainfotech.com",
+  healthcareEmail: "info@skorainfotech.com",
+  address: "T4, Nx one, Greater Noida, U.P - 201009",
   responseGuarantee: "Rapid 4-Hour Response Guarantee",
   packages: defaultPackages,
   services: defaultServices,
@@ -182,7 +185,7 @@ function ensureLocalDbFile(): DatabaseSchema {
       fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), "utf-8");
     }
     return parsed;
-  } catch (err) {
+  } catch {
     const initialData: DatabaseSchema = {
       leads: initialLeads,
       content: defaultSiteContent,
@@ -208,16 +211,20 @@ export async function getLeads(): Promise<Lead[]> {
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("hrms");
+        const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
         const leads = await collection.find({}).sort({ createdAt: -1 }).toArray();
         if (leads.length > 0) {
-          return leads.map(({ _id, ...l }) => l as Lead);
+          return leads.map((lead) => {
+            const clean = { ...(lead as Lead & { _id?: unknown }) };
+            delete clean._id;
+            return clean;
+          });
         }
         // Auto-seed MongoDB with initial leads if collection is empty
         const localDb = ensureLocalDbFile();
         if (localDb.leads && localDb.leads.length > 0) {
-          await collection.insertMany(localDb.leads as any);
+          await collection.insertMany(localDb.leads as unknown as OptionalId<Lead>[]);
           return localDb.leads;
         }
       }
@@ -242,7 +249,7 @@ export async function createLead(leadData: Omit<Lead, "id" | "createdAt" | "stat
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("hrms");
+        const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
         await collection.insertOne(newLead);
         return newLead;
@@ -263,7 +270,7 @@ export async function updateLeadStatus(id: string, status: Lead["status"]): Prom
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("hrms");
+        const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
         const result = await collection.findOneAndUpdate(
           { id },
@@ -271,8 +278,9 @@ export async function updateLeadStatus(id: string, status: Lead["status"]): Prom
           { returnDocument: "after" }
         );
         if (result) {
-          const { _id, ...updatedLead } = result as any;
-          return updatedLead as Lead;
+          const updatedLead = { ...(result as Lead & { _id?: unknown }) };
+          delete updatedLead._id;
+          return updatedLead;
         }
       }
     } catch (e) {
@@ -294,7 +302,7 @@ export async function deleteLead(id: string): Promise<boolean> {
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("hrms");
+        const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
         const res = await collection.deleteOne({ id });
         return res.deletedCount > 0;
@@ -317,11 +325,13 @@ export async function getSiteContent(): Promise<SiteContent> {
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("hrms");
+        const db = client.db(DB_NAME);
         const collection = db.collection<SiteContent>("content");
         const content = await collection.findOne({ key: "global_site_content" });
         if (content) {
-          const { _id, ...cleanContent } = content as any;
+          const stored = { ...(content as SiteContent & { _id?: unknown }) };
+          delete stored._id;
+          const cleanContent = stored;
           return {
             ...defaultSiteContent,
             ...cleanContent,
@@ -371,7 +381,7 @@ export async function updateSiteContent(partialContent: Partial<SiteContent>): P
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("hrms");
+        const db = client.db(DB_NAME);
         const collection = db.collection("content");
         await collection.updateOne(
           { key: "global_site_content" },
@@ -402,14 +412,20 @@ export async function getAdminUser(): Promise<AdminUser> {
   try {
     const client = await getMongoClient();
     if (client) {
-      const db = client.db("hrms");
+      const db = client.db(DB_NAME);
       const collection = db.collection<AdminUser>("admin");
       let user = await collection.findOne({ key: "admin_user" });
       if (!user) {
         user = await collection.findOne({});
       }
       if (user) {
-        const { _id, ...cleanUser } = user as any;
+        const stored = { ...(user as AdminUser & {
+          _id?: unknown;
+          name?: unknown;
+          password?: unknown;
+        }) };
+        delete stored._id;
+        const cleanUser = stored;
         return {
           username: String(cleanUser.username || cleanUser.name || ""),
           passwordHash: String(cleanUser.passwordHash || cleanUser.password || ""),
@@ -468,7 +484,7 @@ export async function updateAdminCredentials(newUsername?: string, newPassword?:
     try {
       const client = await clientPromise;
       if (client) {
-        const db = client.db("hrms");
+        const db = client.db(DB_NAME);
         const collection = db.collection("admin");
         await collection.updateOne(
           { key: "admin_user" },

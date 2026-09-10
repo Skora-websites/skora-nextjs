@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
 import { SiteContentProvider } from "@/context/SiteContentContext";
@@ -10,8 +10,15 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const fraunces = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
-  title: "SKORA.digital — Next-Gen Digital Marketing & Tech Solutions Enterprise",
+  title: "SKORA — Next-Gen Digital Marketing & Tech Solutions Enterprise",
   description: "Enterprise Digital Marketing, Website Design, Mobile Apps, Cloud Services, SaaS Platforms, Project Management Systems & CRM Solutions.",
   keywords: [
     "Digital Marketing",
@@ -24,12 +31,12 @@ export const metadata: Metadata = {
     "PMS",
     "CRM Solutions",
   ],
-  authors: [{ name: "SKORA Digital Team" }],
+  authors: [{ name: "SKORA Team" }],
   openGraph: {
-    title: "SKORA.digital — Digital Marketing & Tech Solutions",
+    title: "SKORA — Digital Marketing & Tech Solutions",
     description: "Rank higher, scale infrastructure, build custom SaaS, Mobile & CRM applications.",
     url: "https://skora.digital",
-    siteName: "SKORA Digital",
+    siteName: "SKORA",
     locale: "en_US",
     type: "website",
   },
@@ -41,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
+      <html lang="en" className={`${plusJakartaSans.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-main text-ink font-sans antialiased flex flex-col" suppressHydrationWarning>
         <SiteContentProvider>
           <ScrollToTop />

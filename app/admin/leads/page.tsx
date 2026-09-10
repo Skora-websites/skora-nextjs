@@ -8,12 +8,6 @@ import {
   Download,
   Trash2,
   Eye,
-  Mail,
-  Phone,
-  Building,
-  Calendar,
-  CheckCircle2,
-  Clock,
   X,
   Sparkles,
 } from "lucide-react";
@@ -40,21 +34,25 @@ export default function AdminLeadsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  const fetchLeads = async () => {
-    try {
-      const res = await fetch("/api/leads");
-      const data = await res.json();
-      if (data.leads) {
-        setLeads(data.leads);
-      }
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchLeads();
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/leads");
+        const data = await res.json();
+        if (!cancelled) {
+          if (data.leads) {
+            setLeads(data.leads);
+          }
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleUpdateStatus = async (id: string, newStatus: Lead["status"]) => {
@@ -72,7 +70,7 @@ export default function AdminLeadsPage() {
           setSelectedLead({ ...selectedLead, status: newStatus });
         }
       }
-    } catch (err) {
+    } catch {
       alert("Failed to update status.");
     }
   };
@@ -87,7 +85,7 @@ export default function AdminLeadsPage() {
           setSelectedLead(null);
         }
       }
-    } catch (err) {
+    } catch {
       alert("Failed to delete lead.");
     }
   };
@@ -134,12 +132,9 @@ export default function AdminLeadsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E1E6DF]">
         <div>
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EFF6FF] border border-[#2563EB]/20 text-[11px] font-mono font-bold text-[#2563EB] mb-2">
-            <Sparkles size={12} />
-            <span>✦ SKORA INFO CRM SUITE ✦</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black uppercase text-[#0B1310] tracking-tight">
-            CLIENT ENQUIRIES ({leads.length})
+          <span className="kicker mb-2">Enquiries</span>
+          <h1 className="display-hero text-3xl sm:text-5xl text-[#0B1310]">
+            Client <span className="display-accent text-accent">enquiries ({leads.length}).</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
             Search, filter, update status, and export client consultation requests.

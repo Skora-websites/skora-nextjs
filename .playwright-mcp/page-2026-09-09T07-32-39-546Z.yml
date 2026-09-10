@@ -1,0 +1,875 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e5]:
+      - link "SKORA. Studio" [ref=e6]:
+        - /url: /
+        - generic [ref=e7]: SKORA.
+        - generic [ref=e8]: Studio
+      - navigation [ref=e9]:
+        - link "Home" [ref=e10]:
+          - /url: /
+        - button "Services" [ref=e13]
+        - link "Healthcare" [ref=e17]:
+          - /url: /healthcare
+        - link "Contact" [ref=e21]:
+          - /url: /contact
+      - generic [ref=e23]:
+        - button "Free audit" [ref=e24]
+        - button "Start a project" [ref=e25]
+    - generic [ref=e29]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]: Digital partner — Est. Greater Noida
+          - generic [ref=e35]: Booking new projects
+        - heading "We design, build and grow digital businesses." [level=1] [ref=e39]:
+          - generic [ref=e40]: We design, build
+          - generic [ref=e42]: and grow digital
+          - generic [ref=e44]: businesses.
+        - generic [ref=e46]:
+          - paragraph [ref=e47]: Skora is a full-service studio for websites, custom software, mobile apps, and marketing — planned in the open, shipped on schedule, reported honestly.
+          - generic [ref=e48]:
+            - button "Start a project" [ref=e49]
+            - link "See the work" [ref=e53]:
+              - /url: "#work"
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - paragraph [ref=e60]: 120+
+            - paragraph [ref=e61]: Projects shipped
+          - generic [ref=e62]:
+            - paragraph [ref=e63]: "9"
+            - paragraph [ref=e64]: Service practices
+          - generic [ref=e65]:
+            - paragraph [ref=e66]: 15+
+            - paragraph [ref=e67]: Industries served
+          - generic [ref=e68]:
+            - paragraph [ref=e69]: 4 hrs
+            - paragraph [ref=e70]: Response time
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - paragraph [ref=e73]: Selected work
+          - link "All services" [ref=e74]:
+            - /url: /services/website-design
+        - generic [ref=e75]:
+          - link "Clinic growth platform Healthcare Clinic growth platform" [ref=e76]:
+            - /url: /healthcare
+            - img "Clinic growth platform" [ref=e77]
+            - generic [ref=e79]: Healthcare
+            - generic [ref=e80]: Clinic growth platform
+          - link "SaaS billing suite Software SaaS billing suite" [ref=e86]:
+            - /url: /services/saas-development
+            - img "SaaS billing suite" [ref=e87]
+            - generic [ref=e89]: Software
+            - generic [ref=e90]: SaaS billing suite
+          - link "Cloud migration Infrastructure Cloud migration" [ref=e96]:
+            - /url: /services/cloud-services
+            - img "Cloud migration" [ref=e97]
+            - generic [ref=e99]: Infrastructure
+            - generic [ref=e100]: Cloud migration
+          - link "Marketing site Web Marketing site" [ref=e106]:
+            - /url: /services/website-design
+            - img "Marketing site" [ref=e107]
+            - generic [ref=e109]: Web
+            - generic [ref=e110]: Marketing site
+      - generic [ref=e117]:
+        - generic [ref=e118]: Website design
+        - generic [ref=e122]: SaaS development
+        - generic [ref=e126]: Mobile apps
+        - generic [ref=e130]: Cloud and DevOps
+        - generic [ref=e134]: SEO and ads
+        - generic [ref=e138]: Branding
+        - generic [ref=e142]: CRM systems
+        - generic [ref=e146]: Video production
+        - generic [ref=e150]: Website design
+        - generic [ref=e154]: SaaS development
+        - generic [ref=e158]: Mobile apps
+        - generic [ref=e162]: Cloud and DevOps
+        - generic [ref=e166]: SEO and ads
+        - generic [ref=e170]: Branding
+        - generic [ref=e174]: CRM systems
+        - generic [ref=e178]: Video production
+    - generic [ref=e184]:
+      - generic [ref=e185]:
+        - generic [ref=e186]:
+          - generic [ref=e187]: What we do
+          - heading "Six practices, one team." [level=2] [ref=e188]
+        - paragraph [ref=e189]: Every engagement has a named owner, a fixed timeline, and weekly demos. Pick a practice to see scope and pricing.
+      - generic [ref=e190]:
+        - link "01 Websites that sell Design and Next.js development with on-page SEO, analytics, and content you can edit. Next.js SEO CMS-ready" [ref=e191]:
+          - /url: /services/website-design
+          - generic [ref=e192]: "01"
+          - generic [ref=e193]:
+            - generic [ref=e194]: Websites that sell
+            - generic [ref=e196]: Design and Next.js development with on-page SEO, analytics, and content you can edit.
+          - generic [ref=e197]:
+            - generic [ref=e198]: Next.js
+            - generic [ref=e199]: SEO
+            - generic [ref=e200]: CMS-ready
+        - link "02 Custom software and SaaS Multi-user platforms with roles, subscriptions, and reporting built around your operations. Multi-tenant Billing Roles" [ref=e205]:
+          - /url: /services/saas-development
+          - generic [ref=e206]: "02"
+          - generic [ref=e207]:
+            - generic [ref=e208]: Custom software and SaaS
+            - generic [ref=e210]: Multi-user platforms with roles, subscriptions, and reporting built around your operations.
+          - generic [ref=e211]:
+            - generic [ref=e212]: Multi-tenant
+            - generic [ref=e213]: Billing
+            - generic [ref=e214]: Roles
+        - link "03 Mobile apps iOS and Android from one codebase — tested weekly, published to both stores. iOS Android OTA updates" [ref=e219]:
+          - /url: /services/mobile-development
+          - generic [ref=e220]: "03"
+          - generic [ref=e221]:
+            - generic [ref=e222]: Mobile apps
+            - generic [ref=e224]: iOS and Android from one codebase — tested weekly, published to both stores.
+          - generic [ref=e225]:
+            - generic [ref=e226]: iOS
+            - generic [ref=e227]: Android
+            - generic [ref=e228]: OTA updates
+        - link "04 Cloud and DevOps AWS and Azure setup with pipelines, monitoring, backups, and cost reviews. AWS CI/CD 99.9% uptime" [ref=e233]:
+          - /url: /services/cloud-services
+          - generic [ref=e234]: "04"
+          - generic [ref=e235]:
+            - generic [ref=e236]: Cloud and DevOps
+            - generic [ref=e238]: AWS and Azure setup with pipelines, monitoring, backups, and cost reviews.
+          - generic [ref=e239]:
+            - generic [ref=e240]: AWS
+            - generic [ref=e241]: CI/CD
+            - generic [ref=e242]: 99.9% uptime
+        - link "05 Marketing that reports revenue Local SEO, Google and Meta ads tied to leads — spend, leads, cost per lead. Local SEO Ads Attribution" [ref=e247]:
+          - /url: /services/digital-marketing
+          - generic [ref=e248]: "05"
+          - generic [ref=e249]:
+            - generic [ref=e250]: Marketing that reports revenue
+            - generic [ref=e252]: Local SEO, Google and Meta ads tied to leads — spend, leads, cost per lead.
+          - generic [ref=e253]:
+            - generic [ref=e254]: Local SEO
+            - generic [ref=e255]: Ads
+            - generic [ref=e256]: Attribution
+        - link "06 Healthcare practice growth Healthcare Clinic websites, appointment flows, and patient systems for doctors and hospitals. Clinics Appointments EHR-ready" [ref=e261]:
+          - /url: /healthcare
+          - generic [ref=e262]: "06"
+          - generic [ref=e263]:
+            - generic [ref=e264]:
+              - generic [ref=e265]: Healthcare practice growth
+              - generic [ref=e266]: Healthcare
+            - generic [ref=e267]: Clinic websites, appointment flows, and patient systems for doctors and hospitals.
+          - generic [ref=e268]:
+            - generic [ref=e269]: Clinics
+            - generic [ref=e270]: Appointments
+            - generic [ref=e271]: EHR-ready
+    - generic [ref=e279]:
+      - generic [ref=e280]:
+        - generic [ref=e281]:
+          - generic [ref=e282]: Why Skora
+          - heading "Measured in outcomes." [level=2] [ref=e283]
+        - paragraph [ref=e284]: No vanity metrics. Every project starts with a number we agree to move — then we report against it.
+      - generic [ref=e285]:
+        - generic [ref=e286]:
+          - paragraph [ref=e287]: 120+
+          - paragraph [ref=e288]: Projects delivered
+          - paragraph [ref=e289]: Web, software, apps and marketing
+        - generic [ref=e290]:
+          - paragraph [ref=e291]: "9"
+          - paragraph [ref=e292]: Service practices
+          - paragraph [ref=e293]: One accountable team
+        - generic [ref=e294]:
+          - paragraph [ref=e295]: 15+
+          - paragraph [ref=e296]: Industries served
+          - paragraph [ref=e297]: Including healthcare
+        - generic [ref=e298]:
+          - paragraph [ref=e299]: 4 hrs
+          - paragraph [ref=e300]: Response time
+          - paragraph [ref=e301]: Business days, guaranteed
+    - generic [ref=e304]:
+      - generic [ref=e305]:
+        - generic [ref=e306]: How we work
+        - heading "No black box, ever." [level=2] [ref=e307]
+      - generic [ref=e308]:
+        - generic [ref=e309]:
+          - generic [ref=e310]: "01"
+          - heading "Scope in writing" [level=3] [ref=e315]
+          - paragraph [ref=e316]: You get a fixed scope, timeline, and price before anything starts. No open-ended billing.
+        - generic [ref=e317]:
+          - generic [ref=e318]: "02"
+          - heading "Design you approve" [level=3] [ref=e325]
+          - paragraph [ref=e326]: Wireframes first, then final layouts. Two structured revision rounds — no endless loops.
+        - generic [ref=e327]:
+          - generic [ref=e328]: "03"
+          - heading "Build in the open" [level=3] [ref=e334]
+          - paragraph [ref=e335]: Weekly staging demos, shared task board, and a group chat with the people doing the work.
+        - generic [ref=e336]:
+          - generic [ref=e337]: "04"
+          - heading "Launch and handover" [level=3] [ref=e344]
+          - paragraph [ref=e345]: Deployment, analytics, documentation, and a training session so your team owns it after.
+    - generic [ref=e347]:
+      - generic [ref=e349]:
+        - generic [ref=e350]:
+          - generic [ref=e351]: Toolbox
+          - heading "Fluent in the modern stack." [level=2] [ref=e352]
+        - paragraph [ref=e353]: The frameworks, clouds, and platforms we ship with every week — no experiments on your budget.
+      - generic [ref=e355]:
+        - generic [ref=e356]:
+          - img "HTML5" [ref=e358]
+          - generic [ref=e359]:
+            - heading "HTML5" [level=3] [ref=e360]
+            - generic [ref=e361]: Frontend
+        - generic [ref=e362]:
+          - img "CSS3" [ref=e364]
+          - generic [ref=e365]:
+            - heading "CSS3" [level=3] [ref=e366]
+            - generic [ref=e367]: Styling
+        - generic [ref=e368]:
+          - img "JavaScript" [ref=e370]
+          - generic [ref=e371]:
+            - heading "JavaScript" [level=3] [ref=e372]
+            - generic [ref=e373]: Language
+        - generic [ref=e374]:
+          - img "TypeScript" [ref=e376]
+          - generic [ref=e377]:
+            - heading "TypeScript" [level=3] [ref=e378]
+            - generic [ref=e379]: Language
+        - generic [ref=e380]:
+          - img "React" [ref=e382]
+          - generic [ref=e383]:
+            - heading "React" [level=3] [ref=e384]
+            - generic [ref=e385]: Frontend
+        - generic [ref=e386]:
+          - img "Node.js" [ref=e388]
+          - generic [ref=e389]:
+            - heading "Node.js" [level=3] [ref=e390]
+            - generic [ref=e391]: Backend
+        - generic [ref=e392]:
+          - img "Python" [ref=e394]
+          - generic [ref=e395]:
+            - heading "Python" [level=3] [ref=e396]
+            - generic [ref=e397]: Language
+        - generic [ref=e398]:
+          - img "PHP" [ref=e400]
+          - generic [ref=e401]:
+            - heading "PHP" [level=3] [ref=e402]
+            - generic [ref=e403]: Backend
+        - generic [ref=e404]:
+          - img "Laravel" [ref=e406]
+          - generic [ref=e407]:
+            - heading "Laravel" [level=3] [ref=e408]
+            - generic [ref=e409]: Backend
+        - generic [ref=e410]:
+          - img "Angular" [ref=e412]
+          - generic [ref=e413]:
+            - heading "Angular" [level=3] [ref=e414]
+            - generic [ref=e415]: Frontend
+        - generic [ref=e416]:
+          - img "Vue.js" [ref=e418]
+          - generic [ref=e419]:
+            - heading "Vue.js" [level=3] [ref=e420]
+            - generic [ref=e421]: Frontend
+        - generic [ref=e422]:
+          - img "WordPress" [ref=e424]
+          - generic [ref=e425]:
+            - heading "WordPress" [level=3] [ref=e426]
+            - generic [ref=e427]: CMS
+        - generic [ref=e428]:
+          - img "Bootstrap" [ref=e430]
+          - generic [ref=e431]:
+            - heading "Bootstrap" [level=3] [ref=e432]
+            - generic [ref=e433]: Styling
+        - generic [ref=e434]:
+          - img "Tailwind CSS" [ref=e436]
+          - generic [ref=e437]:
+            - heading "Tailwind CSS" [level=3] [ref=e438]
+            - generic [ref=e439]: Styling
+        - generic [ref=e440]:
+          - img "HTML5" [ref=e442]
+          - generic [ref=e443]:
+            - heading "HTML5" [level=3] [ref=e444]
+            - generic [ref=e445]: Frontend
+        - generic [ref=e446]:
+          - img "CSS3" [ref=e448]
+          - generic [ref=e449]:
+            - heading "CSS3" [level=3] [ref=e450]
+            - generic [ref=e451]: Styling
+        - generic [ref=e452]:
+          - img "JavaScript" [ref=e454]
+          - generic [ref=e455]:
+            - heading "JavaScript" [level=3] [ref=e456]
+            - generic [ref=e457]: Language
+        - generic [ref=e458]:
+          - img "TypeScript" [ref=e460]
+          - generic [ref=e461]:
+            - heading "TypeScript" [level=3] [ref=e462]
+            - generic [ref=e463]: Language
+        - generic [ref=e464]:
+          - img "React" [ref=e466]
+          - generic [ref=e467]:
+            - heading "React" [level=3] [ref=e468]
+            - generic [ref=e469]: Frontend
+        - generic [ref=e470]:
+          - img "Node.js" [ref=e472]
+          - generic [ref=e473]:
+            - heading "Node.js" [level=3] [ref=e474]
+            - generic [ref=e475]: Backend
+        - generic [ref=e476]:
+          - img "Python" [ref=e478]
+          - generic [ref=e479]:
+            - heading "Python" [level=3] [ref=e480]
+            - generic [ref=e481]: Language
+        - generic [ref=e482]:
+          - img "PHP" [ref=e484]
+          - generic [ref=e485]:
+            - heading "PHP" [level=3] [ref=e486]
+            - generic [ref=e487]: Backend
+        - generic [ref=e488]:
+          - img "Laravel" [ref=e490]
+          - generic [ref=e491]:
+            - heading "Laravel" [level=3] [ref=e492]
+            - generic [ref=e493]: Backend
+        - generic [ref=e494]:
+          - img "Angular" [ref=e496]
+          - generic [ref=e497]:
+            - heading "Angular" [level=3] [ref=e498]
+            - generic [ref=e499]: Frontend
+        - generic [ref=e500]:
+          - img "Vue.js" [ref=e502]
+          - generic [ref=e503]:
+            - heading "Vue.js" [level=3] [ref=e504]
+            - generic [ref=e505]: Frontend
+        - generic [ref=e506]:
+          - img "WordPress" [ref=e508]
+          - generic [ref=e509]:
+            - heading "WordPress" [level=3] [ref=e510]
+            - generic [ref=e511]: CMS
+        - generic [ref=e512]:
+          - img "Bootstrap" [ref=e514]
+          - generic [ref=e515]:
+            - heading "Bootstrap" [level=3] [ref=e516]
+            - generic [ref=e517]: Styling
+        - generic [ref=e518]:
+          - img "Tailwind CSS" [ref=e520]
+          - generic [ref=e521]:
+            - heading "Tailwind CSS" [level=3] [ref=e522]
+            - generic [ref=e523]: Styling
+        - generic [ref=e524]:
+          - img "HTML5" [ref=e526]
+          - generic [ref=e527]:
+            - heading "HTML5" [level=3] [ref=e528]
+            - generic [ref=e529]: Frontend
+        - generic [ref=e530]:
+          - img "CSS3" [ref=e532]
+          - generic [ref=e533]:
+            - heading "CSS3" [level=3] [ref=e534]
+            - generic [ref=e535]: Styling
+        - generic [ref=e536]:
+          - img "JavaScript" [ref=e538]
+          - generic [ref=e539]:
+            - heading "JavaScript" [level=3] [ref=e540]
+            - generic [ref=e541]: Language
+        - generic [ref=e542]:
+          - img "TypeScript" [ref=e544]
+          - generic [ref=e545]:
+            - heading "TypeScript" [level=3] [ref=e546]
+            - generic [ref=e547]: Language
+        - generic [ref=e548]:
+          - img "React" [ref=e550]
+          - generic [ref=e551]:
+            - heading "React" [level=3] [ref=e552]
+            - generic [ref=e553]: Frontend
+        - generic [ref=e554]:
+          - img "Node.js" [ref=e556]
+          - generic [ref=e557]:
+            - heading "Node.js" [level=3] [ref=e558]
+            - generic [ref=e559]: Backend
+        - generic [ref=e560]:
+          - img "Python" [ref=e562]
+          - generic [ref=e563]:
+            - heading "Python" [level=3] [ref=e564]
+            - generic [ref=e565]: Language
+        - generic [ref=e566]:
+          - img "PHP" [ref=e568]
+          - generic [ref=e569]:
+            - heading "PHP" [level=3] [ref=e570]
+            - generic [ref=e571]: Backend
+        - generic [ref=e572]:
+          - img "Laravel" [ref=e574]
+          - generic [ref=e575]:
+            - heading "Laravel" [level=3] [ref=e576]
+            - generic [ref=e577]: Backend
+        - generic [ref=e578]:
+          - img "Angular" [ref=e580]
+          - generic [ref=e581]:
+            - heading "Angular" [level=3] [ref=e582]
+            - generic [ref=e583]: Frontend
+        - generic [ref=e584]:
+          - img "Vue.js" [ref=e586]
+          - generic [ref=e587]:
+            - heading "Vue.js" [level=3] [ref=e588]
+            - generic [ref=e589]: Frontend
+        - generic [ref=e590]:
+          - img "WordPress" [ref=e592]
+          - generic [ref=e593]:
+            - heading "WordPress" [level=3] [ref=e594]
+            - generic [ref=e595]: CMS
+        - generic [ref=e596]:
+          - img "Bootstrap" [ref=e598]
+          - generic [ref=e599]:
+            - heading "Bootstrap" [level=3] [ref=e600]
+            - generic [ref=e601]: Styling
+        - generic [ref=e602]:
+          - img "Tailwind CSS" [ref=e604]
+          - generic [ref=e605]:
+            - heading "Tailwind CSS" [level=3] [ref=e606]
+            - generic [ref=e607]: Styling
+      - generic [ref=e609]:
+        - generic [ref=e610]:
+          - img "AWS" [ref=e612]
+          - generic [ref=e613]:
+            - heading "AWS" [level=3] [ref=e614]
+            - generic [ref=e615]: Cloud
+        - generic [ref=e616]:
+          - img "Docker" [ref=e618]
+          - generic [ref=e619]:
+            - heading "Docker" [level=3] [ref=e620]
+            - generic [ref=e621]: DevOps
+        - generic [ref=e622]:
+          - img "Figma" [ref=e624]
+          - generic [ref=e625]:
+            - heading "Figma" [level=3] [ref=e626]
+            - generic [ref=e627]: Design
+        - generic [ref=e628]:
+          - img "GitHub" [ref=e630]
+          - generic [ref=e631]:
+            - heading "GitHub" [level=3] [ref=e632]
+            - generic [ref=e633]: DevOps
+        - generic [ref=e634]:
+          - img "Facebook" [ref=e636]
+          - generic [ref=e637]:
+            - heading "Facebook" [level=3] [ref=e638]
+            - generic [ref=e639]: Social Media
+        - generic [ref=e640]:
+          - img "Instagram" [ref=e642]
+          - generic [ref=e643]:
+            - heading "Instagram" [level=3] [ref=e644]
+            - generic [ref=e645]: Social Media
+        - generic [ref=e646]:
+          - img "LinkedIn" [ref=e648]
+          - generic [ref=e649]:
+            - heading "LinkedIn" [level=3] [ref=e650]
+            - generic [ref=e651]: Social Media
+        - generic [ref=e652]:
+          - img "X" [ref=e654]
+          - generic [ref=e655]:
+            - heading "X" [level=3] [ref=e656]
+            - generic [ref=e657]: Social Media
+        - generic [ref=e658]:
+          - img "Pinterest" [ref=e660]
+          - generic [ref=e661]:
+            - heading "Pinterest" [level=3] [ref=e662]
+            - generic [ref=e663]: Social Media
+        - generic [ref=e664]:
+          - img "Meta" [ref=e666]
+          - generic [ref=e667]:
+            - heading "Meta" [level=3] [ref=e668]
+            - generic [ref=e669]: Platform
+        - generic [ref=e670]:
+          - img "Google Ads" [ref=e672]
+          - generic [ref=e673]:
+            - heading "Google Ads" [level=3] [ref=e674]
+            - generic [ref=e675]: Marketing
+        - generic [ref=e676]:
+          - img "Google Maps" [ref=e678]
+          - generic [ref=e679]:
+            - heading "Google Maps" [level=3] [ref=e680]
+            - generic [ref=e681]: API & Service
+        - generic [ref=e682]:
+          - img "Canva" [ref=e684]
+          - generic [ref=e685]:
+            - heading "Canva" [level=3] [ref=e686]
+            - generic [ref=e687]: Design
+        - generic [ref=e688]:
+          - img "AWS" [ref=e690]
+          - generic [ref=e691]:
+            - heading "AWS" [level=3] [ref=e692]
+            - generic [ref=e693]: Cloud
+        - generic [ref=e694]:
+          - img "Docker" [ref=e696]
+          - generic [ref=e697]:
+            - heading "Docker" [level=3] [ref=e698]
+            - generic [ref=e699]: DevOps
+        - generic [ref=e700]:
+          - img "Figma" [ref=e702]
+          - generic [ref=e703]:
+            - heading "Figma" [level=3] [ref=e704]
+            - generic [ref=e705]: Design
+        - generic [ref=e706]:
+          - img "GitHub" [ref=e708]
+          - generic [ref=e709]:
+            - heading "GitHub" [level=3] [ref=e710]
+            - generic [ref=e711]: DevOps
+        - generic [ref=e712]:
+          - img "Facebook" [ref=e714]
+          - generic [ref=e715]:
+            - heading "Facebook" [level=3] [ref=e716]
+            - generic [ref=e717]: Social Media
+        - generic [ref=e718]:
+          - img "Instagram" [ref=e720]
+          - generic [ref=e721]:
+            - heading "Instagram" [level=3] [ref=e722]
+            - generic [ref=e723]: Social Media
+        - generic [ref=e724]:
+          - img "LinkedIn" [ref=e726]
+          - generic [ref=e727]:
+            - heading "LinkedIn" [level=3] [ref=e728]
+            - generic [ref=e729]: Social Media
+        - generic [ref=e730]:
+          - img "X" [ref=e732]
+          - generic [ref=e733]:
+            - heading "X" [level=3] [ref=e734]
+            - generic [ref=e735]: Social Media
+        - generic [ref=e736]:
+          - img "Pinterest" [ref=e738]
+          - generic [ref=e739]:
+            - heading "Pinterest" [level=3] [ref=e740]
+            - generic [ref=e741]: Social Media
+        - generic [ref=e742]:
+          - img "Meta" [ref=e744]
+          - generic [ref=e745]:
+            - heading "Meta" [level=3] [ref=e746]
+            - generic [ref=e747]: Platform
+        - generic [ref=e748]:
+          - img "Google Ads" [ref=e750]
+          - generic [ref=e751]:
+            - heading "Google Ads" [level=3] [ref=e752]
+            - generic [ref=e753]: Marketing
+        - generic [ref=e754]:
+          - img "Google Maps" [ref=e756]
+          - generic [ref=e757]:
+            - heading "Google Maps" [level=3] [ref=e758]
+            - generic [ref=e759]: API & Service
+        - generic [ref=e760]:
+          - img "Canva" [ref=e762]
+          - generic [ref=e763]:
+            - heading "Canva" [level=3] [ref=e764]
+            - generic [ref=e765]: Design
+        - generic [ref=e766]:
+          - img "AWS" [ref=e768]
+          - generic [ref=e769]:
+            - heading "AWS" [level=3] [ref=e770]
+            - generic [ref=e771]: Cloud
+        - generic [ref=e772]:
+          - img "Docker" [ref=e774]
+          - generic [ref=e775]:
+            - heading "Docker" [level=3] [ref=e776]
+            - generic [ref=e777]: DevOps
+        - generic [ref=e778]:
+          - img "Figma" [ref=e780]
+          - generic [ref=e781]:
+            - heading "Figma" [level=3] [ref=e782]
+            - generic [ref=e783]: Design
+        - generic [ref=e784]:
+          - img "GitHub" [ref=e786]
+          - generic [ref=e787]:
+            - heading "GitHub" [level=3] [ref=e788]
+            - generic [ref=e789]: DevOps
+        - generic [ref=e790]:
+          - img "Facebook" [ref=e792]
+          - generic [ref=e793]:
+            - heading "Facebook" [level=3] [ref=e794]
+            - generic [ref=e795]: Social Media
+        - generic [ref=e796]:
+          - img "Instagram" [ref=e798]
+          - generic [ref=e799]:
+            - heading "Instagram" [level=3] [ref=e800]
+            - generic [ref=e801]: Social Media
+        - generic [ref=e802]:
+          - img "LinkedIn" [ref=e804]
+          - generic [ref=e805]:
+            - heading "LinkedIn" [level=3] [ref=e806]
+            - generic [ref=e807]: Social Media
+        - generic [ref=e808]:
+          - img "X" [ref=e810]
+          - generic [ref=e811]:
+            - heading "X" [level=3] [ref=e812]
+            - generic [ref=e813]: Social Media
+        - generic [ref=e814]:
+          - img "Pinterest" [ref=e816]
+          - generic [ref=e817]:
+            - heading "Pinterest" [level=3] [ref=e818]
+            - generic [ref=e819]: Social Media
+        - generic [ref=e820]:
+          - img "Meta" [ref=e822]
+          - generic [ref=e823]:
+            - heading "Meta" [level=3] [ref=e824]
+            - generic [ref=e825]: Platform
+        - generic [ref=e826]:
+          - img "Google Ads" [ref=e828]
+          - generic [ref=e829]:
+            - heading "Google Ads" [level=3] [ref=e830]
+            - generic [ref=e831]: Marketing
+        - generic [ref=e832]:
+          - img "Google Maps" [ref=e834]
+          - generic [ref=e835]:
+            - heading "Google Maps" [level=3] [ref=e836]
+            - generic [ref=e837]: API & Service
+        - generic [ref=e838]:
+          - img "Canva" [ref=e840]
+          - generic [ref=e841]:
+            - heading "Canva" [level=3] [ref=e842]
+            - generic [ref=e843]: Design
+    - generic [ref=e845]:
+      - 'button "Sound: OFF" [ref=e847]'
+      - generic [ref=e853]:
+        - generic [ref=e855]:
+          - img "Institution management platform" [ref=e860]
+          - img "Clinic website and recruitment" [ref=e945]
+          - img "Product review portal" [ref=e1030]
+          - img "Business dashboard" [ref=e1115]
+          - img "Marketing website" [ref=e1200]
+          - img "Video and content library" [ref=e1285]
+        - generic [ref=e1367]:
+          - heading "Institution management platform" [level=3] [ref=e1368]
+          - paragraph [ref=e1369]: Multi-user system with roles, attendance, and reports.
+    - generic [ref=e1372]:
+      - generic [ref=e1373]:
+        - generic [ref=e1374]:
+          - generic [ref=e1375]: Client words
+          - heading "Trusted with real work." [level=2] [ref=e1376]
+        - generic [ref=e1377]: 5.0 average
+      - generic [ref=e1390]:
+        - figure "ER Elena Rodriguez Chief Technology Officer" [ref=e1391]:
+          - generic [ref=e1392]:
+            - text: “
+            - blockquote [ref=e1393]: Skora rebuilt our platform and documented everything. Our team now ships updates without waiting on external help.
+          - generic [ref=e1394]:
+            - generic [ref=e1395]: ER
+            - generic [ref=e1396]:
+              - generic [ref=e1397]: Elena Rodriguez
+              - generic [ref=e1398]: Chief Technology Officer
+        - figure "DJC Dr. James Carter Director of Health IT" [ref=e1399]:
+          - generic [ref=e1400]:
+            - text: “
+            - blockquote [ref=e1401]: They delivered our clinic portal with attention to privacy and clinician workflows. Training took one session.
+          - generic [ref=e1402]:
+            - generic [ref=e1403]: DJC
+            - generic [ref=e1404]:
+              - generic [ref=e1405]: Dr. James Carter
+              - generic [ref=e1406]: Director of Health IT
+        - figure "SL Sarah Lin VP of Product" [ref=e1407]:
+          - generic [ref=e1408]:
+            - text: “
+            - blockquote [ref=e1409]: The new website is faster and easier to update. Enquiries from the contact form doubled in two months.
+          - generic [ref=e1410]:
+            - generic [ref=e1411]: SL
+            - generic [ref=e1412]:
+              - generic [ref=e1413]: Sarah Lin
+              - generic [ref=e1414]: VP of Product
+        - figure "MJ Marcus Johnson Founder and CEO" [ref=e1415]:
+          - generic [ref=e1416]:
+            - text: “
+            - blockquote [ref=e1417]: Our iOS and Android apps shipped on the agreed dates, with testing builds shared every week.
+          - generic [ref=e1418]:
+            - generic [ref=e1419]: MJ
+            - generic [ref=e1420]:
+              - generic [ref=e1421]: Marcus Johnson
+              - generic [ref=e1422]: Founder and CEO
+        - figure "PP Priya Patel Lead Architect" [ref=e1423]:
+          - generic [ref=e1424]:
+            - text: “
+            - blockquote [ref=e1425]: They moved our infrastructure to AWS over a weekend plan and stayed on call through the cutover.
+          - generic [ref=e1426]:
+            - generic [ref=e1427]: PP
+            - generic [ref=e1428]:
+              - generic [ref=e1429]: Priya Patel
+              - generic [ref=e1430]: Lead Architect
+        - figure "AM Arjun Mehta Operations Director" [ref=e1431]:
+          - generic [ref=e1432]:
+            - text: “
+            - blockquote [ref=e1433]: Weekly demos meant no surprises. What we approved on Friday was live on Monday.
+          - generic [ref=e1434]:
+            - generic [ref=e1435]: AM
+            - generic [ref=e1436]:
+              - generic [ref=e1437]: Arjun Mehta
+              - generic [ref=e1438]: Operations Director
+    - generic [ref=e1440]:
+      - generic [ref=e1441]:
+        - generic [ref=e1442]:
+          - link "SKORA. Studio" [ref=e1443]:
+            - /url: /
+            - generic [ref=e1444]: SKORA.
+            - generic [ref=e1445]: Studio
+          - heading "Let's build it right." [level=2] [ref=e1446]
+          - paragraph [ref=e1447]: Websites, custom software, and marketing for businesses that need reliable delivery and clear reporting.
+          - generic [ref=e1448]:
+            - paragraph [ref=e1449]:
+              - link "info@skorainfotech.com" [ref=e1453]:
+                - /url: mailto:info@skorainfotech.com
+            - paragraph [ref=e1454]:
+              - link "+91 92173 75835" [ref=e1457]:
+                - /url: tel:+919217375835
+            - paragraph [ref=e1458]:
+              - generic [ref=e1462]: T4, Nx one, Greater Noida, U.P - 201009
+          - button "Request a callback" [ref=e1463]
+        - generic [ref=e1469]:
+          - generic [ref=e1470]:
+            - heading "Get a project estimate" [level=3] [ref=e1471]
+            - paragraph [ref=e1472]: Share your details. No commitment required.
+          - generic [ref=e1473]:
+            - generic [ref=e1474]:
+              - text: Full name
+              - textbox "Full name" [ref=e1475]:
+                - /placeholder: Your name
+            - generic [ref=e1476]:
+              - text: Work email
+              - textbox "Work email" [ref=e1477]:
+                - /placeholder: you@company.com
+          - generic [ref=e1478]:
+            - text: Service needed
+            - combobox "Service needed" [ref=e1479]:
+              - option "Website design and development" [selected]
+              - option "Digital marketing and SEO"
+              - option "Branding and identity"
+              - option "Mobile app development"
+              - option "Cloud and DevOps"
+              - option "SaaS development"
+          - button "Request estimate" [ref=e1480]
+          - paragraph [ref=e1485]: Rapid 4-Hour Response Guarantee
+      - generic [ref=e1486]:
+        - generic [ref=e1487]:
+          - heading "Services" [level=4] [ref=e1488]
+          - list [ref=e1489]:
+            - listitem [ref=e1490]:
+              - link "Website design and development" [ref=e1491]:
+                - /url: /services/website-design
+            - listitem [ref=e1492]:
+              - link "Digital marketing and SEO" [ref=e1493]:
+                - /url: /services/digital-marketing
+            - listitem [ref=e1494]:
+              - link "Branding and identity" [ref=e1495]:
+                - /url: /services/branding
+            - listitem [ref=e1496]:
+              - link "Mobile app development" [ref=e1497]:
+                - /url: /services/mobile-development
+        - generic [ref=e1498]:
+          - heading "More services" [level=4] [ref=e1499]
+          - list [ref=e1500]:
+            - listitem [ref=e1501]:
+              - link "Cloud and DevOps" [ref=e1502]:
+                - /url: /services/cloud-services
+            - listitem [ref=e1503]:
+              - link "SaaS development" [ref=e1504]:
+                - /url: /services/saas-development
+            - listitem [ref=e1505]:
+              - link "CRM development" [ref=e1506]:
+                - /url: /services/crm
+            - listitem [ref=e1507]:
+              - link "Video production" [ref=e1508]:
+                - /url: /services/video-production
+        - generic [ref=e1509]:
+          - heading "Company" [level=4] [ref=e1510]
+          - list [ref=e1511]:
+            - listitem [ref=e1512]:
+              - link "Home" [ref=e1513]:
+                - /url: /
+            - listitem [ref=e1514]:
+              - link "Healthcare" [ref=e1515]:
+                - /url: /healthcare
+            - listitem [ref=e1516]:
+              - link "Contact" [ref=e1517]:
+                - /url: /contact
+            - listitem [ref=e1518]:
+              - link "Privacy policy" [ref=e1519]:
+                - /url: /privacy
+            - listitem [ref=e1520]:
+              - link "Terms and conditions" [ref=e1521]:
+                - /url: /terms
+        - generic [ref=e1522]:
+          - heading "Contact" [level=4] [ref=e1523]
+          - paragraph [ref=e1524]: T4, Nx one, Greater Noida, U.P - 201009
+          - paragraph [ref=e1525]: Mon to Sat, 9:00 AM to 8:00 PM IST
+      - generic [ref=e1526]:
+        - paragraph [ref=e1527]: © 2026 Skora. All rights reserved.
+        - paragraph [ref=e1528]: NDA available on request. Your information stays private.
+  - button "Open Next.js Dev Tools" [ref=e1534] [cursor=pointer]
+  - alert [ref=e1538]
+  - generic [ref=e1539]:
+    - generic [ref=e1545]:
+      - generic [ref=e1546]:
+        - button [ref=e1548] [cursor=pointer]
+        - button [ref=e1553] [cursor=pointer]
+        - button [disabled] [ref=e1557]
+        - button [disabled] [ref=e1566]
+        - generic:
+          - button [disabled]
+        - button [disabled] [ref=e1575]
+        - generic [ref=e1578]:
+          - button [ref=e1579] [cursor=pointer]
+          - generic "MCP Connected"
+        - button [ref=e1585] [cursor=pointer]
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: https://agentation.com
+              - paragraph: v3.0.2
+              - button "Switch to light mode"
+            - generic:
+              - generic:
+                - generic: Output Detail
+                - button "Standard"
+              - generic:
+                - generic: React Components
+                - generic:
+                  - checkbox [checked]
+              - generic:
+                - generic: Hide Until Restart
+                - generic:
+                  - checkbox
+            - generic:
+              - generic: Marker Color
+              - generic:
+                - button "Indigo"
+                - button "Blue"
+                - button "Cyan"
+                - button "Green"
+                - button "Yellow"
+                - button "Orange"
+                - button "Red"
+            - generic:
+              - generic:
+                - generic:
+                  - checkbox "Clear on copy/send"
+                - generic: Clear on copy/send
+              - generic:
+                - generic:
+                  - checkbox "Block page interactions" [checked]
+                - generic: Block page interactions
+            - button "Manage MCP & Webhooks"
+          - generic:
+            - button "Manage MCP & Webhooks"
+            - generic:
+              - generic:
+                - generic: MCP Connection
+                - generic "Connected"
+              - paragraph:
+                - text: MCP connection allows agents to receive and act on annotations.
+                - link "Learn more":
+                  - /url: https://agentation.dev/mcp
+            - generic:
+              - generic:
+                - generic: Webhooks
+                - generic:
+                  - generic: Auto-Send
+                  - generic:
+                    - checkbox "Auto-Send" [checked] [disabled]
+              - paragraph: The webhook URL will receive live annotation changes and annotation data.
+              - textbox "Webhook URL"
+    - generic [ref=e1591]:
+      - button "<Home> <EnterpriseHero> \"and grow\"" [ref=e1593] [cursor=pointer]
+      - generic [ref=e1597]:
+        - generic [ref=e1598]: "color: rgb(37, 99, 235);"
+        - generic [ref=e1599]: "font-size: 120px;"
+        - generic [ref=e1600]: "font-weight: 500;"
+        - generic [ref=e1601]: "font-family: Fraunces, \"Fraunces Fallback\";"
+        - generic [ref=e1602]: "line-height: 117.6px;"
+      - textbox "What should change?" [active] [ref=e1603]
+      - generic [ref=e1604]:
+        - button "Cancel" [ref=e1605] [cursor=pointer]
+        - button "Add" [disabled] [ref=e1606]
