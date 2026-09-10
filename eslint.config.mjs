@@ -35,6 +35,7 @@ const eslintConfig = defineConfig([
       "prefer-const": "warn",
       "@typescript-eslint/no-unused-vars": "warn",
       "no-use-before-define": "warn",
+      "@typescript-eslint/no-use-before-define": "warn",
     },
   },
 ]);
