@@ -45,7 +45,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
         body: JSON.stringify({
           fullName: name,
           email,
-          phone: siteContent.phone || "+91 92173 75835",
+          phone: siteContent.phone || "+44 7756 083473",
           company: "Website footer enquiry",
           service: interest,
           message: `Footer enquiry: ${interest}`,

@@ -42,7 +42,7 @@ export default function ContactPage() {
         body: JSON.stringify({
           fullName,
           email,
-          phone: siteContent.phone || "+91 92173 75835",
+          phone: siteContent.phone || "+44 7756 083473",
           company,
           service,
           message,

@@ -88,7 +88,7 @@ export default function ContactModal({
         body: JSON.stringify({
           fullName,
           email,
-          phone: "+91 92173 75835",
+          phone: "+44 7756 083473",
           company,
           service: selectedServices.join(", ") || "General Strategy Consultation",
           budget,

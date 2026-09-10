@@ -75,7 +75,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
       <div className="section-wrap relative">
         {/* Top meta row */}
         <div className="gsap-hero-fade flex flex-wrap items-center justify-between gap-3 pb-8">
-          <span className="kicker">Digital partner — Est. Greater Noida</span>
+          <span className="kicker">Digital partner — Est. Uxbridge, London</span>
           <span className="hidden items-center gap-2 text-xs font-bold text-faint sm:inline-flex">
             <span className="relative flex h-2 w-2">
               <span className="absolute h-full w-full animate-ping rounded-full bg-accent opacity-60" />

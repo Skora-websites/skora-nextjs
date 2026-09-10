@@ -4,10 +4,10 @@ import React, { useEffect, useState } from "react";
 import { Save, CheckCircle2, AlertCircle, Lock, Phone, Sparkles } from "lucide-react";
 
 export default function AdminSettingsPage() {
-  const [phone, setPhone] = useState("+91 92173 75835");
+  const [phone, setPhone] = useState("+44 7756 083473");
   const [email, setEmail] = useState("info@skorainfotech.com");
   const [healthcareEmail, setHealthcareEmail] = useState("info@skorainfotech.com");
-  const [address, setAddress] = useState("T4, Nx one, Greater Noida, U.P - 201009");
+  const [address, setAddress] = useState("5 Market Square, High Street, Uxbridge, UB8 1LH, London");
   const [responseGuarantee, setResponseGuarantee] = useState("Rapid 4-Hour Response Guarantee");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

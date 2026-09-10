@@ -109,7 +109,7 @@ export default function Navbar({ onOpenConsultation }: NavbarProps) {
     : "bg-white/85 backdrop-blur-xl border-line shadow-[0_1px_2px_rgba(11,18,32,0.04)]";
 
   const siteContent = useSiteContent();
-  const whatsappNumber = (siteContent.phone || "+919217375835").replace(/[^0-9]/g, "");
+  const whatsappNumber = (siteContent.phone || "+447756083473").replace(/[^0-9]/g, "");
   const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     "Hi Skora Analytics Team, I would like to discuss my digital and technology requirements."
   )}`;

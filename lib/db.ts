@@ -115,10 +115,10 @@ const defaultServices: ServiceItem[] = [
 ];
 
 const defaultSiteContent: SiteContent = {
-  phone: "+91 92173 75835",
+  phone: "+44 7756 083473",
   email: "info@skorainfotech.com",
   healthcareEmail: "info@skorainfotech.com",
-  address: "T4, Nx one, Greater Noida, U.P - 201009",
+  address: "5 Market Square, High Street, Uxbridge, UB8 1LH, London",
   responseGuarantee: "Rapid 4-Hour Response Guarantee",
   packages: defaultPackages,
   services: defaultServices,
