@@ -20,6 +20,13 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "SKORA — Next-Gen Digital Marketing & Tech Solutions Enterprise",
   description: "Enterprise Digital Marketing, Website Design, Mobile Apps, Cloud Services, SaaS Platforms, Project Management Systems & CRM Solutions.",
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/logo.png", type: "image/png" },
+    ],
+    apple: [{ url: "/logo.png", type: "image/png" }],
+  },
   keywords: [
     "Digital Marketing",
     "SEO",
