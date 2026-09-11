@@ -14,9 +14,15 @@ type AuxState = "active" | "on_break" | "meeting";
 const DEFAULT_OFFICE: OfficeLocation = { latitude: 28.6007594, longitude: 77.4319307, radius: 100 };
 const DEFAULT_RULES: OfficeRules = { officeStart: 10, officeEnd: 19, lateAfter: 10.5, workDays: [1, 2, 3, 4, 5], halfDayAfter: 14.5 };
 
+// Key attendance by the office calendar date (IST) so the client and server
+// always agree on which records belong to "today", regardless of device timezone.
 function todayString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 function formatHour(hour: number) {
@@ -96,7 +102,12 @@ export function AttendancePunchCard() {
   const auxState: AuxState = record?.auxState === "on_break" || record?.auxState === "meeting" ? record.auxState : "active";
   const workLocation = record?.workLocation || (record?.location?.includes?.("[remote]") ? "remote" : "office");
 
+  // `tick` is a dependency on purpose: the 1s interval updates it so this memo
+  // recomputes and the timer keeps counting live instead of freezing at mount.
+  const [tick, setTick] = useState(0);
+
   const effectiveSeconds = useMemo(() => {
+    void tick;
     if (!record?.punchInTime) return 0;
     const history = Array.isArray(record.auxHistory) ? record.auxHistory : [];
     const now = Date.now();
@@ -109,15 +120,13 @@ export function AttendancePunchCard() {
     }
     if (history.length === 0) total = Math.max(0, now - new Date(record.punchInTime).getTime());
     return Math.floor(total / 1000);
-  }, [record]);
+  }, [record, tick]);
 
-  const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!punchedIn || punchedOut) return;
     const id = window.setInterval(() => setTick(v => v + 1), 1000);
     return () => window.clearInterval(id);
   }, [punchedIn, punchedOut]);
-  void tick;
 
   useEffect(() => () => {
     if (watchRef.current !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchRef.current);

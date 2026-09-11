@@ -20,6 +20,12 @@ export interface Session {
     image?: string | null;
     role: string;
     department?: string | null;
+    /** Canonical account status: e.g. pending_verification, active, disabled. */
+    status?: string | null;
+    /** Official HR-issued employee code, if one has been assigned. */
+    employeeCode?: string | null;
+    /** Coarse onboarding state: pending -> approved/rejected. */
+    onboardingStatus?: string | null;
   } | null;
 }
 
@@ -57,6 +63,9 @@ export async function auth(): Promise<Session> {
         image: user.image || null,
         role,
         department: user.department || user.departmentName || null,
+        status: user.status || null,
+        employeeCode: user.employeeCode || null,
+        onboardingStatus: user.onboardingStatus || null,
       },
     };
   } catch {

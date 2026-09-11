@@ -46,8 +46,8 @@ export default function EmployeeProfilePage() {
   const [emergencyContact, setEmergencyContact] = useState("");
   const [bankAccount, setBankAccount] = useState("");
 
-  // Check if current user is Super Admin or HR Admin
-  const isSuperAdmin = user?.role === "super_admin" || user?.email === "ashish17427@gmail.com";
+  // Role comes exclusively from the session — never from a hardcoded email list.
+  const isSuperAdmin = user?.role === "super_admin";
 
   // Reporting Manager & Team Allocation Info
   const [reportingManager] = useState("");
@@ -161,12 +161,9 @@ export default function EmployeeProfilePage() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Auto-generate employee code based on user ID or Superadmin default
-  const empCode = isSuperAdmin
-    ? "EMP-2026-SUPERADMIN"
-    : user?.id
-    ? `EMP-2026-${user.id.substring(0, 4).toUpperCase()}`
-    : "EMP-2026-1008";
+  // Employee code is assigned by HR during onboarding; fall back to a stable
+  // short id prefix only while awaiting assignment (never a fake "SUPERADMIN" code).
+  const empCode = user?.employeeCode || (user?.id ? `EMP-2026-${user.id.substring(0, 4).toUpperCase()}` : "Pending assignment");
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -417,7 +414,7 @@ export default function EmployeeProfilePage() {
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white text-lg">{user?.name || "Super Admin"}</h3>
                 <p className="text-xs text-primary font-semibold uppercase">{user?.role || "Super Admin"}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email || "ashish17427@gmail.com"}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email || "Not signed in"}</p>
               </div>
             </div>
 

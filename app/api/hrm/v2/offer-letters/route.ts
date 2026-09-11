@@ -65,14 +65,12 @@ export async function POST(request: NextRequest) {
     const db = await getDb();
     if (!db) return NextResponse.json({ error: "Database not available" }, { status: 503 });
 
-    // Check if user already has a pending request
+    // Unlimited requests are allowed. If the user already has a pending or
+    // drafted letter, re-notify the CEO instead of hard-blocking the request.
     const existing = await db.collection("offerLetters").findOne({
       userId: auth.userId,
       status: { $in: ["pending_ceo", "drafted"] },
     });
-    if (existing) {
-      return NextResponse.json({ error: "You already have a pending offer letter request" }, { status: 400 });
-    }
 
     // Get user details
     const { ObjectId } = require("mongodb");
@@ -96,6 +94,21 @@ export async function POST(request: NextRequest) {
       releasedAt: null,
       downloadedAt: null,
     };
+
+    if (existing) {
+      // Existing pending request: just re-notify the CEO so it gets reviewed.
+      await db.collection("notifications").insertOne({
+        userId: existing.userId,
+        title: "Offer Letter Request Reminder",
+        body: doc.employeeName + " has re-requested their pending offer letter.",
+        type: "offer_letter",
+        isRead: false,
+        referenceType: "offer_letter",
+        referenceId: (existing._id as { toString(): string }).toString(),
+        createdAt: new Date(),
+      });
+      return NextResponse.json({ data: { id: (existing._id as { toString(): string }).toString(), status: existing.status, reminder: true } });
+    }
 
     const result = await db.collection("offerLetters").insertOne(doc);
 

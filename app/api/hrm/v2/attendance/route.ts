@@ -65,6 +65,12 @@ export async function GET(request: NextRequest) {
       punchInTime: rec.punchInTime || rec.checkIn, punchOutTime: rec.punchOutTime || rec.checkOut, location: rec.location,
       distanceMeters: rec.currentLocation?.distanceFromOffice, status: rec.status, workHours: rec.workHours || rec.totalHours,
       overtimeHours: rec.overtimeHours, regularizationStatus: rec.regularizationStatus, managerId: rec.managerId,
+      // AUX + work-location state the punch card needs to restore its live UI.
+      auxState: rec.auxState || "active",
+      auxHistory: Array.isArray(rec.auxHistory) ? rec.auxHistory : [],
+      totalBreakMinutes: rec.totalBreakMinutes || 0,
+      effectiveWorkMinutes: rec.effectiveWorkMinutes || 0,
+      workLocation: rec.workLocation || (typeof rec.location === "string" && rec.location.includes("[remote]") ? "remote" : "office"),
     }));
     return NextResponse.json({ data: enriched });
   } catch (error: any) {

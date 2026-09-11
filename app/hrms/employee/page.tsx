@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { AttendancePunchCard } from "@/components/hr/attendance-punch-card";
 import { OnboardingCountdown } from "@/components/hr/onboarding-countdown";
+import { downloadFileFromUrl } from "@/lib/download";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -101,10 +102,6 @@ export default function EmployeeDashboardPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     setLoading(true);
     try {
@@ -126,6 +123,10 @@ export default function EmployeeDashboardPage() {
     } catch { /* empty */ }
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleUpload = async () => {
     if (!uploadFile) return;
@@ -164,21 +165,33 @@ export default function EmployeeDashboardPage() {
   const handleDownloadOffer = async () => {
     if (!latestOffer) return;
     try {
-      const res = await fetch("/api/hrm/v2/offer-letters/download?id=" + latestOffer.id);
-      if (res.ok) {
-        const pw = res.headers.get("X-Offer-Letter-Password");
-        const html = await res.text();
-        const win = window.open("", "_blank");
-        if (win) { win.document.write(html); win.document.close(); }
+      const { ok, headers } = await downloadFileFromUrl(
+        "/api/hrm/v2/offer-letters/download?id=" + latestOffer.id,
+        "offer-letter-" + (latestOffer.employeeName || "employee").replace(/\s+/g, "-") + ".pdf"
+      );
+      if (ok) {
+        const pw = headers.get("X-Offer-Letter-Password");
         if (pw) { setOfferPassword(pw); setShowPasswordModal(true); }
       }
     } catch { /* empty */ }
   };
 
   const latestTask = onboardingTasks.length > 0 ? onboardingTasks[0] : null;
-  const isVerified = latestTask?.status === "completed";
-  const isPending = latestTask?.status === "pending" || (!latestTask && onboardingTasks.length === 0);
-  const isRejected = latestTask?.status === "rejected";
+  // Onboarding status comes primarily from the user record — registration does
+  // not create onboarding task rows for every account, so deriving state from
+  // tasks alone left long-approved users stuck on "Documents Under Review".
+  const userVerified =
+    Boolean(user?.employeeCode) ||
+    (user?.status && user.status !== "pending_verification" && user?.onboardingStatus !== "pending") ||
+    latestTask?.status === "completed" ||
+    latestTask?.status === "APPROVED";
+  const userRejected =
+    (user?.onboardingStatus || "").toLowerCase().includes("reject") ||
+    latestTask?.status === "rejected" ||
+    latestTask?.status === "REJECTED_48H_DEADLINE";
+  const isVerified = userVerified && !userRejected;
+  const isRejected = userRejected;
+  const isPending = !isVerified && !isRejected;
 
   return (
     <AppShell title="Employee Hub">
@@ -239,14 +252,14 @@ export default function EmployeeDashboardPage() {
               <div>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">EMPLOYEE CODE</span>
                 <span className="font-mono font-extrabold text-emerald-700 dark:text-emerald-300 text-sm">
-                  {latestTask?.employeeCode || "EMP-2026-XXXX"}
+                  {user?.employeeCode || latestTask?.employeeCode || "Pending assignment"}
                 </span>
               </div>
               <div className="w-px h-8 bg-emerald-200 dark:bg-emerald-500/20" />
               <div>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">DEPARTMENT</span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {latestTask?.department || "Not Assigned"}
+                  {user?.department || latestTask?.department || "Not Assigned"}
                 </span>
               </div>
               <div className="w-px h-8 bg-emerald-200 dark:bg-emerald-500/20" />
@@ -336,13 +349,20 @@ export default function EmployeeDashboardPage() {
             {offerMsg}
           </div>
         )}
-        {!latestOffer && (
+        {!latestOffer ? (
           <div className="text-center py-8">
             <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">You have not requested an offer letter yet.</p>
             <button onClick={handleRequestOffer} disabled={requestingOffer}
               className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors">
               <Send className="h-3.5 w-3.5" /> {requestingOffer ? "Submitting..." : "Generate Offer Letter"}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3 text-right">
+            <button onClick={handleRequestOffer} disabled={requestingOffer}
+              className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline disabled:opacity-50 transition-colors">
+              <Send className="h-3 w-3" /> {requestingOffer ? "Submitting..." : latestOffer.status === "pending_ceo" ? "Remind CEO" : "Request Another"}
             </button>
           </div>
         )}

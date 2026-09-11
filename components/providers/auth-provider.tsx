@@ -29,6 +29,9 @@ export interface AuthUser {
   image?: string | null;
   role: string;
   department?: string | null;
+  status?: string | null;
+  employeeCode?: string | null;
+  onboardingStatus?: string | null;
 }
 
 interface AuthContextType {

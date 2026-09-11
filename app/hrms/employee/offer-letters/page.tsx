@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
+import { downloadFileFromUrl } from "@/lib/download";
 import {
   FileText,
   Send,
@@ -39,10 +40,6 @@ export default function EmployeeOfferLettersPage() {
   const [password, setPassword] = useState("");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    loadLetters();
-  }, []);
-
   const loadLetters = async () => {
     setLoading(true);
     try {
@@ -54,6 +51,10 @@ export default function EmployeeOfferLettersPage() {
     } catch { /* empty */ }
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadLetters();
+  }, []);
 
   const handleRequest = async () => {
     setRequesting(true);
@@ -75,18 +76,12 @@ export default function EmployeeOfferLettersPage() {
 
   const handleDownload = async (letter: OfferLetter) => {
     try {
-      const res = await fetch("/api/hrm/v2/offer-letters/download?id=" + letter.id);
-      if (res.ok) {
-        const pw = res.headers.get("X-Offer-Letter-Password");
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "offer-letter-" + letter.employeeName.replace(/\s+/g, "-") + ".pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+      const { ok, headers } = await downloadFileFromUrl(
+        "/api/hrm/v2/offer-letters/download?id=" + letter.id,
+        "offer-letter-" + letter.employeeName.replace(/\s+/g, "-") + ".pdf"
+      );
+      if (ok) {
+        const pw = headers.get("X-Offer-Letter-Password");
         if (pw) {
           setPassword(pw);
           setShowPwModal(true);
@@ -123,16 +118,20 @@ export default function EmployeeOfferLettersPage() {
         </div>
       ) : (
         <div className="max-w-3xl space-y-6">
-          {/* Request Section */}
-          {!latest && (
-            <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-8 text-center">
-              <FileText className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">You have not requested an offer letter yet.</p>
-              <Button onClick={handleRequest} disabled={requesting} className="bg-primary text-white font-bold px-6 py-2.5">
-                {requesting ? "Submitting..." : "Generate Offer Letter"}
+          {/* Request Section — always visible so users can (re-)request anytime */}
+          <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">Need a new or corrected offer letter?</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Submit a request and the CEO will review and release it. If a request is already pending, we'll send a reminder.
+                </p>
+              </div>
+              <Button onClick={handleRequest} disabled={requesting} className="bg-primary text-white font-bold px-5 py-2.5 shrink-0">
+                {requesting ? "Submitting..." : latest ? "Request Another / Remind CEO" : "Generate Offer Letter"}
               </Button>
             </div>
-          )}
+          </div>
 
           {/* Current / Latest Letter */}
           {latest && (
