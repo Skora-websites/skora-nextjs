@@ -45,7 +45,7 @@ const DATA_FILES = ["hrms-account-roles.json"];
 const APP_FILES = ["globals.css", "favicon.ico"];
 
 // API routes the HRMS depends on (under app/api).
-const API_PREFIXES = ["api/auth", "api/hrm", "api/upload"];
+const API_PREFIXES = ["api/auth", "api/health", "api/hrm", "api/upload"];
 
 // Root config files needed to build.
 const COPY_FILES = [
