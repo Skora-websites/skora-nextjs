@@ -60,6 +60,11 @@ export async function GET(request: NextRequest) {
     }
 
     const exits = await getEmployeeExits(tenantId, (status as any) || undefined);
+    // Employees may only see their own exit records — the full list is
+    // sensitive HR data (reasons, exit types).
+    if (auth.role === "employee") {
+      return NextResponse.json({ data: exits.filter((e: any) => e.userId === auth.userId) });
+    }
     return NextResponse.json({ data: exits });
   } catch (error: any) {
     console.error("GET /api/hrm/v2/exit error:", error);

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "pretest": "node scripts/seed-test-accounts.js || echo \"[pretest] seeding skipped (DB unreachable) - suite continues\"",
     "test:watch": "vitest",
     "test:e2e": "node scripts/test-with-server.js",
     "test:e2e:watch": "node scripts/test-with-server.js --watch",
