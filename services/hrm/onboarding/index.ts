@@ -91,10 +91,21 @@ export async function getEmployeeOnboardingTasks(
   tenantId: string,
   userId: string
 ): Promise<EmployeeOnboardingTask[]> {
-  return employeeOnboardingTasksService.findManyInTenant(tenantId, {
-    where: [{ field: "userId", op: "==", value: userId }],
-    orderByField: "dueDate",
-    orderByDirection: "asc",
+  // Registration-created onboarding rows historically omitted tenantId; scope
+  // strictly when the tenant is present but never hide rows over a missing
+  // tenant field. Query the raw collection with an $in fallback instead of the
+  // tenant-strict service helper so a legacy row can't vanish from the hub.
+  const { getDb } = await import("@/lib/db/mongo-helper");
+  const db = await getDb();
+  if (!db) return [];
+  const docs = await db
+    .collection("employee_onboarding_tasks")
+    .find({ userId, $or: [{ tenantId }, { tenantId: { $exists: false } }, { tenantId: "default" }] })
+    .sort({ createdAt: -1 })
+    .toArray();
+  return docs.map((d) => {
+    const { _id, ...rest } = d as Record<string, unknown>;
+    return { ...rest, id: String(_id) } as unknown as EmployeeOnboardingTask;
   });
 }
 
@@ -114,12 +125,22 @@ export async function updateOnboardingTaskStatus(
 export async function getPendingOnboardingTasks(
   tenantId: string
 ): Promise<EmployeeOnboardingTask[]> {
-  return employeeOnboardingTasksService.findManyInTenant(tenantId, {
-    where: [
-      { field: "status", op: "==", value: "pending" },
-    ],
-    orderByField: "dueDate",
-    orderByDirection: "asc",
+  // Pending queue must surface registration rows too (they may lack tenantId
+  // or carry status "pending" with a documentName from the register flow).
+  const { getDb } = await import("@/lib/db/mongo-helper");
+  const db = await getDb();
+  if (!db) return [];
+  const docs = await db
+    .collection("employee_onboarding_tasks")
+    .find({
+      $or: [{ tenantId }, { tenantId: { $exists: false } }, { tenantId: "default" }],
+    })
+    .sort({ submittedAt: -1, createdAt: -1 })
+    .limit(200)
+    .toArray();
+  return docs.map((d) => {
+    const { _id, ...rest } = d as Record<string, unknown>;
+    return { ...rest, id: String(_id) } as unknown as EmployeeOnboardingTask;
   });
 }
 

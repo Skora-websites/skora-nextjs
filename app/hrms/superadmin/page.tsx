@@ -1039,7 +1039,7 @@ export default function SuperadminOverviewPage() {
                     )}
                   </div>
                   <Link
-                    href="/hrms/hr-admin"
+                    href="/hrms/manager/approvals"
                     className="shrink-0 ml-2 text-primary text-[10px] font-bold hover:underline"
                   >
                     Review →
@@ -1049,7 +1049,7 @@ export default function SuperadminOverviewPage() {
               {pendingLeaves.length > 8 && (
                 <div className="text-center pt-1">
                   <Link
-                    href="/hrms/hr-admin"
+                    href="/hrms/manager/approvals"
                     className="text-xs text-primary hover:underline font-semibold"
                   >
                     View all {pendingLeaves.length} requests →

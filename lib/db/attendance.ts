@@ -1,6 +1,8 @@
 import { getDb } from "./mongo-helper";
+import type { ObjectId } from "mongodb";
 import { getOfficeConfig } from "@/lib/hrm/office-config";
 import { haversineDistance } from "@/lib/geofencing";
+import { istDateKey } from "@/lib/ist-date";
 
 export type AttendanceStatus = "PRESENT" | "LATE" | "HALF_DAY" | "ABSENT";
 export type AUXState = "active" | "on_break" | "meeting";
@@ -17,12 +19,7 @@ export interface AttendanceRecord { _id?: string; tenantId?: string; userId: str
 export const ATTENDANCE_TIMEZONE = "Asia/Kolkata";
 
 export function attendanceDateKey(date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: ATTENDANCE_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
+  return istDateKey(date);
 }
 
 export function calculateAttendanceStatus(punchInDate: Date): AttendanceStatus { const m = punchInDate.getHours() * 60 + punchInDate.getMinutes(); if (m <= 630) return "PRESENT"; if (m <= 780) return "LATE"; return "HALF_DAY"; }
@@ -149,19 +146,51 @@ export async function recordPunchIn(data: { userId: string; userName: string; us
   return { ...doc, _id: res.insertedId.toString(), createdAt: now.toISOString() } as AttendanceRecord;
 }
 
+/**
+ * Look up today's record for a user, falling back to any tenant when the
+ * stored tenantId is stale. When dateStr is omitted (or already IST) the
+ * lookup uses the IST "today" key so punch-in/AUX/punch-out always agree
+ * even if the server clock is UTC.
+ */
+async function findTodayRecord(
+  userId: string,
+  dateStr: string | undefined,
+  tenantId: string,
+  opts: { openOnly: boolean }
+): Promise<Record<string, unknown> | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const query: Record<string, unknown> = {
+    userId,
+    date: dateStr || attendanceDateKey(),
+  };
+  if (opts.openOnly) query.punchOutTime = { $exists: false };
+  if (tenantId) query.tenantId = { $in: [tenantId, "default"] };
+  const record = await db.collection("attendance").findOne(query);
+  if (record) return record as Record<string, unknown>;
+  // Fallback: tenantId mismatch on legacy rows — retry scoped to the user only.
+  const fallback: Record<string, unknown> = { userId, date: query.date as string };
+  if (opts.openOnly) fallback.punchOutTime = { $exists: false };
+  return (await db.collection("attendance").findOne(fallback)) as Record<string, unknown> | null;
+}
+
 export async function recordAUXChange(userId: string, dateStr: string, newState: AUXState, tenantId = "default"): Promise<AttendanceRecord | null> {
   const db = await getDb();
   if (!db) return null;
-  const record = await db.collection("attendance").findOne({ tenantId: { $in: [tenantId, "default"] }, userId, date: dateStr, punchOutTime: { $exists: false } });
+  const record = await findTodayRecord(userId, dateStr, tenantId, { openOnly: false });
   if (!record) return null;
   const nowISO = new Date().toISOString();
   const history: AUXEntry[] = normalizeAuxHistory(record.auxHistory);
-  const updatedHistory = history.map((e: AUXEntry, i: number) => i === history.length - 1 && !e.endTime ? { ...e, endTime: nowISO } : e);
+  // Seed history for legacy records created without AUX fields.
+  if (history.length === 0 && record.punchInTime) history.push({ state: "active", startTime: new Date(record.punchInTime as string).toISOString() });
+  // If the previous AUX state was already updated to something else out-of-band,
+  // still close any dangling open entry before appending the new state.
+  const updatedHistory = history.map((e: AUXEntry, i: number) => (i === history.length - 1 && !e.endTime ? { ...e, endTime: nowISO } : e));
   updatedHistory.push({ state: newState, startTime: nowISO });
   const effectiveWorkMinutes = calculateEffectiveWorkMinutes(updatedHistory);
   const totalBreakMinutes = calculateBreakMinutes(updatedHistory);
-  await db.collection("attendance").updateOne({ _id: record._id }, { $set: { auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes } });
-  return { ...record, _id: String(record._id), auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes, createdAt: record.createdAt ? new Date(record.createdAt).toISOString() : new Date().toISOString() } as AttendanceRecord;
+  await db.collection("attendance").updateOne({ _id: record._id as ObjectId }, { $set: { auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes } });
+  return { ...record, _id: String(record._id), auxState: newState, auxHistory: updatedHistory, totalBreakMinutes, effectiveWorkMinutes, createdAt: record.createdAt ? new Date(record.createdAt as Date | string).toISOString() : new Date().toISOString() } as unknown as AttendanceRecord;
 }
 
 export async function recordPunchOut(userId: string, dateStr: string, tenantId = "default"): Promise<boolean> {
@@ -169,25 +198,38 @@ export async function recordPunchOut(userId: string, dateStr: string, tenantId =
   if (!db) return false;
   const now = new Date();
   const nowISO = now.toISOString();
-  const record = await db.collection("attendance").findOne({ tenantId: { $in: [tenantId, "default"] }, userId, date: dateStr, punchOutTime: { $exists: false } });
+  // Accept an already-open record for the requested IST date; if none exists,
+  // fall back to the most recent open record regardless of its date key so a
+  // stale/UTC date on the row can never block a legitimate punch-out.
+  let record = await findTodayRecord(userId, dateStr, tenantId, { openOnly: true });
+  if (!record) {
+    const openQuery: Record<string, unknown> = { userId, punchOutTime: { $exists: false } };
+    if (tenantId) openQuery.tenantId = { $in: [tenantId, "default"] };
+    record = (await db.collection("attendance")
+      .find(openQuery)
+      .sort({ punchInTime: -1 })
+      .limit(1)
+      .next()) as Record<string, unknown> | null;
+  }
   if (!record) return false;
   let history: AUXEntry[] = normalizeAuxHistory(record.auxHistory);
-  history = history.map((e: AUXEntry, i: number) => i === history.length - 1 && !e.endTime ? { ...e, endTime: nowISO } : e);
+  if (history.length === 0 && record.punchInTime) history.push({ state: "active", startTime: new Date(record.punchInTime as string).toISOString() });
+  history = history.map((e: AUXEntry, i: number) => (i === history.length - 1 && !e.endTime ? { ...e, endTime: nowISO } : e));
   const effectiveWorkMinutes = calculateEffectiveWorkMinutes(history);
   const totalBreakMinutes = calculateBreakMinutes(history);
   const workHours = Number((effectiveWorkMinutes / 60).toFixed(2));
-  const res = await db.collection("attendance").updateOne({ _id: record._id }, { $set: { punchOutTime: nowISO, workHours, auxState: "active", auxHistory: history, totalBreakMinutes, effectiveWorkMinutes } });
+  const res = await db.collection("attendance").updateOne({ _id: record._id as ObjectId }, { $set: { punchOutTime: nowISO, workHours, auxState: "active", auxHistory: history, totalBreakMinutes, effectiveWorkMinutes } });
   return res.modifiedCount > 0;
 }
 
 export async function updateAttendanceLocation(userId: string, dateStr: string, latitude: number, longitude: number, accuracy: number, distanceFromOffice?: number, tenantId = "default"): Promise<boolean> {
   const db = await getDb();
   if (!db) return false;
-  const record = await db.collection("attendance").findOne({ tenantId: { $in: [tenantId, "default"] }, userId, date: dateStr, punchOutTime: { $exists: false } });
+  const record = await findTodayRecord(userId, dateStr, tenantId, { openOnly: true });
   if (!record) return false;
   const nowISO = new Date().toISOString();
   const entry: LocationEntry = { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice };
-  await db.collection("attendance").updateOne({ _id: record._id }, { $push: { locationHistory: { $each: [entry], $slice: -1000 } } as any, $set: { currentLocation: { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice } } });
+  await db.collection("attendance").updateOne({ _id: record._id as ObjectId }, { $push: { locationHistory: { $each: [entry], $slice: -1000 } } as any, $set: { currentLocation: { latitude, longitude, accuracy, timestamp: nowISO, distanceFromOffice } } });
   return true;
 }
 

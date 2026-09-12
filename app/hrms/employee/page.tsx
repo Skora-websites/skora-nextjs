@@ -101,6 +101,8 @@ export default function EmployeeDashboardPage() {
   // Document upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -131,14 +133,22 @@ export default function EmployeeDashboardPage() {
   const handleUpload = async () => {
     if (!uploadFile) return;
     setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(null);
     try {
       const formData = new FormData();
       formData.append("file", uploadFile);
-      await fetch("/api/hrm/v2/onboarding/upload", { method: "POST", body: formData });
-      loadData();
-    } catch { /* empty */ }
-    setUploading(false);
-    setUploadFile(null);
+      const res = await fetch("/api/hrm/v2/onboarding/upload", { method: "POST", body: formData });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Upload failed. Please try again.");
+      setUploadSuccess("Document uploaded successfully. HR will review it shortly.");
+      setUploadFile(null);
+      await loadData();
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleRequestOffer = async () => {
@@ -222,23 +232,40 @@ export default function EmployeeDashboardPage() {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-end gap-2">
+              {/* The file input must live OUTSIDE the button: nesting it inside
+                  a <button>/<Button> makes the browser re-trigger the input on
+                  click and submits the surrounding DOM as a form (page reload,
+                  nothing uploads). Label + standalone input is the safe pattern. */}
               <input
                 type="file"
                 id="doc-upload"
                 className="hidden"
-                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                onChange={(e) => {
+                  setUploadError(null);
+                  setUploadSuccess(null);
+                  setUploadFile(e.target.files?.[0] || null);
+                  // Allow picking the same file again after a retry.
+                  e.target.value = "";
+                }}
               />
-              <label htmlFor="doc-upload">
-                <Button asChild className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs gap-1 cursor-pointer">
-                  <span><Upload className="h-3.5 w-3.5" /> Upload Document</span>
-                </Button>
-              </label>
-              {uploadFile && (
-                <Button onClick={handleUpload} disabled={uploading} className="bg-primary text-white font-bold text-xs gap-1">
-                  {uploading ? "Uploading..." : "Submit"}
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="doc-upload"
+                  className="inline-flex items-center gap-1 rounded-md bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 h-9 cursor-pointer transition-colors"
+                >
+                  <Upload className="h-3.5 w-3.5" /> {uploadFile ? "Choose Different File" : "Upload Document"}
+                </label>
+                {uploadFile && (
+                  <Button onClick={handleUpload} disabled={uploading} className="bg-primary text-white font-bold text-xs gap-1">
+                    {uploading ? "Uploading..." : "Submit"}
+                  </Button>
+                )}
+              </div>
+              {uploadFile && <span className="text-[10px] text-slate-600 dark:text-slate-300 font-semibold max-w-[220px] truncate">Selected: {uploadFile.name}</span>}
+              {uploadError && <span className="text-[10px] text-red-600 dark:text-red-400 font-semibold">{uploadError}</span>}
+              {uploadSuccess && <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{uploadSuccess}</span>}
             </div>
           </div>
         </div>

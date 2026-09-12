@@ -103,24 +103,9 @@ export default function RegisterPage() {
     }
 
     try {
-      // 1. Upload document first
-      let documentName = "";
-      let documentUrl = "";
-      if (selectedFile) {
-        const formDataUpload = new FormData();
-        formDataUpload.append("file", selectedFile);
-        const uploadRes = await fetch("/api/hrm/v2/onboarding/upload", {
-          method: "POST",
-          body: formDataUpload,
-        });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          documentName = uploadData.data?.fileName || selectedFile.name;
-          documentUrl = uploadData.data?.fileUrl || "";
-        }
-      }
-
-      // 2. Submit Registration Request with document info
+      // 1. Create the account FIRST — the upload endpoint requires a session,
+      // so uploading before registration always 401'd and the document was
+      // silently lost (register page previously ignored that failure).
       const res = await fetch("/api/hrm/v2/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,8 +117,6 @@ export default function RegisterPage() {
           firstName: formData.name.split(" ")[0] || formData.name,
           lastName: formData.name.split(" ").slice(1).join(" ") || "",
           department: formData.department,
-          documentName,
-          documentUrl,
         }),
       });
 
@@ -142,7 +125,24 @@ export default function RegisterPage() {
         throw new Error(data.error || "Registration failed");
       }
 
-      setSuccess("Documents submitted! Verification request sent to HR for approval.");
+      // 2. Upload the verification document — the registration response set
+      // the session cookie, so this call is now authenticated.
+      let uploadFailed = false;
+      if (selectedFile) {
+        const formDataUpload = new FormData();
+        formDataUpload.append("file", selectedFile);
+        const uploadRes = await fetch("/api/hrm/v2/onboarding/upload", {
+          method: "POST",
+          body: formDataUpload,
+        });
+        if (!uploadRes.ok) uploadFailed = true;
+      }
+
+      setSuccess(
+        uploadFailed
+          ? "Account created! The document upload failed — please upload it from your dashboard banner."
+          : "Documents submitted! Verification request sent to HR for approval."
+      );
       setTimeout(() => router.push("/hrms"), 1800);
     } catch (err: any) {
       setError(err.message);

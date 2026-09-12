@@ -52,13 +52,43 @@ export async function POST(request: NextRequest) {
     // Save metadata and document to MongoDB
     const db = await getDb();
     if (db) {
-      // Also update the employee_onboarding_tasks record so CEO/HR can see the document
-      const task = await db.collection("employee_onboarding_tasks").findOne({ userId });
+      // Registration flow stores the verification doc on the user's onboarding
+      // task row — update the most recent one (rows are created on register
+      // and again on re-upload after rejection).
+      const task = await db
+        .collection("employee_onboarding_tasks")
+        .find({ userId })
+        .sort({ createdAt: -1, submittedAt: -1 })
+        .limit(1)
+        .next();
       if (task) {
+        // A fresh upload after a rejection puts the candidate back into the
+        // HR review queue instead of staying rejected forever.
+        const resubmission = task.status === "rejected" || task.status === "escalated";
         await db.collection("employee_onboarding_tasks").updateOne(
           { _id: task._id },
-          { $set: { documentName: file.name, documentUrl: dataUrl, updatedAt: new Date() } }
+          {
+            $set: {
+              documentName: file.name,
+              documentUrl: dataUrl,
+              updatedAt: new Date(),
+              ...(resubmission ? { status: "pending", reSubmittedAt: new Date() } : {}),
+            },
+          }
         );
+      } else {
+        // No task row exists (e.g. user created by admin before onboarding rows
+        // were introduced) — create one so HR can see the document.
+        await db.collection("employee_onboarding_tasks").insertOne({
+          userId,
+          tenantId: auth.tenantId || "default",
+          status: "pending",
+          documentName: file.name,
+          documentUrl: dataUrl,
+          submittedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
       }
 
       await db.collection("onboardingDocuments").insertOne({
@@ -71,6 +101,11 @@ export async function POST(request: NextRequest) {
         status: "pending",
         uploadedAt: new Date(),
       });
+    } else {
+      return NextResponse.json(
+        { error: "Storage is temporarily unavailable. Please try again shortly." },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json({

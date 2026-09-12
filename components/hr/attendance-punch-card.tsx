@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { punchInAction, punchOutAction, updateAUXStateAction } from "@/lib/actions/attendance-actions";
 import { isWithinGeofence } from "@/lib/geofencing";
+import { istDateKey } from "@/lib/ist-date";
 
 interface OfficeLocation { latitude: number; longitude: number; radius: number; }
 interface OfficeRules { officeStart: number; officeEnd: number; lateAfter: number; workDays: number[]; halfDayAfter: number; }
@@ -17,12 +18,7 @@ const DEFAULT_RULES: OfficeRules = { officeStart: 10, officeEnd: 19, lateAfter: 
 // Key attendance by the office calendar date (IST) so the client and server
 // always agree on which records belong to "today", regardless of device timezone.
 function todayString() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  return istDateKey();
 }
 
 function formatHour(hour: number) {
@@ -63,11 +59,15 @@ export function AttendancePunchCard() {
   const refreshAttendance = useCallback(async () => {
     if (!userId) return;
     try {
-      const response = await fetch(`/api/hrm/v2/attendance?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(today)}`, { cache: "no-store" });
+      // Ask for today's rows without a date filter and pick the IST-date row,
+      // so a UTC/IST date-key mismatch can never make a punched-in user look
+      // logged out. Rows carry the punch-in AUX state needed for restore.
+      const response = await fetch(`/api/hrm/v2/attendance?userId=${encodeURIComponent(userId)}`, { cache: "no-store" });
       if (!response.ok) throw new Error("Unable to load today's attendance");
       const data = await response.json();
-      const rows = Array.isArray(data.data) ? data.data : [];
-      setRecord(rows[0] || null);
+      const rows: any[] = Array.isArray(data.data) ? data.data : [];
+      const todayRow = rows.find((r) => r.date === today) || null;
+      setRecord(todayRow);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to load today's attendance");
     } finally {
@@ -137,6 +137,29 @@ export function AttendancePunchCard() {
     navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
   });
 
+  // Keep the server-side live map in sync with this device's position while
+  // the shift is open. Silent best-effort — failures never disturb the UI.
+  useEffect(() => {
+    if (!punchedIn || punchedOut || !navigator.geolocation) return;
+    let cancelled = false;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (cancelled) return;
+        fetch("/api/hrm/v2/attendance/location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+        }).catch(() => { /* live location is best-effort */ });
+      },
+      () => { /* permission denied / unavailable — nothing to sync */ },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+    );
+    return () => {
+      cancelled = true;
+      navigator.geolocation.clearWatch(id);
+    };
+  }, [punchedIn, punchedOut, userId]);
+
   const handlePunchIn = async () => {
     setError(null); setSuccess(null); setPunching(true);
     try {
@@ -148,7 +171,11 @@ export function AttendancePunchCard() {
       setGpsAccuracy(accuracy);
       const result = isWithinGeofence(lat, lng, office.latitude, office.longitude, office.radius);
       setDistance(result.distance);
-      const currentHour = new Date().getHours() + new Date().getMinutes() / 60;
+      const nowMs = Date.now();
+      const istParts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false, minute: "numeric" }).formatToParts(nowMs);
+      const hourNum = Number(istParts.find((p) => p.type === "hour")?.value ?? 0) % 24;
+      const minuteNum = Number(istParts.find((p) => p.type === "minute")?.value ?? 0);
+      const currentHour = hourNum + minuteNum / 60;
       const isOffice = result.within;
       if (isOffice && currentHour < rules.officeStart) throw new Error(`Office hours start at ${formatHour(rules.officeStart)}.`);
       if (isOffice && currentHour >= rules.officeEnd + 1) throw new Error(`Late punch-ins are not accepted after ${formatHour(rules.officeEnd + 1)}.`);
@@ -162,7 +189,14 @@ export function AttendancePunchCard() {
         workLocation: isOffice ? "office" : "remote",
       });
       if (!punch.success || !punch.record) throw new Error(punch.error || "Attendance was not saved. Please try again.");
-      setRecord(punch.record);
+      // The action returns the DB shape; guarantee the AUX fields the UI needs
+      // so a legacy/updated record can never blank out the controls.
+      const saved: any = punch.record;
+      setRecord({
+        ...saved,
+        auxState: saved.auxState || "active",
+        auxHistory: Array.isArray(saved.auxHistory) ? saved.auxHistory : [{ state: "active", startTime: saved.punchInTime }],
+      });
       setSuccess("Attendance recorded successfully.");
       window.dispatchEvent(new CustomEvent("attendance-updated", { detail: { type: "punch-in", record: punch.record } }));
     } catch (e) {
@@ -173,7 +207,7 @@ export function AttendancePunchCard() {
   const executePunchOut = async () => {
     setError(null); setSuccess(null); setPunching(true);
     try {
-      const result = await punchOutAction(userId, today);
+      const result = await punchOutAction(userId);
       if (!result.success) throw new Error(result.error || "Punch-out was not saved.");
       await refreshAttendance();
       setSuccess("Punch-out recorded successfully.");
@@ -201,7 +235,10 @@ export function AttendancePunchCard() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "send_to_role", role: "hr_admin", title: "Early Departure Approval Required", body: `${user?.name || user?.email} requested early punch-out. Reason: ${earlyReason.trim()}.`, type: "approval", referenceType: "early_departure", referenceId: userId }),
       });
-      if (!response.ok) throw new Error("Approval request could not be submitted.");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.error || "Approval request could not be submitted.");
+      }
       setShowEarlyLeave(false); setEarlyReason("");
       setSuccess("Early departure request sent. Your attendance remains open until punch-out is completed.");
     } catch (e) { setError(e instanceof Error ? e.message : "Approval request failed."); }

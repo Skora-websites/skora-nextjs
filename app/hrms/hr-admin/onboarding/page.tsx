@@ -7,24 +7,25 @@ import { Button } from "@/components/ui/button";
 
 interface Candidate {
   id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  documentName: string;
-  status: "pending" | "approved" | "rejected_48h";
+  userId?: string;
+  name?: string;
+  employeeName?: string;
+  email?: string;
+  role?: string;
+  department?: string;
+  documentName?: string;
+  documentUrl?: string;
+  status: string;
   employeeCode?: string;
-  submittedAt: string;
+  submittedAt?: string;
   deadlineHoursRemaining?: number;
+  lastRejectionDate?: string;
 }
 
 export default function HrAdminOnboardingPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadCandidates();
-  }, []);
+  const [actingId, setActingId] = useState<string | null>(null);
 
   const loadCandidates = async () => {
     setLoading(true);
@@ -32,47 +33,71 @@ export default function HrAdminOnboardingPage() {
       const res = await fetch("/api/hrm/v2/onboarding?pending=true");
       if (res.ok) {
         const data = await res.json();
-        setCandidates(data.data || []);
+        setCandidates(Array.isArray(data.data) ? data.data : []);
       }
     } catch { /* empty */ }
     setLoading(false);
   };
 
-  const handleApprove = async (id: string) => {
+  useEffect(() => {
+    loadCandidates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const candidateUserId = (c: Candidate) => c.userId || c.id;
+
+  const handleApprove = async (candidate: Candidate) => {
+    const id = candidate.id;
+    const userId = candidateUserId(candidate);
+    setActingId(id);
     const code = "EMP-2026-" + Math.floor(1000 + Math.random() * 9000);
     try {
-      // Update onboarding task status
+      // 1. Mark the onboarding task approved/completed
       await fetch("/api/hrm/v2/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update_task", taskId: id, status: "approved" }),
+        body: JSON.stringify({ action: "update_task", taskId: id, status: "completed" }),
       });
-      // Update user status to active
-      const candidate = candidates.find((c) => c.id === id);
-      if (candidate) {
-        await fetch("/api/hrm/v2/users", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: candidate.id, action: "status", status: "active" }),
-        });
-      }
+      // 2. Activate the user account
+      await fetch("/api/hrm/v2/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action: "status", status: "active" }),
+      });
+      // 3. Issue the employee code + clear onboarding state so the employee hub
+      //    flips to the verified banner immediately.
+      await fetch("/api/hrm/v2/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, employeeCode: code, onboardingStatus: "approved" }),
+      });
     } catch (err) {
       console.error("Failed to approve onboarding:", err);
     }
-    setCandidates((prev) => prev.map((c) => c.id === id ? { ...c, status: "approved" as const, employeeCode: code } : c));
+    setCandidates((prev) => prev.map((c) => c.id === id ? { ...c, status: "approved", employeeCode: code } : c));
+    setActingId(null);
   };
 
-  const handleReject = async (id: string) => {
+  const handleReject = async (candidate: Candidate) => {
+    const id = candidate.id;
+    const userId = candidateUserId(candidate);
+    setActingId(id);
     try {
       await fetch("/api/hrm/v2/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update_task", taskId: id, status: "rejected" }),
       });
+      await fetch("/api/hrm/v2/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, onboardingStatus: "rejected" }),
+      });
     } catch (err) {
       console.error("Failed to reject onboarding:", err);
     }
-    setCandidates((prev) => prev.map((c) => c.id === id ? { ...c, status: "rejected_48h" as const, deadlineHoursRemaining: 48 } : c));
+    setCandidates((prev) => prev.map((c) => c.id === id ? { ...c, status: "rejected_48h", deadlineHoursRemaining: 48 } : c));
+    setActingId(null);
   };
 
   return (
@@ -111,24 +136,32 @@ export default function HrAdminOnboardingPage() {
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                 {candidates.map((c) => (
                   <tr key={c.id}>
-                    <td className="py-3 font-bold">{c.name}<span className="block text-[10px] text-slate-500 font-normal">{c.email}</span></td>
-                    <td className="py-3"><span className="font-semibold">{c.role}</span><span className="block text-[10px] text-slate-500">{c.department}</span></td>
-                    <td className="py-3 text-primary font-mono text-[11px] underline cursor-pointer"><FileText className="h-3 w-3 inline mr-1" />{c.documentName}</td>
+                    <td className="py-3 font-bold">{c.employeeName || c.name || "—"}<span className="block text-[10px] text-slate-500 font-normal">{c.email || ""}</span></td>
+                    <td className="py-3"><span className="font-semibold">{c.role || "Employee"}</span><span className="block text-[10px] text-slate-500">{c.department || "—"}</span></td>
                     <td className="py-3">
-                      {c.status === "approved" ? <Chip color="emerald">VERIFIED</Chip>
-                        : c.status === "rejected_48h" ? <Chip color="red">REJECTED ({c.deadlineHoursRemaining}h)</Chip>
+                      {c.documentUrl ? (
+                        <a href={c.documentUrl} target="_blank" rel="noreferrer" className="text-primary font-mono text-[11px] underline">
+                          <FileText className="h-3 w-3 inline mr-1" />{c.documentName || "View document"}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 font-mono text-[11px]">{c.documentName || "No document attached"}</span>
+                      )}
+                    </td>
+                    <td className="py-3">
+                      {c.status === "approved" || c.status === "completed" ? <Chip color="emerald">VERIFIED</Chip>
+                        : c.status === "rejected" || c.status === "rejected_48h" ? <Chip color="red">REJECTED ({c.deadlineHoursRemaining ?? 48}h)</Chip>
                         : <Chip color="yellow">PENDING</Chip>}
                     </td>
                     <td className="py-3 font-mono font-bold text-primary">{c.employeeCode || <span className="text-slate-400 font-normal text-[10px]">Pending</span>}</td>
                     <td className="py-3 text-right">
                       {c.status === "pending" && (
                         <div className="flex justify-end gap-1">
-                          <Button size="sm" onClick={() => handleApprove(c.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold h-7 px-2"><ShieldCheck className="h-3 w-3 mr-0.5" />Approve</Button>
-                          <Button size="sm" variant="danger" onClick={() => handleReject(c.id)} className="text-[10px] font-bold h-7 px-2"><XCircle className="h-3 w-3 mr-0.5" />Reject</Button>
+                          <Button size="sm" disabled={actingId === c.id} onClick={() => handleApprove(c)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold h-7 px-2"><ShieldCheck className="h-3 w-3 mr-0.5" />{actingId === c.id ? "..." : "Approve"}</Button>
+                          <Button size="sm" variant="danger" disabled={actingId === c.id} onClick={() => handleReject(c)} className="text-[10px] font-bold h-7 px-2"><XCircle className="h-3 w-3 mr-0.5" />Reject</Button>
                         </div>
                       )}
-                      {c.status === "rejected_48h" && <span className="text-[10px] text-red-500 font-bold">48h Resubmission Active</span>}
-                      {c.status === "approved" && <span className="text-[10px] text-slate-400">Finalized</span>}
+                      {(c.status === "rejected" || c.status === "rejected_48h") && <span className="text-[10px] text-red-500 font-bold">48h Resubmission Active</span>}
+                      {(c.status === "approved" || c.status === "completed") && <span className="text-[10px] text-slate-400">Finalized</span>}
                     </td>
                   </tr>
                 ))}
