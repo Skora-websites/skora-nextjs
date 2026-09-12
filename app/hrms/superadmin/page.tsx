@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { MailStatusCard } from "@/components/superadmin/mail-status-card";
 import {
   Users,
   UserCheck,
@@ -247,7 +248,7 @@ export default function SuperadminOverviewPage() {
     }
   };
 
-  const loadData = async (isSilent = false) => {
+  async function loadData(isSilent = false) {
     if (!isSilent) setLoading(true);
     try {        const [empRes, attRes, escRes, leaveRes, projRes, hrRes, mgrRes, onbRes, offerRes, liveRes] =
         await Promise.allSettled([
@@ -308,7 +309,7 @@ export default function SuperadminOverviewPage() {
       // use empty state
     }
     if (!isSilent) setLoading(false);
-  };
+  }
 
   // ── Offer Letter & Onboarding Counts ──
   const pendingOfferCount = offerLetters.filter((o) => o.status === 'pending_ceo').length;
@@ -512,6 +513,9 @@ export default function SuperadminOverviewPage() {
           color="orange"
         />
       </div>
+
+      {/* ═══ EMAIL / SMTP STATUS ═══ */}
+      <MailStatusCard />
 
       {/* ═══ LIVE OPERATIONS DASHBOARD ═══ */}
       <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl">

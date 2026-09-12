@@ -248,3 +248,97 @@ export async function sendOfferLetterEmail({
       : undefined,
   });
 }
+
+interface PayslipEmailInput {
+  to: string;
+  employeeName: string;
+  periodLabel: string;
+  netPay: number;
+  companyName?: string;
+  pdfAttachment: { filename: string; content: Buffer };
+}
+
+/**
+ * Send a payslip email to an employee when HR marks the payslip paid.
+ * The generated PDF is attached directly. Returns false when no transport
+ * is configured or sending failed.
+ */
+export async function sendPayslipEmail({
+  to,
+  employeeName,
+  periodLabel,
+  netPay,
+  companyName = "SKORA",
+  pdfAttachment,
+}: PayslipEmailInput): Promise<boolean> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; border-bottom: 3px double #2563eb; padding-bottom: 16px; margin-bottom: 20px;">
+        <h1 style="color: #2563eb; letter-spacing: 2px; margin: 0;">${companyName}</h1>
+        <p style="color: #666; font-size: 12px; margin-top: 5px;">Payroll Notification</p>
+      </div>
+      <p>Dear <strong>${employeeName}</strong>,</p>
+      <p>Your salary for <strong>${periodLabel}</strong> has been processed and paid.</p>
+      <p style="font-size:15px;"><strong>Net Pay:</strong> Rs. ${Number(netPay).toLocaleString("en-IN")}</p>
+      <p>📄 <strong>Your payslip is attached</strong> as <em>${pdfAttachment.filename}</em>.</p>
+      <p>If you notice any discrepancy, please reach out to HR within 7 days.</p>
+      <p style="margin-top:24px;">Warm regards,<br><strong>HR Team</strong><br>${companyName}</p>
+      <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 30px; font-size: 11px; color: #999; text-align: center;">
+        <p>This is a confidential payroll document. Unauthorized distribution is prohibited.</p>
+      </div>
+    </div>`;
+
+  return sendMail({
+    to,
+    subject: `Your payslip for ${periodLabel} — ${companyName}`,
+    html,
+    attachments: [
+      { filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: "application/pdf" },
+    ],
+  });
+}
+
+interface ExperienceLetterEmailInput {
+  to: string;
+  employeeName: string;
+  lastWorkingDate: string;
+  companyName?: string;
+  pdfAttachment: { filename: string; content: Buffer };
+}
+
+/**
+ * Send the experience letter PDF when an employee's exit is completed.
+ * Returns false when no transport is configured or sending failed.
+ */
+export async function sendExperienceLetterEmail({
+  to,
+  employeeName,
+  lastWorkingDate,
+  companyName = "SKORA",
+  pdfAttachment,
+}: ExperienceLetterEmailInput): Promise<boolean> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; border-bottom: 3px double #2563eb; padding-bottom: 16px; margin-bottom: 20px;">
+        <h1 style="color: #2563eb; letter-spacing: 2px; margin: 0;">${companyName}</h1>
+        <p style="color: #666; font-size: 12px; margin-top: 5px;">Offboarding Confirmation</p>
+      </div>
+      <p>Dear <strong>${employeeName}</strong>,</p>
+      <p>Your exit process with ${companyName} is now complete. Your <strong>Experience Letter</strong> is attached as <em>${pdfAttachment.filename}</em>.</p>
+      <p style="color:#555;font-size:13px;">Last working date: <strong>${lastWorkingDate}</strong></p>
+      <p>We thank you for your contributions and wish you success ahead.</p>
+      <p style="margin-top:24px;">Warm regards,<br><strong>HR Team</strong><br>${companyName}</p>
+      <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 30px; font-size: 11px; color: #999; text-align: center;">
+        <p>This is a confidential document. Unauthorized distribution is prohibited.</p>
+      </div>
+    </div>`;
+
+  return sendMail({
+    to,
+    subject: `Your Experience Letter — ${companyName}`,
+    html,
+    attachments: [
+      { filename: pdfAttachment.filename, content: pdfAttachment.content, contentType: "application/pdf" },
+    ],
+  });
+}
