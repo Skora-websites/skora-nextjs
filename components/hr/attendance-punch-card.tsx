@@ -9,11 +9,11 @@ import { isWithinGeofence } from "@/lib/geofencing";
 import { istDateKey } from "@/lib/ist-date";
 
 interface OfficeLocation { latitude: number; longitude: number; radius: number; }
-interface OfficeRules { officeStart: number; officeEnd: number; lateAfter: number; workDays: number[]; halfDayAfter: number; }
+interface OfficeRules { officeStart: number; officeEnd: number; lateAfter: number; workDays: number[]; halfDayAfter: number; requiredHours: number; }
 type AuxState = "active" | "on_break" | "meeting";
 
 const DEFAULT_OFFICE: OfficeLocation = { latitude: 28.6007594, longitude: 77.4319307, radius: 100 };
-const DEFAULT_RULES: OfficeRules = { officeStart: 10, officeEnd: 19, lateAfter: 10.5, workDays: [1, 2, 3, 4, 5], halfDayAfter: 14.5 };
+const DEFAULT_RULES: OfficeRules = { officeStart: 10, officeEnd: 19, lateAfter: 10.5, workDays: [1, 2, 3, 4, 5], halfDayAfter: 14.5, requiredHours: 8.5 };
 
 // Key attendance by the office calendar date (IST) so the client and server
 // always agree on which records belong to "today", regardless of device timezone.
@@ -88,6 +88,7 @@ export function AttendancePunchCard() {
           lateAfter: data.officeRules?.lateAfter ?? DEFAULT_RULES.lateAfter,
           workDays: data.officeRules?.workDays ?? DEFAULT_RULES.workDays,
           halfDayAfter: data.officeRules?.halfDayAfter ?? DEFAULT_RULES.halfDayAfter,
+          requiredHours: data.officeRules?.requiredHours ?? DEFAULT_RULES.requiredHours,
         });
         if (Number.isFinite(data.latitude) && Number.isFinite(data.longitude)) {
           setOffice({ latitude: Number(data.latitude), longitude: Number(data.longitude), radius: Number(data.geofenceRadius) || 100 });
@@ -121,6 +122,25 @@ export function AttendancePunchCard() {
     if (history.length === 0) total = Math.max(0, now - new Date(record.punchInTime).getTime());
     return Math.floor(total / 1000);
   }, [record, tick]);
+
+  // Break seconds this shift (for the work/break breakdown bar).
+  const breakSeconds = useMemo(() => {
+    void tick;
+    if (!record?.punchInTime) return 0;
+    const history = Array.isArray(record.auxHistory) ? record.auxHistory : [];
+    const now = Date.now();
+    let total = 0;
+    for (const period of history) {
+      if (period.state !== "on_break") continue;
+      const start = new Date(period.startTime).getTime();
+      const end = period.endTime ? new Date(period.endTime).getTime() : now;
+      if (Number.isFinite(start)) total += Math.max(0, end - start);
+    }
+    return Math.floor(total / 1000);
+  }, [record, tick]);
+
+  // Total elapsed since punch-in (work + break) for the breakdown bar.
+  const totalElapsedSeconds = effectiveSeconds + breakSeconds;
 
   useEffect(() => {
     if (!punchedIn || punchedOut) return;
@@ -307,6 +327,40 @@ export function AttendancePunchCard() {
               {state === "active" ? <><Zap className="inline h-3.5 w-3.5 mr-1" />Active</> : state === "on_break" ? <><Coffee className="inline h-3.5 w-3.5 mr-1" />On Break</> : <><Users className="inline h-3.5 w-3.5 mr-1" />Meeting</>}
             </button>
           ))}
+        </div>
+
+        {/* Live Work / Break breakdown bar (AUX timer visualization) */}
+        {totalElapsedSeconds > 60 && (
+          <div className="mt-3">
+            <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1 font-semibold">
+              <span className="text-emerald-600 dark:text-emerald-400">Work: {formatDuration(effectiveSeconds)}</span>
+              <span className="text-amber-600 dark:text-amber-400">Break: {formatDuration(breakSeconds)}</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden flex">
+              <div
+                className="h-full bg-emerald-500 transition-all duration-500"
+                style={{ width: `${totalElapsedSeconds > 0 ? (effectiveSeconds / totalElapsedSeconds) * 100 : 0}%` }}
+              />
+              <div
+                className="h-full bg-amber-400 transition-all duration-500"
+                style={{ width: `${totalElapsedSeconds > 0 ? (breakSeconds / totalElapsedSeconds) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Daily target progress (default 8.5h from office rules) */}
+        <div className="mt-3">
+          <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1 font-semibold">
+            <span>Daily target progress</span>
+            <span>{Math.min(100, Math.round((effectiveSeconds / (rules.requiredHours * 3600)) * 100))}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-500 ${effectiveSeconds >= rules.requiredHours * 3600 ? "bg-emerald-500" : "bg-primary"}`}
+              style={{ width: `${Math.min(100, (effectiveSeconds / (rules.requiredHours * 3600)) * 100)}%` }}
+            />
+          </div>
         </div>
       </div>}
 

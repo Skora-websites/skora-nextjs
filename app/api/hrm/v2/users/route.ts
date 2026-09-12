@@ -287,6 +287,9 @@ export async function PATCH(request: NextRequest) {
         if (lastName !== undefined) updateData.lastName = lastName;
         if (email !== undefined) updateData.email = email;
         if (phone !== undefined) updateData.phone = phone;
+        // Employee self-service fields (profile page contact section)
+        if (body.emergencyContact !== undefined) updateData.emergencyContact = body.emergencyContact;
+        if (body.bankAccount !== undefined) updateData.bankAccount = body.bankAccount;
         if (body.image !== undefined) updateData.image = body.image;
         await hrmUsersService.update(userId, updateData as any);
         auditAction = "update_user";
