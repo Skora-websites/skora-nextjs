@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db/mongo-helper";
 import { requireAuth } from "@/lib/api-auth";
 import { hrmUsersService } from "@/lib/hrm/firestore";
-import { istDateKey } from "@/lib/ist-date";
 
 export async function punchInAction(data: {
   userId: string;
@@ -61,14 +60,12 @@ export async function punchInAction(data: {
   }
 }
 
-export async function punchOutAction(userId: string, dateStr?: string) {
+export async function punchOutAction(userId: string, dateStr: string) {
   try {
     const auth = await requireAuth();
     if (auth instanceof Response) return { success: false, error: "Unauthorized" };
     if (userId !== auth.userId) return { success: false, error: "You can only punch out your own attendance" };
-    // Never trust the client-supplied date for the lookup: the punch-in row is
-    // keyed by the office (IST) calendar date, so resolve it server-side.
-    const success = await recordPunchOut(auth.userId, istDateKey(), auth.tenantId);
+    const success = await recordPunchOut(auth.userId, dateStr, auth.tenantId);
     if (success) {
       revalidatePath("/hrms/attendance");
       revalidatePath("/hrms/employee");
@@ -86,11 +83,7 @@ export async function updateAUXStateAction(userId: string, dateStr: string, newS
     const auth = await requireAuth();
     if (auth instanceof Response) return { success: false, error: "Unauthorized" };
     if (userId !== auth.userId) return { success: false, error: "You can only change your own AUX state" };
-    if (!auth.tenantId) return { success: false, error: "Tenant not resolved. Please sign in again." };
-    // The client's date key can drift (timezone/clock) from the IST key the
-    // record was stored under — resolve "today" server-side to keep the
-    // punch-in → AUX → punch-out chain on the same row.
-    const record = await recordAUXChange(auth.userId, istDateKey(), newState, auth.tenantId);
+    const record = await recordAUXChange(auth.userId, dateStr, newState, auth.tenantId);
     if (!record) return { success: false, error: "No attendance record found for today. Please punch in first." };
     revalidatePath("/hrms/attendance");
     revalidatePath("/hrms/employee");

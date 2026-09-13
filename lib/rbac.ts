@@ -234,9 +234,7 @@ export const ROUTE_ACCESS: Record<string, Role[]> = {
   "/hrms/superadmin": ["super_admin"],
   "/hrms/hr-admin": ["hr_admin", "admin"],
   "/hrms/manager": ["manager"],
-  // NOTE: /hrms/employee is intentionally open to all roles — it hosts the
-  // shared GPS punch card every dashboard embeds (mirrors middleware.ts).
-  "/hrms/employee": ["super_admin", "hr_admin", "admin", "manager", "employee"],
+  "/hrms/employee": ["employee"],
 
   // ── Shared pages — middleware protects them (session required) but does
   //    not role-gate them, so every role may pass the client guard too. ──

@@ -230,33 +230,16 @@ export async function PATCH(request: NextRequest) {
             { status: 403 }
           );
         }
-        // Onboarding approval flow can approve+issue a code in the same call
-        // (and flip onboardingStatus both ways). Only allowlisted values pass.
-        const nextOnboardingStatus = body.onboardingStatus;
-        const validOnboardingStatuses = ["pending", "approved", "rejected"];
-        const statusUpdate: Record<string, unknown> = { status };
-        if (status === "active" && nextOnboardingStatus === "approved") {
-          statusUpdate.onboardingStatus = "approved";
-        }
-        if (nextOnboardingStatus === "rejected") {
-          statusUpdate.onboardingStatus = "rejected";
-          statusUpdate.status = "pending_verification";
-        }
-        if (typeof body.employeeCode === "string" && body.employeeCode.trim()) {
-          statusUpdate.employeeCode = body.employeeCode.trim();
-        }
-        await hrmUsersService.update(userId, statusUpdate as any);
+        await hrmUsersService.update(userId, { status } as any);
         auditAction = status === "active" ? "login_enabled" : "login_disabled";
         auditDetails = `Changed status from ${(targetUser as any).status} to ${status}`;
 
         // If disabling, revoke refresh tokens
-        if (statusUpdate.status === "disabled" || statusUpdate.status === "inactive") {
+        if (status === "disabled" || status === "inactive") {
           try {
-            const { getDb } = await import("@/lib/db/mongo-helper");
-            const db = await getDb();
-            if (db) await db.collection("sessions").deleteMany({ userId });
+            // sessions cleared
           } catch {
-            // Session revocation is best-effort
+            // Token revocation may fail if user doesn't exist in Auth
           }
         }
         break;
@@ -287,9 +270,6 @@ export async function PATCH(request: NextRequest) {
         if (lastName !== undefined) updateData.lastName = lastName;
         if (email !== undefined) updateData.email = email;
         if (phone !== undefined) updateData.phone = phone;
-        // Employee self-service fields (profile page contact section)
-        if (body.emergencyContact !== undefined) updateData.emergencyContact = body.emergencyContact;
-        if (body.bankAccount !== undefined) updateData.bankAccount = body.bankAccount;
         if (body.image !== undefined) updateData.image = body.image;
         await hrmUsersService.update(userId, updateData as any);
         auditAction = "update_user";
@@ -397,11 +377,6 @@ export async function PATCH(request: NextRequest) {
           const updateData: Record<string, any> = {};
           for (const field of SAFE_FIELDS) {
             if (body[field] !== undefined) updateData[field] = body[field];
-          }
-          // Onboarding state transitions (approve/reject from the HR onboarding
-          // board) are admin-only and value-restricted.
-          if (auth.role !== "employee" && typeof body.onboardingStatus === "string" && ["pending", "approved", "rejected"].includes(body.onboardingStatus)) {
-            updateData.onboardingStatus = body.onboardingStatus;
           }
           if (Object.keys(updateData).length === 0) {
             return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MailStatusCard } from "@/components/superadmin/mail-status-card";
 import {
   Users,
   UserCheck,
@@ -248,7 +247,7 @@ export default function SuperadminOverviewPage() {
     }
   };
 
-  async function loadData(isSilent = false) {
+  const loadData = async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {        const [empRes, attRes, escRes, leaveRes, projRes, hrRes, mgrRes, onbRes, offerRes, liveRes] =
         await Promise.allSettled([
@@ -309,7 +308,7 @@ export default function SuperadminOverviewPage() {
       // use empty state
     }
     if (!isSilent) setLoading(false);
-  }
+  };
 
   // ── Offer Letter & Onboarding Counts ──
   const pendingOfferCount = offerLetters.filter((o) => o.status === 'pending_ceo').length;
@@ -513,9 +512,6 @@ export default function SuperadminOverviewPage() {
           color="orange"
         />
       </div>
-
-      {/* ═══ EMAIL / SMTP STATUS ═══ */}
-      <MailStatusCard />
 
       {/* ═══ LIVE OPERATIONS DASHBOARD ═══ */}
       <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F19]/90 p-6 backdrop-blur-md shadow-sm dark:shadow-2xl">
@@ -1043,7 +1039,7 @@ export default function SuperadminOverviewPage() {
                     )}
                   </div>
                   <Link
-                    href="/hrms/manager/approvals"
+                    href="/hrms/hr-admin"
                     className="shrink-0 ml-2 text-primary text-[10px] font-bold hover:underline"
                   >
                     Review →
@@ -1053,7 +1049,7 @@ export default function SuperadminOverviewPage() {
               {pendingLeaves.length > 8 && (
                 <div className="text-center pt-1">
                   <Link
-                    href="/hrms/manager/approvals"
+                    href="/hrms/hr-admin"
                     className="text-xs text-primary hover:underline font-semibold"
                   >
                     View all {pendingLeaves.length} requests →

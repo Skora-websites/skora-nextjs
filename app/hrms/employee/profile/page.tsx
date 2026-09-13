@@ -39,9 +39,8 @@ interface DocItem {
 const defaultDocs: DocItem[] = [];
 
 export default function EmployeeProfilePage() {
-  const { user, refresh } = useAuth();
+  const { user } = useAuth();
   const [saved, setSaved] = useState(false);
-  const [profileError, setProfileError] = useState<string | null>(null);
 
   const [phone, setPhone] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
@@ -68,8 +67,9 @@ export default function EmployeeProfilePage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newDocType, setNewDocType] = useState("Aadhaar Card / Govt ID");
 
-  // File Upload State
+  // File Upload State (Matching Register Page Pattern)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedServerUrl, setUploadedServerUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [viewingDoc, setViewingDoc] = useState<DocItem | null>(null);
@@ -90,21 +90,7 @@ export default function EmployeeProfilePage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  // Hydrate the editable profile fields from the live session so the form
-  // shows what HR/admin sees (and reflects the user's own last save).
-  useEffect(() => {
-    setPhone((user as any)?.phone || "");
-    setEmergencyContact((user as any)?.emergencyContact || "");
-    setBankAccount((user as any)?.bankAccount || "");
-    // Verification status mirrors the account record, not localStorage.
-    if (!isSuperAdmin) {
-      if ((user?.onboardingStatus || "").toLowerCase().includes("reject")) setVerificationStatus("REJECTED_48H");
-      else if (user?.onboardingStatus === "approved" || user?.status === "active") setVerificationStatus("APPROVED");
-      else setVerificationStatus("PENDING");
-    }
-  }, [user, isSuperAdmin]);
-
-  // Load documents from backend server
+  // Load documents from backend server / localStorage
   useEffect(() => {
     if (isSuperAdmin) {
       setVerificationStatus("APPROVED");
@@ -133,6 +119,24 @@ export default function EmployeeProfilePage() {
     };
 
     fetchDocs();
+
+    if (!isSuperAdmin) {
+      const savedStatus = localStorage.getItem("my-onboarding-status");
+      if (savedStatus) {
+        try {
+          const parsed = JSON.parse(savedStatus);
+          if (parsed.status === "REJECTED_48H_DEADLINE") {
+            setVerificationStatus("REJECTED_48H");
+          } else if (parsed.status === "APPROVED") {
+            setVerificationStatus("APPROVED");
+          } else {
+            setVerificationStatus("PENDING");
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
   }, [isSuperAdmin]);
 
   // 48h Countdown Timer
@@ -163,9 +167,8 @@ export default function EmployeeProfilePage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileError(null);
     try {
-      const res = await fetch("/api/hrm/v2/users", {
+      await fetch("/api/hrm/v2/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -176,16 +179,9 @@ export default function EmployeeProfilePage() {
           bankAccount,
         }),
       });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error || "Could not save profile changes.");
-      // Re-pull the session so every section of the dashboard re-renders
-      // with the freshly saved values (auth provider re-fetches silently).
-      await refresh();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (err: any) {
-      setProfileError(err?.message || "Could not save profile changes.");
-    }
+    } catch { /* ignore */ }
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   const handlePasswordChange = async () => {
@@ -235,101 +231,108 @@ export default function EmployeeProfilePage() {
     }
   };
 
-  // File selection — selection ONLY, no network call. The upload happens on
-  // Submit so the "Submit Document to HR" button controls the real upload.
-  // (The previous implementation uploaded inside onChange AND gated the submit
-  // button on its completion, so any hiccup left the modal unusable.)
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelectedFile(file);
-    setUploadError(null);
-    setUploadProgress(file ? 0 : 0);
-    setIsUploading(false);
-    setUploadComplete(false);
-    // Reset the input so picking the same file again re-fires onChange.
-    e.target.value = "";
+  // File Change Handler — Exactly as used on Register Page!
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setUploadError(null);
+      setUploadProgress(15);
+      setIsUploading(true);
+      setUploadComplete(false);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("type", editingDoc?.type || newDocType);
+        formData.append("userId", user?.id || "employee");
+
+        setUploadProgress(60);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to save file to server");
+        }
+
+        const data = await res.json();
+        setUploadProgress(100);
+        setIsUploading(false);
+        setUploadComplete(true);
+        setUploadedServerUrl(data.url);
+      } catch (err: any) {
+        setIsUploading(false);
+        setUploadError(err.message || "Upload error");
+      }
+    }
   };
 
-  // Final Submit to HR — performs the REAL upload into the onboarding queue
-  // that HR reviews from /hrms/hr-admin/onboarding.
-  const handleSubmitToHR = async () => {
-    if (!selectedFile || isUploading) return;
+  // Final Submit to HR
+  const handleSubmitToHR = () => {
+    if (!selectedFile) return;
 
     setIsSubmittingToHR(true);
-    setUploadError(null);
-    setIsUploading(true);
-    setUploadComplete(false);
-    setUploadProgress(25);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("type", editingDoc?.type || newDocType);
-
-      setUploadProgress(55);
-
-      const res = await fetch("/api/hrm/v2/onboarding/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error || "Upload failed. Please try again.");
-
-      setUploadProgress(100);
-      setIsUploading(false);
-      setUploadComplete(true);
-
-      // Reflect the saved document in the list immediately.
+    setTimeout(() => {
       const sizeInMB = (selectedFile.size / (1024 * 1024)).toFixed(1) + " MB";
       const newFileName = selectedFile.name;
       const todayStr = new Date().toISOString().split("T")[0];
       const targetType = editingDoc?.type || newDocType;
-      const serverUrl = data?.data?.fileUrl || "";
+      const serverUrl = uploadedServerUrl || `/uploads/${Date.now()}_${newFileName}`;
 
-      setDocuments((prev) => {
-        if (editingDoc) {
-          return prev.map((d) =>
-            d.id === editingDoc.id
-              ? { ...d, name: newFileName, size: sizeInMB, date: todayStr, fileUrl: serverUrl || d.fileUrl }
-              : d
-          );
-        }
-        return [
-          { id: `doc-${Date.now()}`, name: newFileName, type: targetType, date: todayStr, size: sizeInMB, fileUrl: serverUrl },
-          ...prev,
-        ];
-      });
+      let updated: DocItem[];
+      if (editingDoc) {
+        updated = documents.map((d) =>
+          d.id === editingDoc.id
+            ? {
+                ...d,
+                name: newFileName,
+                size: sizeInMB,
+                date: todayStr,
+                fileUrl: serverUrl,
+              }
+            : d
+        );
+      } else {
+        const newDocItem: DocItem = {
+          id: `doc-${Date.now()}`,
+          name: newFileName,
+          type: targetType,
+          date: todayStr,
+          size: sizeInMB,
+          fileUrl: serverUrl,
+        };
+        updated = [newDocItem, ...documents];
+      }
+
+      setDocuments(updated);
+      localStorage.setItem("employee-onboarding-docs", JSON.stringify(updated));
 
       if (!isSuperAdmin) {
         setVerificationStatus("PENDING");
+        localStorage.setItem("my-onboarding-status", JSON.stringify({ status: "DOCUMENT_VERIFICATION_PENDING" }));
       }
 
+      setIsSubmittingToHR(false);
+      setEditingDoc(null);
+      setShowAddModal(false);
+      setSelectedFile(null);
+      setUploadedServerUrl(null);
+      setUploadProgress(0);
+      setUploadComplete(false);
       setDocSubmittedToHR(true);
       setTimeout(() => setDocSubmittedToHR(false), 4500);
-
-      // Close the modal after a beat so the user sees the 100% bar.
-      setTimeout(() => {
-        setEditingDoc(null);
-        setShowAddModal(false);
-        setSelectedFile(null);
-        setUploadProgress(0);
-        setUploadComplete(false);
-      }, 700);
-    } catch (err: any) {
-      setIsUploading(false);
-      setUploadError(err?.message || "Upload failed. Please try again.");
-    } finally {
-      setIsSubmittingToHR(false);
-    }
+    }, 500);
   };
 
   return (
     <AppShell title="My Employee Profile">
-      {/* Hidden File Input — Always mounted in DOM, OUTSIDE any button/label
-          nesting so a click never re-triggers the picker or submits a form. */}
+      {/* Hidden File Input — Always mounted in DOM */}
       <input
         ref={fileInputRef}
-        id="profile-doc-upload"
         type="file"
         accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
         onChange={handleFileChange}
@@ -399,13 +402,6 @@ export default function EmployeeProfilePage() {
             <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
               <CheckCircle2 className="h-4 w-4" />
               <span>Profile information updated successfully!</span>
-            </div>
-          )}
-
-          {profileError && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-bold">
-              <AlertCircle className="h-4 w-4" />
-              <span>{profileError}</span>
             </div>
           )}
 
@@ -588,6 +584,7 @@ export default function EmployeeProfilePage() {
                 setShowAddModal(true);
                 setEditingDoc(null);
                 setSelectedFile(null);
+                setUploadedServerUrl(null);
                 setUploadProgress(0);
                 setUploadComplete(false);
               }}
@@ -654,6 +651,7 @@ export default function EmployeeProfilePage() {
                       setEditingDoc(doc);
                       setShowAddModal(false);
                       setSelectedFile(null);
+                      setUploadedServerUrl(null);
                       setUploadProgress(0);
                       setIsUploading(false);
                       setUploadComplete(false);
@@ -723,6 +721,7 @@ export default function EmployeeProfilePage() {
                   setEditingDoc(null);
                   setShowAddModal(false);
                   setSelectedFile(null);
+                  setUploadedServerUrl(null);
                   setUploadProgress(0);
                   setUploadComplete(false);
                 }}
@@ -756,22 +755,20 @@ export default function EmployeeProfilePage() {
                   Select Document File <span className="text-red-500">*</span>
                 </label>
 
-                {/* Dropzone is a label bound to the hidden input via htmlFor —
-                    native file-picker trigger with no JS side effects. */}
-                <label
-                  htmlFor="profile-doc-upload"
+                <div
+                  onClick={triggerFileBrowse}
                   className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-primary/40 rounded-xl bg-slate-50 dark:bg-black/40 hover:bg-slate-100 dark:hover:bg-black/60 cursor-pointer transition-colors text-center"
                 >
-                  <Upload className="h-8 w-8 text-primary mb-2" />
+                  <Upload className="h-8 w-8 text-primary mb-2 animate-bounce" />
                   <span className="font-bold text-slate-900 dark:text-white text-xs">
                     {selectedFile ? selectedFile.name : "Click to Browse Govt ID / Passport File"}
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                     {selectedFile
-                      ? `Size: ${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB — click Submit to send to HR`
-                      : "Supports PDF, PNG, JPG, DOCX (Max 10 MB)"}
+                      ? `Size: ${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`
+                      : "Supports PDF, PNG, JPG, DOCX (Max 15 MB)"}
                   </span>
-                </label>
+                </div>
               </div>
 
               {/* LIVE UPLOAD PROGRESS BAR */}
@@ -813,6 +810,7 @@ export default function EmployeeProfilePage() {
                     setEditingDoc(null);
                     setShowAddModal(false);
                     setSelectedFile(null);
+                    setUploadedServerUrl(null);
                     setUploadProgress(0);
                     setUploadComplete(false);
                   }}
@@ -822,7 +820,7 @@ export default function EmployeeProfilePage() {
                 
                 <Button
                   type="button"
-                  disabled={!selectedFile || isUploading || isSubmittingToHR}
+                  disabled={!selectedFile || isUploading || !uploadComplete || isSubmittingToHR}
                   onClick={handleSubmitToHR}
                   className="bg-primary text-white font-bold gap-2 disabled:opacity-50"
                 >

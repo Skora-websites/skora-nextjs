@@ -9,15 +9,6 @@ const ROLE_DASHBOARDS: Record<string, string> = {
   employee: "/hrms/employee",
 };
 
-// Fallback when a role is barred from its default dashboard (e.g. unknown or
-// stale user_role cookie) so nobody gets bounced into access-denied loops.
-const DASHBOARD_FALLBACKS: Record<string, string> = {
-  "/hrms/superadmin": "/hrms/hr-admin",
-  "/hrms/hr-admin": "/hrms/employee",
-  "/hrms/manager": "/hrms/employee",
-  "/hrms/employee": "/hrms/dashboard",
-};
-
 // ── Routes that require authentication ────────────────────
 const protectedHrmsRoutes = [
   "/hrms/dashboard",
@@ -53,26 +44,15 @@ const protectedHrmsRoutes = [
 
 // ── Role-gated route prefixes ─────────────────────────────
 // Only the specified roles (and super_admin who can access everything) may visit these.
-// NOTE: /hrms/employee is intentionally NOT gated here — it hosts the shared
-// GPS punch card every role uses (same treatment as /hrms/attendance).
 const ROLE_GATED_ROUTES: Record<string, string[]> = {
   "/hrms/superadmin": ["super_admin"],
   "/hrms/hr-admin": ["hr_admin", "admin"],
   "/hrms/manager": ["manager"],
+  "/hrms/employee": ["employee"],
 };
 
 // ── Auth routes (redirect logged-in users away) ───────────
 const hrmsAuthRoutes = ["/hrms/login", "/hrms/register", "/hrms/forgot-password"];
-
-function dashboardFor(role: string): string | null {
-  if (!role || !ROLE_DASHBOARDS[role]) return null; // unknown role → let the page resolve client-side
-  const dashboard = ROLE_DASHBOARDS[role];
-  const allowedRoles = ROLE_GATED_ROUTES[dashboard];
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    return DASHBOARD_FALLBACKS[dashboard] || "/hrms/employee";
-  }
-  return dashboard;
-}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -135,8 +115,8 @@ export function middleware(request: NextRequest) {
       (route) => pathname === route || pathname.startsWith(route + "/")
     );
     if (isAuthRoute) {
-      const dashboard = dashboardFor(userRole);
-      if (dashboard) return NextResponse.redirect(new URL(dashboard, request.url));
+      const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
+      return NextResponse.redirect(new URL(dashboard, request.url));
     }
   }
 
@@ -150,9 +130,8 @@ export function middleware(request: NextRequest) {
       }
       return res;
     }
-    const dashboard = dashboardFor(userRole);
-    if (dashboard) return NextResponse.redirect(new URL(dashboard, request.url));
-    return NextResponse.next();
+    const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
+    return NextResponse.redirect(new URL(dashboard, request.url));
   }
 
   // ── 2d. /hrms/dashboard → role-specific dashboard or login ──
@@ -167,11 +146,8 @@ export function middleware(request: NextRequest) {
       }
       return res;
     }
-    const dashboard = dashboardFor(userRole);
-    if (dashboard && pathname !== dashboard) {
-      return NextResponse.redirect(new URL(dashboard, request.url));
-    }
-    return NextResponse.next();
+    const dashboard = ROLE_DASHBOARDS[userRole] || "/hrms/employee";
+    return NextResponse.redirect(new URL(dashboard, request.url));
   }
 
   // ── 2e. Role-gated sub-routes ───────────────────────────
