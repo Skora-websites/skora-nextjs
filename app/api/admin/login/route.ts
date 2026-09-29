@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { setAdminSessionCookie } from "@/lib/auth";
 
 /**
- * Admin login API — authenticates against hrms.users collection.
+ * Admin login API — authenticates against the users collection.
  * Same logic as lib/actions/admin-auth.ts server action.
  */
 export async function POST(request: Request) {
@@ -21,17 +21,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Database not available." }, { status: 503 });
     }
 
-    const user = await db.collection("users").findOne({
-      email: username.toLowerCase(),
-    });
+    // Look up by email OR username, case-insensitive (stored values may not be emails).
+    const identifier = String(username).trim().toLowerCase();
+    const user = await db.collection("users").findOne(
+      {
+        $or: [{ email: identifier }, { username: identifier }],
+      },
+      { collation: { locale: "en", strength: 2 } }
+    );
 
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials. No account found with this email." }, { status: 401 });
     }
 
     const role = (user.role || "").toLowerCase();
-    if (role !== "super_admin" && role !== "hr_admin") {
-      return NextResponse.json({ error: `Access denied. Your role is '${role}'. Only super_admin and hr_admin can access the admin portal.` }, { status: 403 });
+    if (role !== "super_admin" && role !== "admin") {
+      return NextResponse.json({ error: `Access denied. Your role is '${role}'. Only admin and super_admin can access the admin portal.` }, { status: 403 });
     }
 
     if (user.loginStatus === "disabled") {
@@ -50,7 +55,7 @@ export async function POST(request: Request) {
 
     await setAdminSessionCookie();
     return NextResponse.json({ success: true, message: "Authenticated successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
   }
 }

@@ -114,7 +114,7 @@ export async function signInWithMongo(
     email: user.email,
     role: normalizeRoleStrict(user.role),
     displayName: user.displayName || user.firstName || email,
-    mustChangePassword: (user as any).mustChangePassword === true,
+    mustChangePassword: (user as unknown as Record<string, unknown>).mustChangePassword === true,
   };
 }
 

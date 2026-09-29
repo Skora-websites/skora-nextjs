@@ -8,12 +8,12 @@ import {
   Users,
   Sliders,
   Settings,
+  FileText,
+  Search,
   LogOut,
-  ShieldCheck,
   Globe,
   Menu,
   X,
-  Sparkles,
 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,34 +27,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (isLoginPage) return;
-
-    fetch("/api/admin/me", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/me", { cache: "no-store" });
+        const data = await res.json();
+        if (cancelled) return;
         if (!data.authenticated) {
-          window.location.href = "/admin/login";
+          router.replace("/admin/login");
         } else {
           setAuthenticated(true);
         }
-      })
-      .catch(() => {
-        window.location.href = "/admin/login";
-      });
-  }, [isLoginPage]);
+      } catch {
+        if (!cancelled) router.replace("/admin/login");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoginPage, router]);
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
+    router.replace("/admin/login");
   };
 
   if (isLoginPage) {
     return <>{children}</>;
   }
 
+  if (authenticated !== true) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F4F6F1]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#2563EB]/30 border-t-[#2563EB] animate-spin" />
+      </div>
+    );
+  }
+
   const navItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Leads & Enquiries", href: "/admin/leads", icon: Users },
     { label: "Content & Packages", href: "/admin/content", icon: Sliders },
+    { label: "Blog Posts", href: "/admin/blog", icon: FileText },
+    { label: "SEO Settings", href: "/admin/seo", icon: Search },
     { label: "Site Settings", href: "/admin/settings", icon: Settings },
   ];
 
@@ -95,8 +110,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   SK
                 </div>
                 <div>
-                  <h2 className="text-xs font-black text-[#0B1310] uppercase tracking-wider">SKORA DIGITAL</h2>
-                  <span className="text-[10px] font-mono font-bold text-[#2563EB] block">✦ Admin Portal ✦</span>
+                  <h2 className="text-xs font-black text-[#0B1310] uppercase tracking-wider">SKORA</h2>
+                  <span className="text-[10px] font-mono font-bold text-[#2563EB] block">Admin Portal</span>
                 </div>
               </div>
               <Globe size={16} className="text-slate-400 group-hover:text-[#2563EB] transition-colors" />
@@ -109,7 +124,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               MANAGEMENT SUITE
             </span>
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
               const Icon = item.icon;
               return (
                 <Link
@@ -139,7 +156,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <p className="text-xs font-bold text-[#0B1310]">Administrator</p>
-                <p className="text-[10px] font-mono text-slate-500">admin@skora.digital</p>
+                <p className="text-[10px] font-mono text-slate-500">info@skorainfotech.com</p>
               </div>
             </div>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />

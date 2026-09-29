@@ -1,61 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiRoute, toISO } from "@/lib/api-utils";
-import { leadsService } from "@/lib/firestore";
-import { requirePermission, isErrorResponse, type ApiAuthResult } from "@/lib/api-auth";
-import { PERMISSIONS } from "@/lib/rbac";
-import { withErrorHandler, badRequest, notFound, created } from "@/lib/api-handler";
+import { toISO } from "@/lib/api-utils";
+import { leadsService, type FirestoreLead } from "@/lib/firestore";
+import { isSubmittedAdminAuthenticated } from "@/lib/auth";
+import { withErrorHandler, badRequest, created, notFound } from "@/lib/api-handler";
 
-export const GET = apiRoute(
-  async () => {
-    const leads = await leadsService.findMany({
-      orderByField: "createdAt",
-      orderByDirection: "desc",
-    });
+/**
+ * CRM lead collection — admin only.
+ *
+ * Auth uses `isSubmittedAdminAuthenticated`, the same check as /api/leads/[id],
+ * /api/posts and /api/admin/seo: it validates the `admin_session` cookie that
+ * both login flows (the /admin/login server action and POST /api/admin/login)
+ * actually set. The previous `requireAdmin()`/`apiRoute` helpers read a
+ * different cookie that no login flow ever writes, so a signed-in admin was
+ * always answered 401 here and leads submitted through the public forms never
+ * appeared in the dashboard.
+ *
+ * Public submissions do NOT come through this file — they go to
+ * POST /api/contact, which is validated and rate-limited separately.
+ */
 
-    return leads.map((lead) => ({
-      id: lead.id,
-      name: lead.name,
-      company: lead.company,
-      email: lead.email,
-      phone: lead.phone || undefined,
-      status: lead.status,
-      source: lead.source,
-      value: lead.value,
-      owner: "",
-      probability: lead.probability,
-      notes: lead.notes,
-      createdAt: toISO(lead.createdAt),
-      updatedAt: toISO(lead.updatedAt),
-    }));
-  },
-  { permission: "leads.view" as const }
-);
+async function guardAdmin(): Promise<NextResponse | null> {
+  if (await isSubmittedAdminAuthenticated()) return null;
+  return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+}
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
-  const auth = await requirePermission(PERMISSIONS.LEADS_CREATE);
-  if (isErrorResponse(auth)) return auth;
-  const { userId } = auth as ApiAuthResult;
-
-  const body = await request.json();
-
-  if (!body.name || !body.email || !body.company) {
-    return badRequest("Missing required fields: name, email, company");
-  }
-
-  const lead = await leadsService.create({
-    name: body.name,
-    company: body.company,
-    email: body.email,
-    phone: body.phone || null,
-    status: body.status || "new",
-    source: body.source || "other",
-    value: body.value || 0,
-    probability: body.probability || 0,
-    notes: body.notes || null,
-    ownerId: userId,
-  });
-
-  return created({
+/** One response shape for list, create and update. */
+function serialize(lead: FirestoreLead) {
+  return {
     id: lead.id,
     name: lead.name,
     company: lead.company,
@@ -69,58 +40,89 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     notes: lead.notes,
     createdAt: toISO(lead.createdAt),
     updatedAt: toISO(lead.updatedAt),
+  };
+}
+
+export async function GET() {
+  const denied = await guardAdmin();
+  if (denied) return denied;
+
+  const leads = await leadsService.findMany({
+    orderByField: "createdAt",
+    orderByDirection: "desc",
   });
-}, { label: "Leads" });
 
-export const PATCH = withErrorHandler(async (request: NextRequest) => {
-  const auth = await requirePermission(PERMISSIONS.LEADS_EDIT);
-  if (isErrorResponse(auth)) return auth;
+  return NextResponse.json(leads.map(serialize));
+}
 
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  if (!id) {
-    return badRequest("id parameter required");
-  }
+export const POST = withErrorHandler(
+  async (request: NextRequest) => {
+    const denied = await guardAdmin();
+    if (denied) return denied;
 
-  const body = await request.json();
-  const lead = await leadsService.update(id, body);
-  if (!lead) {
-    return notFound("Lead not found");
-  }
+    const body = await request.json();
 
-  return NextResponse.json({
-    data: {
-      id: lead.id,
-      name: lead.name,
-      company: lead.company,
-      email: lead.email,
-      phone: lead.phone || undefined,
-      status: lead.status,
-      source: lead.source,
-      value: lead.value,
-      owner: "",
-      probability: lead.probability,
-      notes: lead.notes,
-      createdAt: toISO(lead.createdAt),
-      updatedAt: toISO(lead.updatedAt),
-    },
-  });
-}, { label: "Leads" });
+    if (!body.name || !body.email || !body.company) {
+      return badRequest("Missing required fields: name, email, company");
+    }
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  const auth = await requirePermission(PERMISSIONS.LEADS_DELETE);
-  if (isErrorResponse(auth)) return auth;
+    const lead = await leadsService.create({
+      name: body.name,
+      company: body.company,
+      email: body.email,
+      phone: body.phone || null,
+      status: body.status || "new",
+      source: body.source || "other",
+      value: body.value || 0,
+      probability: body.probability || 0,
+      notes: body.notes || null,
+      ownerId: "",
+    });
 
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  if (!id) {
-    return badRequest("id parameter required");
-  }
+    return created(serialize(lead));
+  },
+  { label: "Leads" }
+);
 
-  const deleted = await leadsService.delete(id);
-  if (!deleted) {
-    return notFound("Lead not found");
-  }
+export const PATCH = withErrorHandler(
+  async (request: NextRequest) => {
+    const denied = await guardAdmin();
+    if (denied) return denied;
 
-  return NextResponse.json({ success: true });
-}, { label: "Leads" });
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return badRequest("id parameter required");
+    }
+
+    const body = await request.json();
+    const lead = await leadsService.update(id, body);
+    if (!lead) {
+      return notFound("Lead not found");
+    }
+
+    return NextResponse.json({ data: serialize(lead) });
+  },
+  { label: "Leads" }
+);
+
+export const DELETE = withErrorHandler(
+  async (request: NextRequest) => {
+    const denied = await guardAdmin();
+    if (denied) return denied;
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return badRequest("id parameter required");
+    }
+
+    const deleted = await leadsService.delete(id);
+    if (!deleted) {
+      return notFound("Lead not found");
+    }
+
+    return NextResponse.json({ success: true });
+  },
+  { label: "Leads" }
+);

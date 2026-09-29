@@ -9,7 +9,6 @@ import {
   MessageSquare,
   TrendingUp,
   ArrowUpRight,
-  ShieldCheck,
   Mail,
   Phone,
   Sparkles,
@@ -56,12 +55,9 @@ export default function AdminDashboardPage() {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E1E6DF]">
         <div>
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EFF6FF] border border-[#2563EB]/20 text-[11px] font-mono font-bold text-[#2563EB] mb-2">
-            <Sparkles size={12} />
-            <span>✦ SKORA INFO SYSTEM OVERVIEW ✦</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black uppercase text-[#0B1310] tracking-tight">
-            EXECUTIVE DASHBOARD
+          <span className="kicker mb-2">Overview</span>
+          <h1 className="display-hero text-3xl sm:text-5xl text-[#0B1310]">
+            Executive <span className="display-accent text-accent">dashboard.</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
             Manage inquiries, update site configurations, and monitor client acquisition.

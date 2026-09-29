@@ -26,9 +26,9 @@ export default function AdminLoginPage() {
         return;
       }
 
-      window.location.href = "/admin";
-    } catch (err: any) {
-      setError(err?.message || "Authentication failed. Please try again.");
+      router.push("/admin");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Authentication failed. Please try again.");
       setLoading(false);
     }
   };
@@ -52,13 +52,10 @@ export default function AdminLoginPage() {
               <ShieldCheck size={32} />
             </div>
 
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EFF6FF] border border-[#2563EB]/20 text-[11px] font-mono font-bold text-[#2563EB]">
-              <Sparkles size={12} />
-              <span>✦ SKORA INFO ADMIN PORTAL ✦</span>
-            </div>
+            <span className="kicker">Admin portal</span>
 
-            <h1 className="text-2xl sm:text-3xl font-black uppercase text-[#0B1310] tracking-tight">
-              ADMINISTRATOR LOGIN
+            <h1 className="display-hero text-3xl sm:text-4xl text-[#0B1310]">
+              Welcome <span className="display-accent text-accent">back.</span>
             </h1>
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
               Enter credentials to access lead analytics, database controls, and site configurations.

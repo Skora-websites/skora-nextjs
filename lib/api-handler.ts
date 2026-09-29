@@ -53,11 +53,10 @@ export function conflict(message: string) {
 // ── Error handler wrapper ────────────────────────────
 
 // Route handler type compatible with Next.js App Router
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RouteHandler = (
   request: NextRequest,
   context: { params: Promise<Record<string, string>> }
-) => Promise<any>;
+) => Promise<Response>;
 
 type ErrorHandlerOptions = {
   /** Route label for error logging */

@@ -5,7 +5,7 @@ export async function POST() {
   try {
     await clearAdminSessionCookie();
     return NextResponse.json({ success: true, message: "Logged out successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Logout failed" }, { status: 500 });
   }
 }

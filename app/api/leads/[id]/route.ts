@@ -26,7 +26,7 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true, lead: updatedLead });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to update lead status" }, { status: 500 });
   }
 }
@@ -48,7 +48,7 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to delete lead" }, { status: 500 });
   }
 }
