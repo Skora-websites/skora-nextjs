@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Save, CheckCircle2, Sparkles, Layers, Stethoscope, Plus, Trash2 } from "lucide-react";
+import { Save, CheckCircle2, Layers, Stethoscope, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface PackageItem {

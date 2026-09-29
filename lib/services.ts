@@ -404,7 +404,7 @@ export const SERVICES: ServicePageData[] = [
     slug: "cloud-services",
     pill: "Cloud and DevOps",
     navName: "Cloud Services & DevOps",
-    navDesc: "AWS/Azure migrations, 99.99% uptime & CI/CD pipelines.",
+    navDesc: "AWS/Azure migrations, monitoring, backups & CI/CD pipelines.",
     icon: Cloud,
     title: "Reliable cloud setup with monitoring and backups",
     lead: "AWS and Azure configuration, deployments, and documentation with alerts, backups, and cost notes your team can follow.",

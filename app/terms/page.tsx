@@ -30,7 +30,7 @@ const clauses = [
   {
     num: "05.",
     title: "Service Level Agreement (SLA) & Uptime Guarantee",
-    body: "For managed cloud hosting and enterprise retainer contracts, SKORA maintains a 99.99% uptime target. Scheduled maintenance windows will be communicated at least 48 hours in advance. Emergency hotfixes are deployed without notice to protect security integrity.",
+    body: "For managed cloud hosting and enterprise retainer contracts, SKORA targets the uptime level agreed in your service agreement. Scheduled maintenance windows will be communicated at least 48 hours in advance. Emergency hotfixes are deployed without notice to protect security integrity.",
   },
   {
     num: "06.",

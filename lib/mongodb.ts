@@ -68,7 +68,6 @@ async function resolveSRV(srvUri: string): Promise<string> {
     let directUri = "mongodb://" + credentials + "@" + hosts + "/" + dbPath;
     if (mergedParams) directUri += "?" + mergedParams;
 
-    console.log("[MongoDB] Resolved SRV to", srvRecords.length, "direct hosts");
     return directUri;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -108,7 +107,6 @@ async function connectWithRetry(retries = 2): Promise<MongoClient | null> {
     try {
       const client = new MongoClient(resolvedUri, clientOptions);
       await client.connect();
-      console.log("[MongoDB] Connected successfully (attempt " + (attempt + 1) + ")");
       return client;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -118,9 +116,7 @@ async function connectWithRetry(retries = 2): Promise<MongoClient | null> {
       }
     }
   }
-  console.error("[MongoDB] All connection attempts failed.");
-  console.error("[MongoDB] If this is 'tlsv1 alert internal error', your IP may not be whitelisted in MongoDB Atlas.");
-  console.error("[MongoDB] Go to cloud.mongodb.com → Network Access → Add IP Address.");
+  console.error("[MongoDB] All connection attempts failed — check MONGODB_URI and that mongod is running.");
   return null;
 }
 

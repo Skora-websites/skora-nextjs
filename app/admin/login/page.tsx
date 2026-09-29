@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Lock, User, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
+import { ShieldCheck, Lock, User, ArrowRight, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { loginAdminAction } from "@/lib/actions/admin-auth";
+import { inputClassIcon, labelClassIcon } from "@/components/admin/styles";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -76,7 +77,7 @@ export default function AdminLoginPage() {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-600 block">
+              <label className={labelClassIcon}>
                 Email
               </label>
               <div className="relative">
@@ -87,13 +88,13 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl pl-10 pr-4 py-3 text-sm text-[#0B1310] focus:outline-none focus:border-[#2563EB] transition-colors font-mono"
+                  className={inputClassIcon}
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-600 block">
+              <label className={labelClassIcon}>
                 Password
               </label>
               <div className="relative">
@@ -104,7 +105,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl pl-10 pr-4 py-3 text-sm text-[#0B1310] focus:outline-none focus:border-[#2563EB] transition-colors font-mono"
+                  className={inputClassIcon}
                 />
               </div>
             </div>

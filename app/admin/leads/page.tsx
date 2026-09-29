@@ -9,23 +9,15 @@ import {
   Trash2,
   Eye,
   X,
-  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  adminTableClass,
+  searchInputClass,
+  searchSelectClass,
+} from "@/components/admin/styles";
 
-interface Lead {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  company?: string;
-  service: string;
-  budget?: string;
-  message: string;
-  status: "New" | "Contacted" | "In Progress" | "Closed";
-  source: string;
-  createdAt: string;
-}
+import type { Lead } from "@/lib/lead";
 
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -161,7 +153,7 @@ export default function AdminLeadsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by client name, email, phone, or service..."
-            className="w-full bg-white border border-[#E1E6DF] rounded-xl pl-10 pr-4 py-3 text-sm text-[#0B1310] focus:outline-none focus:border-[#2563EB] transition-colors shadow-sm"
+            className={searchInputClass}
           />
         </div>
 
@@ -171,7 +163,7 @@ export default function AdminLeadsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-white border border-[#E1E6DF] rounded-xl pl-10 pr-4 py-3 text-sm text-[#0B1310] focus:outline-none focus:border-[#2563EB] transition-colors cursor-pointer appearance-none font-mono shadow-sm"
+            className={searchSelectClass}
           >
             <option value="ALL">ALL STATUSES ({leads.length})</option>
             <option value="New">NEW ({leads.filter((l) => l.status === "New").length})</option>
@@ -192,7 +184,7 @@ export default function AdminLeadsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-700">
+            <table className={adminTableClass}>
               <thead className="bg-[#F4F6F1] border-b border-[#E1E6DF] text-slate-600 uppercase font-mono tracking-wider">
                 <tr>
                   <th className="p-4 sm:p-5 font-bold">Client / Company</th>

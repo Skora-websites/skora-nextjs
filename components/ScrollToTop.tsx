@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { gsap, ScrollTrigger, ScrollSmoother } from "@/lib/gsap";
+import { ScrollTrigger, ScrollSmoother } from "@/lib/gsap";
 
 /**
  * On every route change: force manual history scroll restoration, snap back to

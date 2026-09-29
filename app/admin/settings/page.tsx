@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Save, CheckCircle2, AlertCircle, Lock, Phone, Sparkles } from "lucide-react";
+import { Save, CheckCircle2, AlertCircle, Phone } from "lucide-react";
+import { inputClassLg, labelClassLg } from "@/components/admin/styles";
+import { DEFAULT_SITE_CORE } from "@/lib/site-defaults";
 
 export default function AdminSettingsPage() {
-  const [phone, setPhone] = useState("+44 07756083473");
-  const [email, setEmail] = useState("info@skorainfotech.com");
-  const [healthcareEmail, setHealthcareEmail] = useState("info@skorainfotech.com");
-  const [address, setAddress] = useState("5 Market Square, High Street, Uxbridge, UB8 1LH, London");
-  const [responseGuarantee, setResponseGuarantee] = useState("Rapid 4-Hour Response Guarantee");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState(DEFAULT_SITE_CORE.phone);
+  const [email, setEmail] = useState(DEFAULT_SITE_CORE.email);
+  const [healthcareEmail, setHealthcareEmail] = useState(DEFAULT_SITE_CORE.email);
+  const [address, setAddress] = useState(DEFAULT_SITE_CORE.address);
+  const [responseGuarantee, setResponseGuarantee] = useState(DEFAULT_SITE_CORE.responseGuarantee);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -36,11 +36,6 @@ export default function AdminSettingsPage() {
     setError("");
     setSuccess(false);
 
-    if (newPassword && newPassword !== confirmPassword) {
-      setError("New passwords do not match.");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -53,7 +48,6 @@ export default function AdminSettingsPage() {
           healthcareEmail,
           address,
           responseGuarantee,
-          newPassword: newPassword || undefined,
         }),
       });
 
@@ -66,8 +60,6 @@ export default function AdminSettingsPage() {
 
       setLoading(false);
       setSuccess(true);
-      setNewPassword("");
-      setConfirmPassword("");
       setTimeout(() => setSuccess(false), 4000);
     } catch {
       setError("Network error.");
@@ -82,10 +74,10 @@ export default function AdminSettingsPage() {
         <div>
           <span className="kicker mb-2">Configuration</span>
           <h1 className="display-hero text-3xl sm:text-5xl text-[#0B1310]">
-            Site <span className="display-accent text-accent">&amp; security.</span>
+            Site <span className="display-accent text-accent">&amp; contact details.</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
-            Update business contact numbers, email addresses, and admin security password.
+            Update the business contact details shown in the footer, contact page and header actions.
           </p>
         </div>
       </div>
@@ -101,7 +93,7 @@ export default function AdminSettingsPage() {
         {success && (
           <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold text-xs flex items-center gap-2">
             <CheckCircle2 size={18} className="text-emerald-600" />
-            <span>Settings and security credentials saved successfully to database!</span>
+            <span>Settings saved to database!</span>
           </div>
         )}
 
@@ -119,97 +111,70 @@ export default function AdminSettingsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs font-mono">
             <div className="space-y-1.5">
-              <label className="text-slate-600 font-bold uppercase block">Phone / WhatsApp Number</label>
+              <label className={labelClassLg}>Phone / WhatsApp Number</label>
               <input
                 type="text"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
+                className={inputClassLg}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-slate-600 font-bold uppercase block">Main Contact Email</label>
+              <label className={labelClassLg}>Main Contact Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
+                className={inputClassLg}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-slate-600 font-bold uppercase block">Healthcare Division Email</label>
+              <label className={labelClassLg}>Healthcare Division Email</label>
               <input
                 type="email"
                 required
                 value={healthcareEmail}
                 onChange={(e) => setHealthcareEmail(e.target.value)}
-                className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
+                className={inputClassLg}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-slate-600 font-bold uppercase block">Response Time Guarantee</label>
+              <label className={labelClassLg}>Response Time Guarantee</label>
               <input
                 type="text"
                 required
                 value={responseGuarantee}
                 onChange={(e) => setResponseGuarantee(e.target.value)}
-                className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
+                className={inputClassLg}
               />
             </div>
 
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-slate-600 font-bold uppercase block">Office Location Address</label>
+              <label className={labelClassLg}>Office Location Address</label>
               <input
                 type="text"
                 required
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
+                className={inputClassLg}
               />
             </div>
           </div>
         </div>
 
-        {/* SECURITY CREDENTIALS */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E1E6DF] space-y-6 shadow-xl">
-          <div className="flex items-center gap-3 pb-4 border-b border-[#E1E6DF]">
-            <div className="p-2.5 rounded-xl bg-[#EFF6FF] text-[#2563EB] border border-[#2563EB]/20">
-              <Lock size={20} />
-            </div>
-            <div>
-              <h2 className="text-lg font-black uppercase text-[#0B1310]">CHANGE ADMIN PASSWORD</h2>
-              <p className="text-xs text-slate-500 font-medium">Leave blank if you do not wish to change the password.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs font-mono">
-            <div className="space-y-1.5">
-              <label className="text-slate-600 font-bold uppercase block">New Admin Password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Leave blank to keep current password"
-                className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-slate-600 font-bold uppercase block">Confirm New Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm password"
-                className="w-full bg-[#F4F6F1] border border-[#E1E6DF] rounded-xl px-4 py-3 text-[#0B1310] font-bold focus:outline-none focus:border-[#2563EB]"
-              />
-            </div>
-          </div>
+        {/* ADMIN PASSWORD — handled outside the app, on purpose */}
+        <div className="p-6 rounded-3xl bg-[#F4F6F1] border border-[#E1E6DF] text-xs font-medium text-slate-600 space-y-1.5">
+          <h2 className="text-sm font-black uppercase text-[#0B1310]">Admin password</h2>
+          <p>
+            Credentials are rotated with <span className="font-mono font-bold">npm run db:seed-admin</span> (see the
+            README) rather than from this screen, so no password is ever stored in site content or echoed back by the
+            API.
+          </p>
         </div>
 
         <div className="flex justify-end">

@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { toISO } from "@/lib/api-utils";
-import { leadsService, type FirestoreLead } from "@/lib/firestore";
+import { createLead, deleteLead, getLeads, updateLeadStatus, type Lead } from "@/lib/db";
 import { isSubmittedAdminAuthenticated } from "@/lib/auth";
 import { withErrorHandler, badRequest, created, notFound } from "@/lib/api-handler";
 
 /**
- * CRM lead collection — admin only.
+ * Lead list + create — admin only.
  *
  * Auth uses `isSubmittedAdminAuthenticated`, the same check as /api/leads/[id],
  * /api/posts and /api/admin/seo: it validates the `admin_session` cookie that
  * both login flows (the /admin/login server action and POST /api/admin/login)
- * actually set. The previous `requireAdmin()`/`apiRoute` helpers read a
- * different cookie that no login flow ever writes, so a signed-in admin was
- * always answered 401 here and leads submitted through the public forms never
- * appeared in the dashboard.
+ * actually set. An earlier wrapper authenticated against a different session
+ * that no login flow ever writes, so a signed-in admin was always answered
+ * 401 here and leads submitted through the public forms never appeared in the
+ * dashboard.
  *
  * Public submissions do NOT come through this file — they go to
  * POST /api/contact, which is validated and rate-limited separately.
+ * Updates and deletes live on /api/leads/[id].
  */
 
 async function guardAdmin(): Promise<NextResponse | null> {
@@ -24,22 +24,20 @@ async function guardAdmin(): Promise<NextResponse | null> {
   return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
 }
 
-/** One response shape for list, create and update. */
-function serialize(lead: FirestoreLead) {
+/** One response shape for list and create — matches `lib/lead.ts`. */
+function serialize(lead: Lead) {
   return {
     id: lead.id,
-    name: lead.name,
-    company: lead.company,
+    fullName: lead.fullName,
     email: lead.email,
-    phone: lead.phone || undefined,
+    phone: lead.phone,
+    company: lead.company,
+    service: lead.service,
+    budget: lead.budget,
+    message: lead.message,
     status: lead.status,
     source: lead.source,
-    value: lead.value,
-    owner: "",
-    probability: lead.probability,
-    notes: lead.notes,
-    createdAt: toISO(lead.createdAt),
-    updatedAt: toISO(lead.updatedAt),
+    createdAt: lead.createdAt,
   };
 }
 
@@ -47,12 +45,8 @@ export async function GET() {
   const denied = await guardAdmin();
   if (denied) return denied;
 
-  const leads = await leadsService.findMany({
-    orderByField: "createdAt",
-    orderByDirection: "desc",
-  });
-
-  return NextResponse.json(leads.map(serialize));
+  const leads = await getLeads();
+  return NextResponse.json({ leads: leads.map(serialize) });
 }
 
 export const POST = withErrorHandler(
@@ -62,22 +56,25 @@ export const POST = withErrorHandler(
 
     const body = await request.json();
 
-    if (!body.name || !body.email || !body.company) {
-      return badRequest("Missing required fields: name, email, company");
+    if (!body.fullName || !body.email) {
+      return badRequest("Missing required fields: fullName, email");
     }
 
-    const lead = await leadsService.create({
-      name: body.name,
-      company: body.company,
-      email: body.email,
-      phone: body.phone || null,
-      status: body.status || "new",
-      source: body.source || "other",
-      value: body.value || 0,
-      probability: body.probability || 0,
-      notes: body.notes || null,
-      ownerId: "",
+    const lead = await createLead({
+      fullName: String(body.fullName),
+      email: String(body.email),
+      phone: String(body.phone || ""),
+      company: body.company ? String(body.company) : undefined,
+      service: String(body.service || ""),
+      budget: body.budget ? String(body.budget) : undefined,
+      message: String(body.message || ""),
+      source: String(body.source || "Admin dashboard"),
     });
+
+    if (body.status && body.status !== lead.status) {
+      const updated = await updateLeadStatus(lead.id, body.status);
+      return created(serialize(updated ?? lead));
+    }
 
     return created(serialize(lead));
   },
@@ -96,7 +93,11 @@ export const PATCH = withErrorHandler(
     }
 
     const body = await request.json();
-    const lead = await leadsService.update(id, body);
+    if (!body.status) {
+      return badRequest("status field required");
+    }
+
+    const lead = await updateLeadStatus(id, body.status);
     if (!lead) {
       return notFound("Lead not found");
     }
@@ -117,7 +118,7 @@ export const DELETE = withErrorHandler(
       return badRequest("id parameter required");
     }
 
-    const deleted = await leadsService.delete(id);
+    const deleted = await deleteLead(id);
     if (!deleted) {
       return notFound("Lead not found");
     }

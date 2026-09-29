@@ -10,6 +10,7 @@
     "db:start": "./scripts/local-mongo.sh start",
     "db:stop": "./scripts/local-mongo.sh stop",
     "db:status": "./scripts/local-mongo.sh status",
+    "db:logs": "./scripts/local-mongo.sh logs",
     "db:seed-admin": "node scripts/seed-admin.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

@@ -1,37 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { DEFAULT_PACKAGES } from "@/lib/site-defaults";
 import {
-  Activity,
   ArrowRight,
   ArrowLeft,
-  Award,
   BarChart3,
-  Calendar,
   CheckCircle2,
   ChevronRight,
-  ChevronLeft,
-  Clock,
-  ExternalLink,
-  Globe,
   Heart,
-  Layers,
-  MapPin,
-  Megaphone,
-  MessageSquare,
-  Phone,
-  Shield,
   ShieldCheck,
-  Sparkles,
-  Star,
   UserCheck,
-  Users,
-  Video,
-  Zap,
   X,
   Stethoscope,
-  BookOpen,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import Card3D from "@/components/Card3D";
@@ -411,7 +392,7 @@ const doctorServices = [
     title: "Custom Medical Websites",
     shortDesc: "High-speed, HIPAA-compliant clinic websites optimized for appointment conversions and mobile speed.",
     image: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=600&q=80",
-    stats: "3.2x Patient Calls",
+    stats: "Appointment-first builds",
     features: ["HIPAA Compliant", "Mobile First", "Instant Booking"],
     fullStrategy: "We build medical websites specifically tailored to healthcare providers. Your site will feature online appointment booking, doctor bio highlights, patient review showcases, and mobile-first loading speeds under 1.2 seconds.",
     deliverables: ["Custom UI/UX Design", "Online Scheduling Integration", "SSL & HIPAA Compliance Check", "Speed Optimization (95+ Lighthouse score)"],
@@ -420,11 +401,11 @@ const doctorServices = [
     id: "gmb-seo",
     badge: "✦ GMB Local SEO ✦",
     title: "Google My Business (GMB)",
-    shortDesc: "Rank #1 on Google Maps for high-intent patient queries in your immediate local clinic radius.",
+    shortDesc: "Show up in the Google Maps local pack for high-intent patient searches around your clinic.",
     image: "https://images.unsplash.com/photo-1581056771107-24ca5f033842?auto=format&fit=crop&w=600&q=80",
-    stats: "#1 Local Map Pack",
+    stats: "Local Map Pack SEO",
     features: ["Map Pack Boost", "Review Management", "Local Citations"],
-    fullStrategy: "90% of patients search 'doctor near me' on Google Maps. We optimize your GMB profile, build local medical citations, automate review collections, and track call volume weekly.",
+    fullStrategy: "Most patients start with a 'doctor near me' search on Google Maps. We optimize your GMB profile, build local medical citations, automate review collections, and track call volume weekly.",
     deliverables: ["Profile Audit & Verification", "Review Generation System", "Local Medical Keyword Targeting", "15-Day Rankings Report"],
   },
   {
@@ -444,7 +425,7 @@ const doctorServices = [
     title: "Meta Ads & Google PPC",
     shortDesc: "Targeted lead generation campaigns driving instant patient inquiries for specific treatments.",
     image: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=600&q=80",
-    stats: "₹180 / Verified Lead",
+    stats: "Cost-per-lead reporting",
     features: ["High Intent Ads", "Conversion Tracking", "WhatsApp Leads"],
     fullStrategy: "Run hyper-targeted ad campaigns for specific procedures (e.g., Dental Implants, IVF, Hair Transplant, Orthopedics). Inquiries land directly on your clinic WhatsApp or CRM.",
     deliverables: ["Ad Creative & Copywriting", "WhatsApp & Call Tracking", "A/B Testing Campaigns", "Daily Lead Dashboard"],
@@ -453,9 +434,9 @@ const doctorServices = [
     id: "maps-seo",
     badge: "✦ Local Dominance ✦",
     title: "Google Maps & Local SEO",
-    shortDesc: "Dominating local search results so nearby patients find your practice before any competitor.",
+    shortDesc: "Local search visibility so nearby patients find your practice before they reach a competitor.",
     image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=600&q=80",
-    stats: "+320% Traffic Growth",
+    stats: "Local traffic growth",
     features: ["Schema Markup", "Geo-Targeted Content", "Local Backlinks"],
     fullStrategy: "We optimize your website's local schema markup, create localized condition treatment pages, and build authoritative backlinks from medical directories.",
     deliverables: ["Medical Schema Architecture", "Condition Page Copywriting", "Medical Directory Submissions", "Rank Tracking"],
@@ -466,7 +447,7 @@ const doctorServices = [
     title: "Patient Engagement",
     shortDesc: "Automated SMS, WhatsApp & Email reminder campaigns for follow-up appointments and health checkups.",
     image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80",
-    stats: "88% Patient Recall",
+    stats: "Patient recall automation",
     features: ["Automated Reminders", "WhatsApp Broadcasts", "Follow-up Sequences"],
     fullStrategy: "Never lose a patient to missed follow-ups. Our automated WhatsApp workflows send appointment reminders, annual checkup alerts, and post-treatment care instructions.",
     deliverables: ["WhatsApp API Integration", "Automated SMS Workflows", "Patient Recall Sequences", "No-Show Reduction Metrics"],
@@ -486,133 +467,20 @@ const doctorServices = [
     id: "lead-generation",
     badge: "✦ Lead Pipeline ✦",
     title: "Appointment Lead Gen",
-    shortDesc: "Guaranteed high-intent patient booking requests delivered straight to your clinic receptionist.",
+    shortDesc: "High-intent patient booking requests routed straight to your clinic receptionist.",
     image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=600&q=80",
-    stats: "50+ Leads / Month",
+    stats: "Lead intake workflow",
     features: ["Pre-screened Leads", "Receptionist Alerts", "Real-time Lead Tracker"],
     fullStrategy: "A complete end-to-end patient funnel. From ad click to WhatsApp intake form to receptionist notification, every lead is qualified before reaching your desk.",
     deliverables: ["Dedicated Intake Funnel", "Instant SMS/WhatsApp Notification", "Receptionist Training Guide", "Weekly Lead Audit"],
   },
 ];
 
-const packages = [
-  {
-    name: "Basic Growth Plan",
-    price: "₹5,000",
-    period: "+ GST / month",
-    popular: false,
-    subtitle: "Essential local visibility for solo doctors & clinics",
-    features: [
-      "Custom 5-Page Doctor Website",
-      "Google My Business (GMB) Setup",
-      "8 Social Media Posts / month",
-      "Basic Local SEO Setup",
-      "Monthly Growth Report",
-    ],
-  },
-  {
-    name: "Standard Growth Plan",
-    price: "₹15,000",
-    period: "+ GST / month",
-    popular: true,
-    subtitle: "Our most popular package for growing medical practices",
-    features: [
-      "Custom 10-Page Medical Website + Booking",
-      "GMB Profile Optimization & Map Rank",
-      "14 Posts + 2 Reels / month",
-      "High-Intent Local SEO Keywords",
-      "Report Dispatched Every 15 Days",
-      "Priority Clinical Support",
-    ],
-  },
-  {
-    name: "Premium Growth Plan",
-    price: "₹32,000",
-    period: "+ GST / month",
-    popular: false,
-    subtitle: "Complete digital dominance for multi-specialty centers",
-    features: [
-      "Facebook, Instagram, LinkedIn & GMB",
-      "18 Posts + 4 Reels / month",
-      "Dedicated Medical Content Team",
-      "Weekly Analytical Dispatches",
-      "Advanced Local SEO & Maps Ads",
-      "24/7 Dedicated Account Manager",
-    ],
-  },
-];
-
-const doctorReviews = [
-  {
-    quote: "SKORA transformed our cardiology practice online. Our Google Maps calls tripled in 60 days, and our website conversion rate doubled.",
-    doctor: "Dr. Rajiv Sharma, MD",
-    specialty: "Cardiologist & Clinic Director",
-    city: "Mumbai",
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    quote: "Working with a team that strictly focuses on healthcare made all the difference. They manage our website, reels, and patient leads effortlessly.",
-    doctor: "Dr. Ananya Patel",
-    specialty: "Dermatology Specialist",
-    city: "Delhi NCR",
-    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    quote: "Our orthopedic surgical leads increased by 340% within 3 months of launching our Meta PPC campaigns with SKORA.",
-    doctor: "Dr. Vikramaditya Rao",
-    specialty: "Orthopedic Surgeon & Director",
-    city: "Bengaluru",
-    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    quote: "The patient recall sequences on WhatsApp cut our no-shows down to almost zero. Best healthcare digital agency in India.",
-    doctor: "Dr. Meera Nambiar",
-    specialty: "IVF & Gynecology Specialist",
-    city: "Kochi",
-    avatar: "https://images.unsplash.com/photo-1594824813566-88855ce78961?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    quote: "Our dental clinic ranks #1 on Google Maps for all high-intent dental implant keywords in South Mumbai.",
-    doctor: "Dr. Sidharth Roy",
-    specialty: "Dental Surgeon & Clinic Owner",
-    city: "Mumbai",
-    avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    quote: "Professional, HIPAA-conscious, and extremely prompt with 15-day reporting dispatches. Highly recommended for clinicians.",
-    doctor: "Dr. Priya Malhotra",
-    specialty: "Pediatric Specialist",
-    city: "Hyderabad",
-    avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=300&q=80",
-  },
-];
-
-const doctorNews = [
-  {
-    title: "How AI Search (GEO) Is Redefining Patient Acquisition in 2026",
-    date: "August 2026",
-    summary: "Patients are using ChatGPT & AI Overviews to find doctors. Discover how to optimize your clinic website for AI search engines.",
-    fullContent: "Generative Engine Optimization (GEO) is replacing traditional Google SEO for healthcare. Patients now ask AI assistants questions like 'Who is the best orthopedic surgeon for knee replacement near me with high reviews?' We break down the 5 steps to ensure your clinic is indexed by AI engines.",
-  },
-  {
-    title: "5 Medical Website Mistakes Costing You 40% of Appointments",
-    date: "July 2026",
-    summary: "Slow mobile loading, lack of online booking, and missing GMB integration are driving patients to competitors.",
-    fullContent: "Studies show 74% of patients leave a doctor website if it takes longer than 3 seconds to load. In this deep dive, we showcase how adding instant WhatsApp booking and doctor video intros increases appointment conversions by 40%.",
-  },
-  {
-    title: "Meta Ads vs. Google Search PPC: Which Yields Higher Doctor ROI?",
-    date: "June 2026",
-    summary: "A comparative ROI breakdown of Meta social ads versus Google PPC search ads for specialized medical treatments.",
-    fullContent: "For urgent care and specialized surgeries, Google PPC captures immediate high-intent searchers. For elective procedures like cosmetic dentistry or dermatology, Meta Ads generate higher overall volume. We analyze how combining both yields optimal CPL.",
-  },
-];
-
+const packages = DEFAULT_PACKAGES;
 export default function HealthcarePortal() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState("");
   const [activeCardModal, setActiveCardModal] = useState<typeof doctorServices[0] | null>(null);
-  const [activeNewsModal, setActiveNewsModal] = useState<typeof doctorNews[0] | null>(null);
   const [packageModalOpen, setPackageModalOpen] = useState<typeof packages[0] | null>(null);
   const [displayedPackages, setDisplayedPackages] = useState(packages);
 
@@ -700,10 +568,10 @@ export default function HealthcarePortal() {
   };
 
   const trustPills = [
-    { icon: "🏆", label: "350+ Clinics Partnered" },
-    { icon: "📍", label: "#1 Google Maps Ranking" },
-    { icon: "⚡", label: "₹180 / Verified Lead" },
-    { icon: "🔒", label: "HIPAA Compliant" },
+    { icon: "🏆", label: "Healthcare growth programs" },
+    { icon: "📍", label: "Google Maps local SEO" },
+    { icon: "⚡", label: "Cost-per-lead tracking" },
+    { icon: "🔒", label: "Privacy-first delivery" },
   ];
 
   return (
@@ -773,9 +641,9 @@ export default function HealthcarePortal() {
               {/* Stats strip */}
               <div className="hero-fade-up flex flex-wrap items-center gap-x-10 gap-y-4 pt-4 border-t border-line">
                 {[
-                  { val: "+320%", label: "Avg. Patient Lead Growth" },
-                  { val: "350+", label: "Clinics Partnered", green: true },
-                  { val: "99.4%", label: "Client Retention Rate" },
+                  { val: "Daily", label: "Lead alerts", green: true },
+                  { val: "15 days", label: "Reporting cadence" },
+                  { val: "Weekly", label: "Campaign reviews" },
                 ].map((s, i) => (
                   <div key={i}>
                     <div className={`text-3xl font-extrabold ${s.green ? "text-emerald-400" : "text-ink"}`}>{s.val}</div>
@@ -900,7 +768,7 @@ export default function HealthcarePortal() {
           {[
             {
               icon: Stethoscope,
-              title: "100% Medical Focus",
+              title: "Medical-Only Focus",
               desc: "We understand doctor specialties, medical terminologies, ethical advertising guidelines, and patient decision triggers.",
             },
             {
@@ -1006,101 +874,8 @@ export default function HealthcarePortal() {
         </div>
       </section>
 
-      {/* FRAMER ORAL CARE STYLE LIGHT DOCTOR REVIEWS MARQUEE CAROUSEL */}
-      <section id="testimonials" className="py-20 bg-surface/60 border-y border-line my-8 overflow-hidden w-full relative z-10">
-        <AnimatedSection className="text-center max-w-3xl mx-auto mb-14 px-4">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
-            Verified Doctor Testimonials /
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-ink">
-            WHAT DOCTORS SAY ABOUT US
-          </h2>
-          <p className="mt-4 text-sub text-base font-medium">
-            Hear from clinic directors and specialists across India who scaled their practices with SKORA.
-          </p>
-        </AnimatedSection>
-
-        {/* Edge-to-Edge Continuous Infinite Sliding Marquee */}
-        <div className="relative w-full overflow-hidden group">
-          <div className="animate-marquee gap-6">
-            {[...doctorReviews, ...doctorReviews].map((rev, idx) => (
-              <div
-                key={idx}
-                className="w-[360px] sm:w-[420px] p-8 rounded-[2rem] glass-card glass-card-hover flex flex-col justify-between shrink-0 space-y-6"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center gap-1 text-amber-400">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} size={16} fill="currentColor" />
-                    ))}
-                  </div>
-                  <p className="text-sub text-sm font-medium leading-relaxed italic">
-                    &ldquo;{rev.quote}&rdquo;
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 pt-4 border-t border-line">
-                  <img
-                    src={rev.avatar}
-                    alt={rev.doctor}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80";
-                    }}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500/60 shadow-sm"
-                  />
-                  <div>
-                    <h4 className="text-base font-extrabold text-ink">{rev.doctor}</h4>
-                    <p className="text-xs text-emerald-400 font-semibold">{rev.specialty} • {rev.city}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HEALTHCARE NEWS & INSIGHTS */}
-      <section id="news" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
-        <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 block mb-2">
-            Healthcare Digital News /
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-ink tracking-tight">
-            LATEST HEALTHCARE INSIGHTS
-          </h2>
-          <p className="mt-4 text-sub text-base font-medium">
-            Stay updated with medical digital trends, SEO strategies, and patient acquisition blueprints.
-          </p>
-        </AnimatedSection>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {doctorNews.map((news, idx) => (
-            <AnimatedSection key={idx}>
-              <div
-                onClick={() => setActiveNewsModal(news)}
-                className="cursor-pointer group h-full"
-              >
-                <Card3D maxTilt={8} className="p-6 rounded-[2rem] glass-card glass-card-hover space-y-4 h-full flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <span className="text-[11px] font-mono text-faint">{news.date}</span>
-                    <h3 className="text-lg font-extrabold text-ink group-hover:text-emerald-400 transition-colors leading-snug">
-                      {news.title}
-                    </h3>
-                    <p className="text-xs text-sub font-medium leading-relaxed">
-                      {news.summary}
-                    </p>
-                  </div>
-                  <div className="pt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-400 group-hover:translate-x-1 transition-transform">
-                    <span>Read Article</span>
-                    <ArrowRight size={14} />
-                  </div>
-                </Card3D>
-              </div>
-            </AnimatedSection>
-          ))}
-        </div>
-      </section>
-
+      
+      
       {/* HEALTHCARE LIGHT TRIONN FOOTER */}
       <Footer onOpenConsultation={handleOpenConsultation} />
 
@@ -1262,66 +1037,7 @@ export default function HealthcarePortal() {
         )}
       </AnimatePresence>
 
-      {/* INTERACTIVE NEWS ARTICLE SLIDER MODAL */}
-      <AnimatePresence>
-        {activeNewsModal && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-scrim backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.25 }}
-              className="relative z-10 my-auto w-full max-w-2xl rounded-3xl glass-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-line mb-6">
-                <button
-                  onClick={() => setActiveNewsModal(null)}
-                  className="btn-secondary px-3.5 py-1.5 text-xs"
-                >
-                  <ArrowLeft size={16} className="text-emerald-400" />
-                  <span>Return to Previous Page</span>
-                </button>
-                <button
-                  onClick={() => setActiveNewsModal(null)}
-                  className="p-2 rounded-xl bg-ink/5 hover:bg-ink/10 text-sub hover:text-ink transition-colors cursor-pointer"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-emerald-400">
-                  <BookOpen size={14} />
-                  <span>HEALTHCARE INSIGHTS DISPATCH • {activeNewsModal.date}</span>
-                </div>
-
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-ink">
-                  {activeNewsModal.title}
-                </h2>
-
-                <div className="p-5 rounded-2xl bg-ink/5 border border-line space-y-3">
-                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
-                    Article Analysis & Action Plan
-                  </h4>
-                  <p className="text-xs sm:text-sm text-sub font-medium leading-relaxed">
-                    {activeNewsModal.fullContent}
-                  </p>
-                </div>
-
-                <div className="pt-4 flex justify-end">
-                  <button
-                    onClick={() => setActiveNewsModal(null)}
-                    className="btn-secondary px-6 py-2.5 text-xs"
-                  >
-                    Close Article
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
+      
       {/* CONSULTATION MODAL */}
       <ContactModal
         isOpen={modalOpen}

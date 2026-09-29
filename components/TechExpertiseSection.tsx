@@ -35,7 +35,7 @@ const expertiseRow2 = [
   { name: "Meta", category: "Platform", icon: "https://cdn.simpleicons.org/meta/0467DF" },
   { name: "Google Ads", category: "Marketing", icon: "https://cdn.simpleicons.org/googleads/4285F4" },
   { name: "Google Maps", category: "API & Service", icon: "https://cdn.simpleicons.org/googlemaps/4285F4" },
-  { name: "Canva", category: "Design", icon: "https://cdn.simpleicons.org/canva/00C4CC" },
+  { name: "Canva", category: "Design", icon: "https://api.iconify.design/simple-icons:canva.svg?color=%2300C4CC" },
 ];
 
 function TechCard({

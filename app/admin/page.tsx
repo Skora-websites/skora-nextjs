@@ -11,23 +11,10 @@ import {
   ArrowUpRight,
   Mail,
   Phone,
-  Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface Lead {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  company?: string;
-  service: string;
-  budget?: string;
-  message: string;
-  status: "New" | "Contacted" | "In Progress" | "Closed";
-  source: string;
-  createdAt: string;
-}
+import type { Lead } from "@/lib/lead";
 
 export default function AdminDashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);

@@ -7,7 +7,6 @@ import FeelTheMarket from "@/components/FeelTheMarket";
 import TechExpertiseSection from "@/components/TechExpertiseSection";
 import ProcessSection from "@/components/ProcessSection";
 import LaptopSlider from "@/components/LaptopSlider";
-import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
 import { useConsultation } from "@/context/ConsultationContext";
 
@@ -43,10 +42,7 @@ export default function Home() {
       {/* 6. Selected work */}
       <LaptopSlider />
 
-      {/* 7. Client feedback */}
-      <TestimonialsSection />
-
-      {/* 8. Footer */}
+      {/* 7. Footer */}
       <Footer onOpenConsultation={openConsultation} />
     </main>
   );

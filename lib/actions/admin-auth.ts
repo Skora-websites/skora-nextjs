@@ -34,15 +34,15 @@ export async function loginAdminAction(usernameInput: string, passwordInput: str
     );
 
     if (!user) {
-      console.warn(`[Admin Auth] Login failed — no user found for '${username}'`);
-      console.warn(`[Admin Auth] All users in DB:`, await db.collection("users").countDocuments(), "total");
+      // No username/role/collection-shape details in the log — only the outcome.
+      console.warn("[Admin Auth] Login failed: no matching account");
       return { success: false, error: "Invalid credentials. No account found with this email." };
     }
 
     // Only allow super_admin or admin to access admin portal
     const role = (user.role || "").toLowerCase();
     if (role !== "super_admin" && role !== "admin") {
-      console.warn(`[Admin Auth] Login failed — user '${username}' has role '${role}', not admin`);
+      console.warn("[Admin Auth] Login rejected: account role is not an admin role");
       return { success: false, error: `Access denied. Your role is '${role}'. Only admin and super_admin can access the admin portal.` };
     }
 
@@ -54,17 +54,17 @@ export async function loginAdminAction(usernameInput: string, passwordInput: str
     // Verify password with bcrypt
     const passwordHash = user.passwordHash;
     if (!passwordHash) {
-      console.warn(`[Admin Auth] Login failed — user '${username}' has no password hash. Has fields:`, Object.keys(user).join(", "));
+      console.warn("[Admin Auth] Login failed: account has no password hash");
       return { success: false, error: "Invalid credentials. Account has no password set." };
     }
 
     const isValid = await bcrypt.compare(password, passwordHash);
     if (!isValid) {
-      console.warn(`[Admin Auth] Login failed — wrong password for '${username}'`);
+      console.warn("[Admin Auth] Login failed: password mismatch");
       return { success: false, error: "Invalid credentials." };
     }
 
-    console.log(`[Admin Auth] Login succeeded for '${username}' (role: ${role})`);
+    console.log("[Admin Auth] Login succeeded");
     await setAdminSessionCookie();
     return { success: true };
   } catch (error) {

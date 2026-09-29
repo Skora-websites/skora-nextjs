@@ -17,6 +17,7 @@ import {
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SerpPreview from "@/components/admin/SerpPreview";
 import { slugify, stripHtml } from "@/lib/blog";
+import { inputClass, labelClass } from "@/components/admin/styles";
 
 interface EditorSeo {
   metaTitle: string;
@@ -67,10 +68,6 @@ const emptyState: EditorState = {
     schemaType: "BlogPosting",
   },
 };
-
-const inputClass =
-  "w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2.5 text-xs text-[#0B1310] font-bold placeholder:font-medium placeholder:text-slate-400 focus:border-[#2563EB] focus:outline-none transition-colors";
-const labelClass = "text-[10px] font-mono font-bold uppercase text-slate-500 block mb-1.5";
 
 function Field({
   label,

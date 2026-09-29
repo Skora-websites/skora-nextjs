@@ -5,10 +5,7 @@ import { CheckCircle2, CircleAlert, Globe, ListTree, Plus, Search, Share2, Shiel
 import SerpPreview from "@/components/admin/SerpPreview";
 import { applyTitleTemplate, type GlobalSeo, type SocialProfile } from "@/lib/blog";
 import { SOCIAL_PLATFORMS } from "@/lib/socials";
-
-const inputClass =
-  "w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2.5 text-xs text-[#0B1310] font-bold placeholder:font-medium placeholder:text-slate-400 focus:border-[#2563EB] focus:outline-none transition-colors";
-const labelClass = "text-[10px] font-mono font-bold uppercase text-slate-500 block mb-1.5";
+import { inputClass, labelClass } from "@/components/admin/styles";
 
 export default function AdminSeoPage() {
   const [seo, setSeo] = useState<GlobalSeo | null>(null);

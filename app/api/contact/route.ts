@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandler, badRequest, created } from "@/lib/api-handler";
-import { leadsService } from "@/lib/firestore";
+import { createLead } from "@/lib/db";
 
 /**
  * Public enquiry endpoint — the only unauthenticated write on the site.
  *
- * `/api/leads` stays admin-only because it is the CRM's CRUD surface; this
+ * `/api/leads` stays admin-only because it is the admin CRUD surface; this
  * route accepts the contact form and consultation modal submissions, validates
- * them, and creates a lead the admin can see under CRM → Leads.
+ * them, and creates a lead the admin sees under CRM → Leads.
  *
  * Abuse controls: honeypot field, field length caps, per-IP throttle.
  */
@@ -64,25 +64,6 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-/**
- * The CRM lead record has no service/budget columns, so the brief is folded
- * into `notes` where the admin will read it.
- */
-function buildNotes(
-  body: Record<string, unknown>,
-  message: string
-): string {
-  const service = text(body.service, MAX.service);
-  const budget = text(body.budget, MAX.budget);
-  const lines: string[] = [];
-
-  if (service) lines.push(`Service: ${service}`);
-  if (budget) lines.push(`Budget: ${budget}`);
-  lines.push(`Message: ${message || "(no message provided)"}`);
-
-  return lines.join("\n\n").slice(0, 4000);
-}
-
 export const POST = withErrorHandler(
   async (request: NextRequest) => {
     const ip =
@@ -115,17 +96,15 @@ export const POST = withErrorHandler(
       return created({ ok: true });
     }
 
-    const lead = await leadsService.create({
-      name,
-      company: text(body.company, MAX.company) || "Not provided",
+    const lead = await createLead({
+      fullName: name,
       email,
-      phone: text(body.phone, MAX.phone) || undefined,
-      status: "new",
+      phone: text(body.phone, MAX.phone),
+      company: text(body.company, MAX.company) || undefined,
+      service: text(body.service, MAX.service),
+      budget: text(body.budget, MAX.budget),
+      message: text(body.message, MAX.message),
       source: text(body.source, MAX.source) || "Website contact form",
-      value: 0,
-      probability: 0,
-      notes: buildNotes(body, text(body.message, MAX.message)),
-      ownerId: "",
     });
 
     return created({ id: lead.id, ok: true });

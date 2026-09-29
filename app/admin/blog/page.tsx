@@ -4,6 +4,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
+  adminTableClass,
+  searchInputClass,
+  searchSelectClass,
+} from "@/components/admin/styles";
+import {
   CircleAlert,
   ExternalLink,
   Eye,
@@ -166,7 +171,7 @@ export default function AdminBlogPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by title, slug, category or tag..."
-            className="w-full bg-white border border-[#E1E6DF] rounded-xl pl-10 pr-4 py-3 text-sm text-[#0B1310] focus:outline-none focus:border-[#2563EB] transition-colors shadow-sm"
+            className={searchInputClass}
           />
         </div>
 
@@ -175,7 +180,7 @@ export default function AdminBlogPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-white border border-[#E1E6DF] rounded-xl pl-10 pr-4 py-3 text-sm text-[#0B1310] focus:outline-none focus:border-[#2563EB] transition-colors cursor-pointer appearance-none font-mono shadow-sm"
+            className={searchSelectClass}
           >
             <option value="ALL">ALL STATUSES ({posts.length})</option>
             <option value="published">PUBLISHED ({publishedCount})</option>
@@ -207,7 +212,7 @@ export default function AdminBlogPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-700">
+            <table className={adminTableClass}>
               <thead className="bg-[#F4F6F1] border-b border-[#E1E6DF] text-slate-600 uppercase font-mono tracking-wider">
                 <tr>
                   <th className="p-4 sm:p-5 font-bold">Post</th>

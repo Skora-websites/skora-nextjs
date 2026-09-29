@@ -1,7 +1,14 @@
 import fs from "fs";
 import path from "path";
 import { ObjectId, type Db, type Filter, type OptionalId } from "mongodb";
-import clientPromise, { getMongoClient } from "./mongodb";
+import clientPromise from "./mongodb";
+import {
+  DEFAULT_PACKAGES,
+  DEFAULT_SERVICES,
+  DEFAULT_SITE_CORE,
+  type PackageItem,
+  type ServiceItem,
+} from "./site-defaults";
 import {
   defaultGlobalSeo,
   makeDefaultSeo,
@@ -14,37 +21,8 @@ import {
 
 const DB_NAME = process.env.MONGODB_DB || "skora";
 
-export interface Lead {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  company?: string;
-  service: string;
-  budget?: string;
-  message: string;
-  status: "New" | "Contacted" | "In Progress" | "Closed";
-  source: string;
-  createdAt: string;
-}
-
-export interface PackageItem {
-  id: string;
-  name: string;
-  price: string;
-  period: string;
-  popular: boolean;
-  subtitle: string;
-  features: string[];
-}
-
-export interface ServiceItem {
-  id: string;
-  title: string;
-  category: string;
-  pricing: string;
-  status: "Active" | "Inactive";
-}
+export type { Lead, LeadStatus } from "./lead";
+import type { Lead } from "./lead";
 
 export interface SiteContent {
   phone: string;
@@ -61,6 +39,8 @@ export interface SiteContent {
 }
 
 /** Partial update payload — the `seo` block may be supplied piecemeal. */
+export type { PackageItem, ServiceItem };
+
 export type SiteContentPatch = Omit<Partial<SiteContent>, "seo"> & {
   seo?: Partial<GlobalSeo>;
 };
@@ -68,109 +48,14 @@ export type SiteContentPatch = Omit<Partial<SiteContent>, "seo"> & {
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "hrms.json");
 
-const defaultPackages: PackageItem[] = [
-  {
-    id: "pkg-1",
-    name: "Basic Growth Plan",
-    price: "₹5,000",
-    period: "+ GST / month",
-    popular: false,
-    subtitle: "Essential local visibility for solo doctors & clinics",
-    features: [
-      "Custom 5-Page Doctor Website",
-      "Google My Business (GMB) Setup",
-      "8 Social Media Posts / month",
-      "Basic Local SEO Setup",
-      "Monthly Growth Report",
-    ],
-  },
-  {
-    id: "pkg-2",
-    name: "Standard Growth Plan",
-    price: "₹15,000",
-    period: "+ GST / month",
-    popular: true,
-    subtitle: "Our most popular package for growing medical practices",
-    features: [
-      "Custom 10-Page Medical Website + Booking",
-      "GMB Profile Optimization & Map Rank",
-      "14 Posts + 2 Reels / month",
-      "High-Intent Local SEO Keywords",
-      "Report Dispatched Every 15 Days",
-      "Priority Clinical Support",
-    ],
-  },
-  {
-    id: "pkg-3",
-    name: "Premium Growth Plan",
-    price: "₹32,000",
-    period: "+ GST / month",
-    popular: false,
-    subtitle: "Complete digital dominance for multi-specialty centers",
-    features: [
-      "Facebook, Instagram, LinkedIn & GMB",
-      "18 Posts + 4 Reels / month",
-      "Dedicated Medical Content Team",
-      "Weekly Analytical Dispatches",
-      "Advanced Local SEO & Maps Ads",
-      "24/7 Dedicated Account Manager",
-    ],
-  },
-];
-
-const defaultServices: ServiceItem[] = [
-  { id: "srv-1", title: "Website Design & Web Apps", category: "Core Development", pricing: "<25K - >1.5L", status: "Active" },
-  { id: "srv-2", title: "Digital Marketing & SEO", category: "Growth & PPC", pricing: "25K - 50K/mo", status: "Active" },
-  { id: "srv-3", title: "Branding & Visual Identity", category: "Design Studio", pricing: "25K - 50K", status: "Active" },
-  { id: "srv-4", title: "Video Production & Reels", category: "Media Studio", pricing: "50K - 1.5L", status: "Active" },
-  { id: "srv-5", title: "Custom SaaS Development", category: "Software Engineering", pricing: ">1.5L", status: "Active" },
-  { id: "srv-6", title: "Cloud Services & AWS", category: "DevOps & Cloud", pricing: "Custom Enterprise", status: "Active" },
-  { id: "srv-7", title: "CRM Solutions", category: "Business Automation", pricing: "50K - 1.5L", status: "Active" },
-  { id: "srv-8", title: "Project Management Systems", category: "Enterprise Systems", pricing: ">1.5L", status: "Active" },
-  { id: "srv-9", title: "Mobile App Development", category: "iOS & Android", pricing: ">1.5L", status: "Active" },
-];
-
 const defaultSiteContent: SiteContent = {
-  phone: "+44 07756083473",
-  email: "info@skorainfotech.com",
-  healthcareEmail: "info@skorainfotech.com",
-  address: "5 Market Square, High Street, Uxbridge, UB8 1LH, London",
-  responseGuarantee: "Rapid 4-Hour Response Guarantee",
-  packages: defaultPackages,
-  services: defaultServices,
+  ...DEFAULT_SITE_CORE,
+  packages: DEFAULT_PACKAGES,
+  services: DEFAULT_SERVICES,
   textOverrides: {},
   seo: defaultGlobalSeo,
   updatedAt: new Date().toISOString(),
 };
-
-const initialLeads: Lead[] = [
-  {
-    id: "lead-101",
-    fullName: "Dr. Rajesh Varma",
-    email: "rajesh.v@noidaclinic.com",
-    phone: "+91 98112 34567",
-    company: "Varma Cardiology Clinic",
-    service: "Healthcare IT & EHR Systems",
-    budget: "50K-1.5L",
-    message: "Interested in establishing a clinic management workflow with WhatsApp patient booking integration.",
-    status: "New",
-    source: "Healthcare Portal",
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: "lead-102",
-    fullName: "Vikram Malhotra",
-    email: "vikram@apextechnologies.io",
-    phone: "+91 98711 99887",
-    company: "Apex Tech Labs",
-    service: "Custom SaaS Development",
-    budget: ">1.5L",
-    message: "We need a multi-tenant SaaS dashboard for asset tracking with AWS cloud architecture.",
-    status: "In Progress",
-    source: "Main Site Consultation Modal",
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-  },
-];
 
 interface DatabaseSchema {
   leads: Lead[];
@@ -188,8 +73,8 @@ function normalizeLocalContent(parsed: SiteContent): SiteContent {
     textOverrides: parsed?.textOverrides || {},
     seo: { ...defaultGlobalSeo, ...(parsed?.seo || {}) },
   };
-  if (!merged.packages || merged.packages.length === 0) merged.packages = defaultPackages;
-  if (!merged.services || merged.services.length === 0) merged.services = defaultServices;
+  if (!merged.packages || merged.packages.length === 0) merged.packages = DEFAULT_PACKAGES;
+  if (!merged.services || merged.services.length === 0) merged.services = DEFAULT_SERVICES;
   return merged;
 }
 
@@ -200,7 +85,7 @@ function ensureLocalDbFile(): DatabaseSchema {
 
   if (!fs.existsSync(DB_FILE)) {
     const initialData: DatabaseSchema = {
-      leads: initialLeads,
+      leads: [],
       content: defaultSiteContent,
       posts: [],
     };
@@ -224,7 +109,7 @@ function ensureLocalDbFile(): DatabaseSchema {
     return parsed;
   } catch {
     const initialData: DatabaseSchema = {
-      leads: initialLeads,
+      leads: [],
       content: defaultSiteContent,
       posts: [],
     };
@@ -255,7 +140,10 @@ export async function getLeads(): Promise<Lead[]> {
         if (leads.length > 0) {
           return leads.map((lead) => {
             const clean = { ...(lead as Lead & { _id?: unknown }) };
+            const rawId = clean._id;
             delete clean._id;
+            // Rows written before the shape was unified may have no `id`.
+            if (!clean.id && rawId !== undefined && rawId !== null) clean.id = String(rawId);
             return clean;
           });
         }
@@ -304,10 +192,8 @@ export async function createLead(leadData: Omit<Lead, "id" | "createdAt" | "stat
 }
 
 /**
- * Leads live in two shapes in the same collection: rows written by `createLead`
- * carry a generated string `id`, while rows written by `leadsService` (the
- * public contact form, CRM create) only carry Mongo's `_id`. Try both so an
- * admin status change or delete works regardless of which path created it.
+ * Match a lead by its generated string `id`, falling back to Mongo's `_id` so
+ * rows written before the lead shape was unified can still be updated.
  */
 function leadIdFilters(id: string): Filter<Lead>[] {
   const filters: Filter<Lead>[] = [{ id }];
@@ -454,109 +340,6 @@ export async function updateSiteContent(partialContent: SiteContentPatch): Promi
   localDb.content = updatedContent;
   writeLocalDb(localDb);
   return updatedContent;
-}
-
-export interface AdminUser {
-  username: string;
-  passwordHash: string;
-  role: string;
-  updatedAt: string;
-}
-
-export async function getAdminUser(): Promise<AdminUser> {
-  try {
-    const client = await getMongoClient();
-    if (client) {
-      const db = client.db(DB_NAME);
-      const collection = db.collection<AdminUser>("admin");
-      let user = await collection.findOne({ key: "admin_user" });
-      if (!user) {
-        user = await collection.findOne({});
-      }
-      if (user) {
-        const stored = { ...(user as AdminUser & {
-          _id?: unknown;
-          name?: unknown;
-          password?: unknown;
-        }) };
-        delete stored._id;
-        const cleanUser = stored;
-        return {
-          username: String(cleanUser.username || cleanUser.name || ""),
-          passwordHash: String(cleanUser.passwordHash || cleanUser.password || ""),
-          role: String(cleanUser.role || "SuperAdmin"),
-          updatedAt: cleanUser.updatedAt || new Date().toISOString(),
-        };
-      }
-    }
-  } catch (e) {
-    console.error("MongoDB error loading admin user:", e);
-  }
-
-  return {
-    username: "",
-    passwordHash: "",
-    role: "SuperAdmin",
-    updatedAt: new Date().toISOString(),
-  };
-}
-
-export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
-  const adminUser = await getAdminUser();
-  const dbUsername = (adminUser.username || "").toLowerCase().trim();
-  const dbPassword = (adminUser.passwordHash || "").trim();
-
-  const inputUsername = (username || "").toLowerCase().trim();
-  const inputPassword = (password || "").trim();
-
-  const isUsernameValid = inputUsername === dbUsername;
-  const isPasswordValid = inputPassword === dbPassword;
-
-  if (!isUsernameValid || !isPasswordValid) {
-    console.warn(`[Admin Auth] Login failed for user '${inputUsername}'. DB expects username: '${dbUsername}'`);
-  } else {
-    console.log(`[Admin Auth] Login succeeded for user '${inputUsername}'`);
-  }
-
-  return isUsernameValid && isPasswordValid;
-}
-
-export async function verifyAdminPassword(password: string): Promise<boolean> {
-  const adminUser = await getAdminUser();
-  return password === adminUser.passwordHash;
-}
-
-export async function updateAdminCredentials(newUsername?: string, newPassword?: string): Promise<boolean> {
-  const current = await getAdminUser();
-  const updatedUser: AdminUser = {
-    ...current,
-    ...(newUsername && newUsername.trim().length > 0 ? { username: newUsername.trim() } : {}),
-    ...(newPassword && newPassword.trim().length > 0 ? { passwordHash: newPassword.trim() } : {}),
-    updatedAt: new Date().toISOString(),
-  };
-
-  if (clientPromise) {
-    try {
-      const client = await clientPromise;
-      if (client) {
-        const db = client.db(DB_NAME);
-        const collection = db.collection("admin");
-        await collection.updateOne(
-          { key: "admin_user" },
-          { $set: { key: "admin_user", ...updatedUser } },
-          { upsert: true }
-        );
-      }
-    } catch (e) {
-      console.error("MongoDB Atlas error updating admin user:", e);
-    }
-  }
-
-  return true;
-}
-
-export async function updateAdminPassword(newPassword: string): Promise<boolean> {
-  return updateAdminCredentials(undefined, newPassword);
 }
 
 // ====================================================
@@ -899,12 +682,6 @@ export async function deletePost(id: string): Promise<boolean> {
   if (local.posts.length === before) return false;
   writeLocalDb(local);
   return true;
-}
-
-/** Lightweight projection used by the sitemap. */
-export async function getPublishedPostSlugs(): Promise<{ slug: string; updatedAt: string }[]> {
-  const posts = await getPosts({ includeDrafts: false });
-  return posts.map((p) => ({ slug: p.slug, updatedAt: p.updatedAt || p.createdAt }));
 }
 
 /**
