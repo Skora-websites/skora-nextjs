@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
+import Preloader from "@/components/Preloader";
+import SiteChrome from "@/components/SiteChrome";
+import SmoothScroll from "@/components/animation/SmoothScroll";
+import PageWipe from "@/components/transition/PageWipe";
 import { SiteContentProvider } from "@/context/SiteContentContext";
+import { PreloaderProvider } from "@/context/PreloaderContext";
+import { ConsultationProvider } from "@/context/ConsultationContext";
+import { getGlobalSeoSafe } from "@/lib/db";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -10,30 +17,57 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-export const metadata: Metadata = {
-  title: "SKORA.digital — Next-Gen Digital Marketing & Tech Solutions Enterprise",
-  description: "Enterprise Digital Marketing, Website Design, Mobile Apps, Cloud Services, SaaS Platforms, Project Management Systems & CRM Solutions.",
-  keywords: [
-    "Digital Marketing",
-    "SEO",
-    "Website Design",
-    "Mobile Development",
-    "Cloud Services",
-    "SaaS Development",
-    "Project Management System",
-    "PMS",
-    "CRM Solutions",
-  ],
-  authors: [{ name: "SKORA Digital Team" }],
-  openGraph: {
-    title: "SKORA.digital — Digital Marketing & Tech Solutions",
-    description: "Rank higher, scale infrastructure, build custom SaaS, Mobile & CRM applications.",
-    url: "https://skora.digital",
-    siteName: "SKORA Digital",
-    locale: "en_US",
-    type: "website",
-  },
-};
+const fraunces = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  // Site-wide defaults come from the admin panel (/admin/seo). Falls back to
+  // the built-in constants when the database is unreachable.
+  const seo = await getGlobalSeoSafe();
+  const base = seo.canonicalBase || "https://skora.digital";
+
+  return {
+    metadataBase: new URL(base),
+    title: {
+      default: seo.defaultTitle,
+      // Next's type requires a template containing "%s" — guard against a
+      // malformed value saved in the admin panel.
+      template: seo.titleTemplate.includes("%s") ? seo.titleTemplate : `%s | ${seo.siteName}`,
+    },
+    description: seo.defaultDescription,
+    keywords: seo.defaultKeywords,
+    icons: {
+      icon: [
+        { url: "/favicon.png", type: "image/png" },
+        { url: "/logo.png", type: "image/png" },
+      ],
+      apple: [{ url: "/logo.png", type: "image/png" }],
+    },
+    authors: [{ name: `${seo.siteName} Team` }],
+    openGraph: {
+      title: seo.defaultTitle,
+      description: seo.defaultDescription,
+      url: base,
+      siteName: seo.siteName,
+      locale: "en_US",
+      type: "website",
+      images: seo.ogImage ? [{ url: seo.ogImage, alt: seo.siteName }] : undefined,
+    },
+    twitter: seo.twitterHandle
+      ? {
+          card: "summary_large_image",
+          site: seo.twitterHandle,
+          title: seo.defaultTitle,
+          description: seo.defaultDescription,
+          images: seo.ogImage ? [seo.ogImage] : undefined,
+        }
+      : undefined,
+  };
+}
 
 export default function RootLayout({
   children,
@@ -41,12 +75,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
+      <html lang="en" className={`${plusJakartaSans.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-main text-ink font-sans antialiased flex flex-col" suppressHydrationWarning>
-        <SiteContentProvider>
-          <ScrollToTop />
-          {children}
-        </SiteContentProvider>
+        <PreloaderProvider>
+          <SiteContentProvider>
+            <ConsultationProvider>
+              {/* Everything fixed lives outside the smoother wrapper: a
+                  transformed #smooth-content would break position: fixed. */}
+              <Preloader />
+              <ScrollToTop />
+              <PageWipe />
+              <SmoothScroll>{children}</SmoothScroll>
+              <SiteChrome />
+            </ConsultationProvider>
+          </SiteContentProvider>
+        </PreloaderProvider>
       </body>
     </html>
   );

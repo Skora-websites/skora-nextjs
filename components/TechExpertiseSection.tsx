@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import Marquee from "@/components/animation/Marquee";
+import Reveal from "@/components/animation/Reveal";
+import SplitHeading from "@/components/animation/SplitHeading";
 
 const expertiseRow1 = [
   { name: "HTML5", category: "Frontend", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original.svg" },
@@ -36,105 +38,103 @@ const expertiseRow2 = [
   { name: "Canva", category: "Design", icon: "https://cdn.simpleicons.org/canva/00C4CC" },
 ];
 
+function TechCard({
+  item,
+  fallback,
+}: {
+  item: { name: string; category: string; icon: string };
+  fallback: string;
+}) {
+  return (
+    <div className="glass-card glass-card-hover group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4 transition-transform duration-300 hover:-translate-y-1.5 hover:scale-[1.04]">
+      <div className="flex h-14 w-full items-center justify-center p-1">
+        <img
+          src={item.icon}
+          alt={item.name}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = fallback;
+          }}
+          className="max-h-11 max-w-11 object-contain transition-transform duration-300 group-hover:scale-110"
+        />
+      </div>
+      <div className="w-full text-center">
+        <h3 className="truncate text-xs font-bold text-ink transition-colors group-hover:text-accent-light">
+          {item.name}
+        </h3>
+        <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-wider text-faint">
+          {item.category}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Two technology rails travelling in opposite directions. Both are GSAP
+ * marquees whose speed tracks scroll velocity, so flicking the wheel whips the
+ * cards past and they ease back to a cruise when you stop.
+ */
 export default function TechExpertiseSection() {
   return (
-    <section className="relative overflow-hidden bg-main py-20 border-t border-line">
-      <style>{`
-        @keyframes marqueeLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        @keyframes marqueeRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
-        .animate-marquee-left { display: flex; width: max-content; animation: marqueeLeft 38s linear infinite; }
-        .animate-marquee-right { display: flex; width: max-content; animation: marqueeRight 38s linear infinite; }
-        .marquee-container:hover .animate-marquee-left,
-        .marquee-container:hover .animate-marquee-right { animation-play-state: paused; }
-      `}</style>
-
-      {/* Dot Grid Background (dark) */}
+    <section className="relative overflow-hidden border-t border-line bg-main py-20">
       <div
         className="absolute inset-0 opacity-70"
-        style={{ backgroundImage: "radial-gradient(#d7e0ee 1px, transparent 1px)", backgroundSize: "32px 32px" }}
+        style={{
+          backgroundImage: "radial-gradient(#d7e0ee 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute left-1/2 top-0 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-blue-600/10 blur-[120px]"
+        aria-hidden="true"
       />
 
-      {/* Ambient blue glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="relative mx-auto mb-10 max-w-4xl px-4 text-center">
-        <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-ink">
-          Our <span className="text-gradient">Tech &amp; Media Expertise</span>
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-base sm:text-lg font-medium text-sub">
-          Empowering scalable digital ecosystems with industry-standard development frameworks, cloud solutions, and media platforms.
-        </p>
+      <div className="section-wrap relative mb-10 flex flex-wrap items-end justify-between gap-6">
+        <Reveal variant="fade-left" className="max-w-2xl">
+          <span className="kicker">Toolbox</span>
+          <SplitHeading as="h2" className="display-hero mt-4 text-4xl sm:text-6xl">
+            Fluent in the <span className="display-accent text-accent">modern stack.</span>
+          </SplitHeading>
+        </Reveal>
+        <Reveal variant="fade-right" delay={0.15} className="max-w-sm">
+          <p className="text-sm font-medium leading-relaxed text-sub">
+            The frameworks, clouds, and platforms we ship with every week — no experiments on your budget.
+          </p>
+        </Reveal>
       </div>
 
-      {/* Marquee Row 1 - Left */}
-      <div className="marquee-container relative flex overflow-hidden py-3">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-main to-transparent md:w-48" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-main to-transparent md:w-48" />
-
-        <div className="animate-marquee-left flex gap-5 px-4 py-2">
-          {[...expertiseRow1, ...expertiseRow1, ...expertiseRow1].map((item, index) => (
-            <motion.div
-              key={`row1-${item.name}-${index}`}
-              whileHover={{ y: -5, scale: 1.04 }}
-              className="glass-card glass-card-hover group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4"
-            >
-              <div className="flex h-14 w-full items-center justify-center p-1">
-                <img
-                  src={item.icon}
-                  alt={item.name}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg";
-                  }}
-                  className="max-h-11 max-w-11 object-contain transition-transform duration-300 group-hover:scale-110"
-                />
-              </div>
-              <div className="w-full text-center">
-                <h3 className="text-xs font-bold text-ink transition-colors group-hover:text-accent-light truncate">
-                  {item.name}
-                </h3>
-                <span className="mt-0.5 block text-[9px] font-semibold tracking-wider text-faint uppercase">
-                  {item.category}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+      <Reveal variant="zoom" duration={0.9} className="relative">
+        {/* Row 1 — travelling left */}
+        <div className="marquee-container relative flex overflow-hidden py-3">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-main to-transparent md:w-48" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-main to-transparent md:w-48" />
+          <Marquee direction="left" duration={38} laneClassName="gap-5 px-4 py-2">
+            {expertiseRow1.map((item) => (
+              <TechCard
+                key={item.name}
+                item={item}
+                fallback="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg"
+              />
+            ))}
+          </Marquee>
         </div>
-      </div>
 
-      {/* Marquee Row 2 - Right */}
-      <div className="marquee-container relative flex overflow-hidden py-3 mt-4">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-main to-transparent md:w-48" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-main to-transparent md:w-48" />
-
-        <div className="animate-marquee-right flex gap-5 px-4 py-2">
-          {[...expertiseRow2, ...expertiseRow2, ...expertiseRow2].map((item, index) => (
-            <motion.div
-              key={`row2-${item.name}-${index}`}
-              whileHover={{ y: -5, scale: 1.04 }}
-              className="glass-card glass-card-hover group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4"
-            >
-              <div className="flex h-14 w-full items-center justify-center p-1">
-                <img
-                  src={item.icon}
-                  alt={item.name}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg";
-                  }}
-                  className="max-h-11 max-w-11 object-contain transition-transform duration-300 group-hover:scale-110"
-                />
-              </div>
-              <div className="w-full text-center">
-                <h3 className="text-xs font-bold text-ink transition-colors group-hover:text-accent-light truncate">
-                  {item.name}
-                </h3>
-                <span className="mt-0.5 block text-[9px] font-semibold tracking-wider text-faint uppercase">
-                  {item.category}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+        {/* Row 2 — travelling right */}
+        <div className="marquee-container relative mt-4 flex overflow-hidden py-3">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-main to-transparent md:w-48" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-main to-transparent md:w-48" />
+          <Marquee direction="right" duration={38} laneClassName="gap-5 px-4 py-2">
+            {expertiseRow2.map((item) => (
+              <TechCard
+                key={item.name}
+                item={item}
+                fallback="https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg"
+              />
+            ))}
+          </Marquee>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

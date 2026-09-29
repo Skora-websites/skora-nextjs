@@ -41,10 +41,32 @@ import Footer from "@/components/Footer";
 import ContactModal from "@/components/ContactModal";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { usePreloaderGate } from "@/context/PreloaderContext";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
+
+/**
+ * Splits a headline into clip-revealed words. Lives at module scope so the
+ * component identity is stable across renders — defining it during render
+ * would remount the subtree on every render.
+ */
+const SplitHeadline = ({ text, accent }: { text: string; accent?: boolean }) => (
+  <>
+    {text.split(" ").map((word, i) => (
+      <span key={i} className="hero-word inline-block overflow-hidden align-bottom mr-[0.25em] last:mr-0">
+        <span
+          className={`hero-word-inner inline-block${
+            accent ? " text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600" : ""
+          }`}
+        >
+          {word}
+        </span>
+      </span>
+    ))}
+  </>
+);
 
 // Hero Right Card Auto-Sliding Doctor Images Component (2s Interval, Right-to-Left Transition)
 const HeroRightDoctorSlider = () => {
@@ -607,7 +629,11 @@ export default function HealthcarePortal() {
       .catch(() => {});
   }, []);
 
+  // Entrance animations wait until the preloader overlay starts fading.
+  const { isPreloaderActive } = usePreloaderGate();
+
   useEffect(() => {
+    if (isPreloaderActive) return;
     if (!heroRef.current) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
@@ -666,23 +692,7 @@ export default function HealthcarePortal() {
       );
     }, heroRef);
     return () => ctx.revert();
-  }, []);
-
-  const SplitHeadline = ({ text, accent }: { text: string; accent?: boolean }) => (
-    <>
-      {text.split(" ").map((word, i) => (
-        <span key={i} className="hero-word inline-block overflow-hidden align-bottom mr-[0.25em] last:mr-0">
-          <span
-            className={`hero-word-inner inline-block${
-              accent ? " text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600" : ""
-            }`}
-          >
-            {word}
-          </span>
-        </span>
-      ))}
-    </>
-  );
+  }, [isPreloaderActive]);
 
   const handleOpenConsultation = (topic?: string) => {
     setSelectedService(topic || "Doctor Healthcare Digital Growth");
@@ -1025,7 +1035,7 @@ export default function HealthcarePortal() {
                     ))}
                   </div>
                   <p className="text-sub text-sm font-medium leading-relaxed italic">
-                    "{rev.quote}"
+                    &ldquo;{rev.quote}&rdquo;
                   </p>
                 </div>
 

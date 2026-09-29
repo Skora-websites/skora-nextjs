@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, CheckCircle2, Sparkles, Send, Building2, User, Mail, DollarSign } from "lucide-react";
+import { X, CheckCircle2, Sparkles, Send, Building2, User, Mail, DollarSign, AlertTriangle } from "lucide-react";
+import Overlay from "@/components/animation/Overlay";
+import { SERVICES } from "@/lib/services";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -26,18 +28,13 @@ export default function ContactModal({
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const availableServices = [
-    "Website Design & Dev",
-    "Branding & Visual Identity",
-    "SaaS Architecture",
-    "Mobile App Development",
-    "Cloud Services & DevOps",
-    "CRM System Engineering",
-    "Digital Marketing & SEO",
-    "Property Mgmt System",
-    "Video Production & Reels",
-  ];
+  /**
+   * Chip labels come from the shared service list, so the names here always
+   * match the footer, contact form and service pages.
+   */
+  const availableServices = SERVICES.map((s) => s.pill);
 
   useEffect(() => {
     if (isOpen) {
@@ -50,21 +47,26 @@ export default function ContactModal({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (serviceToPreselect) {
-      const match = availableServices.find(
-        (s) => s.toLowerCase() === serviceToPreselect.toLowerCase()
-      );
-      if (match && !selectedServices.includes(match)) {
-        setSelectedServices([match]);
-      } else if (!selectedServices.includes(serviceToPreselect)) {
-        setSelectedServices([serviceToPreselect]);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serviceToPreselect, isOpen]);
-
-  if (!isOpen) return null;
+  // Apply the preselected service when the modal opens or the topic changes
+  // (render-phase adjustment — no effect needed).
+  const [appliedPreselect, setAppliedPreselect] = useState<string | null>(null);
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) setAppliedPreselect(null);
+  }
+  const preselectKey = isOpen ? serviceToPreselect : "";
+  if (preselectKey && appliedPreselect !== preselectKey) {
+    setAppliedPreselect(preselectKey);
+    // Accept either the display name or a page's own modal name
+    // ("Branding and visual identity" → the "Branding and identity" chip).
+    const matched = SERVICES.find(
+      (s) =>
+        s.pill.toLowerCase() === preselectKey.toLowerCase() ||
+        s.modalServiceName.toLowerCase() === preselectKey.toLowerCase()
+    );
+    setSelectedServices(matched ? [matched.pill] : [preselectKey]);
+  }
 
   const toggleService = (serviceName: string) => {
     if (selectedServices.includes(serviceName)) {
@@ -77,15 +79,16 @@ export default function ContactModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      await fetch("/api/leads", {
+      // Public write-only endpoint — /api/leads requires an admin session.
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName,
+          name: fullName,
           email,
-          phone: "+91 92173 75835",
           company,
           service: selectedServices.join(", ") || "General Strategy Consultation",
           budget,
@@ -93,23 +96,47 @@ export default function ContactModal({
           source: "Contact Consultation Modal",
         }),
       });
-    } catch (err) {
-      console.error(err);
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(
+          data?.error ||
+            "We couldn't send your request. Please email us directly and we'll reply within 4 business hours."
+        );
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError(
+        "We couldn't reach the server. Check your connection and try again, or email us directly."
+      );
     } finally {
       setLoading(false);
-      setSubmitted(true);
     }
   };
 
   const labelCls = "text-xs font-mono font-bold uppercase tracking-wider text-faint block";
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-scrim backdrop-blur-md overflow-y-auto animate-fade-in">
+    <Overlay
+      open={isOpen}
+      duration={0.4}
+      frame={{ enter: { opacity: 0 }, exit: { opacity: 0 } }}
+      panel={{
+        enter: { opacity: 0, scale: 0.96, y: 18 },
+        exit: { opacity: 0, scale: 0.96, y: 18 },
+      }}
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-scrim backdrop-blur-md overflow-y-auto"
+    >
       {/* Backdrop Click to Close */}
       <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
 
       {/* Modal Content Box — dark glass */}
-      <div className="relative my-auto w-full max-w-xl glass-card rounded-3xl p-6 sm:p-8 shadow-2xl max-h-[85vh] sm:max-h-[88vh] overflow-y-auto z-[100000]">
+      <div
+        data-overlay-panel
+        className="relative my-auto w-full max-w-xl glass-card rounded-3xl p-6 sm:p-8 shadow-2xl max-h-[85vh] sm:max-h-[88vh] overflow-y-auto z-[100000]"
+      >
         {/* Close Button */}
         <button
           type="button"
@@ -126,10 +153,10 @@ export default function ContactModal({
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-extrabold text-ink">
-              Consultation Dispatched!
+              Request received
             </h3>
             <p className="text-xs sm:text-sm text-sub max-w-md mx-auto font-medium leading-relaxed">
-              Thank you, <strong className="text-ink">{fullName}</strong>. Our senior strategy consultant will reach out to <strong className="text-ink">{email}</strong> within 4 business hours with your custom proposal.
+              Thank you, <strong className="text-ink">{fullName}</strong>. We will reply to <strong className="text-ink">{email}</strong> within 4 business hours.
             </p>
 
             <button
@@ -147,20 +174,20 @@ export default function ContactModal({
             <div className="space-y-2">
               <span className="glass-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Initialize Your Project</span>
+                <span>Project enquiry</span>
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">
-                Schedule Strategy Consultation
+                Request a consultation
               </h2>
               <p className="text-xs text-faint font-medium">
-                Select your required capabilities and project scope.
+                Select the services you need and share a short brief.
               </p>
             </div>
 
             {/* Service Multi-Select */}
             <div className="space-y-2">
               <label className={labelCls}>
-                Required Capabilities
+                Services needed
               </label>
               <div className="flex flex-wrap gap-2">
                 {availableServices.map((svc) => {
@@ -257,16 +284,29 @@ export default function ContactModal({
 
             <div className="space-y-1.5">
               <label className={labelCls}>
-                Project Brief / Requirements
+                Project details
               </label>
               <textarea
                 rows={3}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell us about your goals, timelines, and technical requirements..."
+                placeholder="Goals, timeline, and anything we should know..."
                 className="input-dark p-3 text-xs resize-none"
               />
             </div>
+
+            {error && (
+              <div
+                role="alert"
+                className="flex items-start gap-3 rounded-2xl border border-red-300 bg-red-50 p-4"
+              >
+                <AlertTriangle size={17} className="mt-0.5 shrink-0 text-red-600" />
+                <div className="space-y-1">
+                  <p className="text-xs font-extrabold text-red-700">Your request was not sent</p>
+                  <p className="text-xs font-medium leading-relaxed text-red-700/85">{error}</p>
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -277,7 +317,7 @@ export default function ContactModal({
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Dispatch Consultation Request</span>
+                  <span>Request consultation</span>
                   <Send className="w-4 h-4" />
                 </>
               )}
@@ -285,6 +325,6 @@ export default function ContactModal({
           </form>
         )}
       </div>
-    </div>
+    </Overlay>
   );
 }

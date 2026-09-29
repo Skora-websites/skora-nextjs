@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import type { GlobalSeo } from "@/lib/blog";
 
 export interface PackageItem {
   id: string;
@@ -28,13 +29,18 @@ export interface SiteContent {
   responseGuarantee: string;
   packages: PackageItem[];
   services: ServiceItem[];
+  /**
+   * Site-wide SEO settings as served by /api/content (the whole document is
+   * returned, not just these fields). The footer reads `seo.socials`.
+   */
+  seo?: GlobalSeo;
 }
 
 const defaultContent: SiteContent = {
-  phone: "+91 92173 75835",
-  email: "ashish17427@gmail.com",
-  healthcareEmail: "ashish17427@gmail.com",
-  address: "Gaur City 2, Greater Noida, Uttar Pradesh 201308, India",
+  phone: "+44 07756083473",
+  email: "info@skorainfotech.com",
+  healthcareEmail: "info@skorainfotech.com",
+  address: "5 Market Square, High Street, Uxbridge, UB8 1LH, London",
   responseGuarantee: "Rapid 4-Hour Response Guarantee",
   packages: [
     {

@@ -32,8 +32,15 @@
 
   /* Reserved accents */
   --color-gold: #f59e0b;
-  --color-clinic: #10b981; /* healthcare content ONLY */
+  --color-clinic: #10b981; /* healthcare content ONLY — do not use on marketing pages */
   --color-clinic-deep: #059669;
+  --color-navy: #0a1633;
+  --color-navy-deep: #060d22;
+  --color-ink-deep: #060b18;
+  --color-paper: #fbfcfe;
+
+  /* Display serif for agency headlines */
+  --font-display: "Fraunces", Georgia, serif;
 }
 
 @layer base {
@@ -69,14 +76,25 @@
     --input-bg: #ffffff;
     --input-bg-focus: #ffffff;
 
-    /* FeelTheMarket radial light mesh */
-    --market-halo: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, rgba(247, 249, 252, 0) 70%);
+  /* FeelTheMarket radial light mesh */
+  --market-halo: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, rgba(247, 249, 252, 0) 70%);
+    --shadow-card-lg: 0 1px 2px rgba(11, 18, 32, 0.05), 0 24px 48px -24px rgba(11, 18, 32, 0.18);
+    --radius-card: 1.75rem;
   }
 
   html {
     scroll-behavior: smooth;
     color-scheme: light;
     background-color: var(--bg-main);
+  }
+
+  /* ScrollSmoother animates the page itself, so CSS-smooth scrolling must be
+     off while it's alive (GSAP's requirement — otherwise every programmatic
+     scroll is doubly eased). In-page anchors still feel weighted: the native
+     jump happens instantly and the smoothed content eases to catch up.
+     Set by SmoothScroll on create, removed on kill. */
+  html.has-smoother {
+    scroll-behavior: auto;
   }
 
   body {
@@ -266,6 +284,144 @@
   .market-halo {
     background: var(--market-halo);
   }
+
+  /* Enterprise section rhythm — one consistent container */
+  .section-wrap {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 80rem;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .section-wrap { padding-inline: 1.5rem; }
+  }
+  @media (min-width: 1024px) {
+    .section-wrap { padding-inline: 2rem; }
+  }
+
+  /* Single-halo page background wash (use once per hero) */
+  .enterprise-wash {
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 0%, rgba(37, 99, 235, 0.1) 0%, rgba(247, 249, 252, 0) 70%);
+  }
+
+  /* Navy CTA band */
+  .navy-band {
+    background: linear-gradient(135deg, #0a1633 0%, #12275f 55%, #1d4ed8 100%);
+  }
+
+  /* Elevated card for proof points */
+  .card-elevated {
+    background: #ffffff;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card-lg);
+  }
+
+  /* ── Agency system ─────────────────────────────── */
+  /* Oversized editorial headline */
+  .display-hero {
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+  }
+  /* Serif italic accent word inside headlines */
+  .display-accent {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  /* Small caps kickers with rule */
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .kicker::before {
+    content: "";
+    width: 2rem;
+    height: 2px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+  }
+  /* Outlined ghost numerals */
+  .ghost-numeral {
+    font-weight: 800;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--border-strong);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    user-select: none;
+  }
+  /* Sticker badge */
+  .sticker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--text-primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    box-shadow: 0 10px 24px -10px rgba(11, 18, 32, 0.5);
+  }
+  .sticker-blue {
+    background: var(--accent-primary);
+  }
+  /* Editorial hairline rule with label */
+  .rule-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .rule-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+  /* Fine grid backdrop */
+  .bg-blueprint {
+    background-image:
+      linear-gradient(to right, rgba(11, 18, 32, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(11, 18, 32, 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  /* Underline link with animated fill */
+  .link-fill {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    padding-bottom: 2px;
+  }
+  .link-fill:hover {
+    background-size: 100% 2px;
+  }
+  /* Marquee lane */
+  .marquee-lane {
+    display: flex;
+    width: max-content;
+    animation: marquee 28s linear infinite;
+  }
+  .marquee-lane:hover {
+    animation-play-state: paused;
+  }
 }
 
 /* ============================================================
@@ -346,4 +502,153 @@
   .animate-pulse-glow {
     animation: none;
   }
+}
+
+/* ============================================================
+   BLOG — admin rich-text surface + public article typography
+   Shared selector list: the editor and the published page must
+   render the author's HTML identically.
+   ============================================================ */
+.rte-content,
+.article-body {
+  color: var(--text-primary);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.rte-content > *:first-child,
+.article-body > *:first-child { margin-top: 0; }
+.rte-content p,
+.article-body p { margin: 0 0 1.05rem; line-height: 1.75; }
+.rte-content h2,
+.article-body h2 {
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 2rem 0 0.85rem;
+}
+.rte-content h3,
+.article-body h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin: 1.75rem 0 0.7rem;
+}
+.rte-content h4,
+.article-body h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.5rem 0 0.6rem;
+}
+.rte-content h5,
+.article-body h5 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin: 1.4rem 0 0.5rem;
+}
+.rte-content ul,
+.article-body ul,
+.rte-content ol,
+.article-body ol {
+  margin: 0 0 1.1rem;
+  padding-left: 1.4rem;
+}
+.rte-content ul,
+.article-body ul { list-style: disc; }
+.rte-content ol,
+.article-body ol { list-style: decimal; }
+.rte-content li,
+.article-body li { margin-bottom: 0.45rem; line-height: 1.7; }
+.rte-content li::marker,
+.article-body li::marker { color: var(--accent-primary); }
+.rte-content a,
+.article-body a {
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rte-content a:hover,
+.article-body a:hover { color: var(--accent-primary-hover); }
+.rte-content strong,
+.article-body strong { font-weight: 700; }
+.rte-content blockquote,
+.article-body blockquote {
+  margin: 1.4rem 0;
+  padding: 0.9rem 1.15rem;
+  border-left: 3px solid var(--accent-primary);
+  background: var(--bg-surface-elevated);
+  border-radius: 0 1rem 1rem 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+.rte-content blockquote p:last-child,
+.article-body blockquote p:last-child { margin-bottom: 0; }
+.rte-content img,
+.article-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 1.25rem;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border-light);
+}
+.rte-content hr,
+.article-body hr {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 2rem 0;
+}
+.rte-content code,
+.article-body code {
+  background: var(--bg-surface-elevated);
+  padding: 0.12rem 0.4rem;
+  border-radius: 0.4rem;
+  font-size: 0.88em;
+}
+.rte-content pre,
+.article-body pre {
+  background: #0b1220;
+  color: #e5eaf2;
+  padding: 1.1rem 1.25rem;
+  border-radius: 1.1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+.rte-content pre code,
+.article-body pre code { background: transparent; color: inherit; padding: 0; }
+.rte-content table,
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+.rte-content th,
+.rte-content td,
+.article-body th,
+.article-body td {
+  border: 1px solid var(--border-light);
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+}
+.rte-content th,
+.article-body th { background: var(--bg-surface-elevated); font-weight: 700; }
+.rte-content figure,
+.article-body figure { margin: 1.5rem 0; }
+.rte-content figcaption,
+.article-body figcaption {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 0.5rem;
+}
+.rte-placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
 }

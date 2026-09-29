@@ -2,58 +2,49 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { gsap, ScrollTrigger, ScrollSmoother } from "@/lib/gsap";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
+/**
+ * On every route change: force manual history scroll restoration, snap back to
+ * the top, and re-measure all ScrollTriggers against the new page.
+ *
+ * With ScrollSmoother active the body height is synthetic, so the smoother's
+ * own `scrollTop(0)` is what actually repositions the transformed content —
+ * plain `window.scrollTo` is kept as well for native-scroll routes
+ * (/healthcare, /admin, reduced motion).
+ */
 export default function ScrollToTop() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // 1. Force manual scroll restoration across all browsers
-    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+    if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
 
-    // 2. Instant scroll reset to top (0,0)
     const resetScroll = () => {
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      }
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      ScrollSmoother.get()?.scrollTop(0);
     };
 
     resetScroll();
 
-    // 3. RequestAnimationFrame scroll reset to catch post-render layout shifts
-    const rafId = requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(resetScroll);
+    const t1 = setTimeout(() => {
       resetScroll();
-    });
-
-    // 4. Re-run scroll reset & refresh GSAP triggers after DOM settles
-    const timer1 = setTimeout(() => {
+      ScrollTrigger.clearScrollMemory();
+      ScrollTrigger.refresh();
+    }, 60);
+    const t2 = setTimeout(() => {
       resetScroll();
-      if (typeof window !== "undefined") {
-        ScrollTrigger.clearScrollMemory();
-        ScrollTrigger.refresh();
-      }
-    }, 50);
-
-    const timer2 = setTimeout(() => {
-      resetScroll();
-      if (typeof window !== "undefined") {
-        ScrollTrigger.refresh();
-      }
-    }, 150);
+      ScrollTrigger.refresh();
+    }, 220);
 
     return () => {
       cancelAnimationFrame(rafId);
-      clearTimeout(timer1);
-      clearTimeout(timer2);
+      clearTimeout(t1);
+      clearTimeout(t2);
     };
   }, [pathname]);
 

@@ -1,80 +1,53 @@
 "use client";
 
-import React, { useState } from "react";
-import ScrollProgressBar from "@/components/ScrollProgressBar";
-import ScrollReveal from "@/components/ScrollReveal";
-import Navbar from "@/components/Navbar";
+import React from "react";
 import EnterpriseHero from "@/components/EnterpriseHero";
 import CapabilitiesSection from "@/components/CapabilitiesSection";
 import FeelTheMarket from "@/components/FeelTheMarket";
 import TechExpertiseSection from "@/components/TechExpertiseSection";
+import ProcessSection from "@/components/ProcessSection";
 import LaptopSlider from "@/components/LaptopSlider";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
-import ContactModal from "@/components/ContactModal";
+import { useConsultation } from "@/context/ConsultationContext";
 
+/**
+ * Homepage composition.
+ *
+ * No chrome here: the navbar, scroll progress bar and consultation modal are
+ * hoisted into the root layout (see SiteChrome / ConsultationContext) so they
+ * sit outside ScrollSmoother's transformed wrapper and survive navigation.
+ * Each section owns its own scroll choreography rather than being wrapped in
+ * a reveal layer that would animate twice.
+ */
 export default function Home() {
-  const [consultationModalOpen, setConsultationModalOpen] = useState(false);
-  const [selectedServiceForConsultation, setSelectedServiceForConsultation] = useState<string>("");
-
-  const handleOpenConsultation = (serviceTitle?: string) => {
-    if (serviceTitle) {
-      setSelectedServiceForConsultation(serviceTitle);
-    } else {
-      setSelectedServiceForConsultation("");
-    }
-    setConsultationModalOpen(true);
-  };
-
-  const handleCloseConsultation = () => {
-    setConsultationModalOpen(false);
-  };
+  const { openConsultation } = useConsultation();
 
   return (
     <main className="min-h-screen bg-main text-ink flex flex-col relative overflow-hidden">
-      {/* Top Sticky Scroll Progress Bar */}
-      <ScrollProgressBar />
+      {/* 1. Hero */}
+      <EnterpriseHero onOpenConsultation={openConsultation} />
 
-      {/* Navbar with white-glass scroll treatment */}
-      <Navbar onOpenConsultation={handleOpenConsultation} />
+      {/* 2. Services overview */}
+      <CapabilitiesSection />
 
-      {/* 1. ENTERPRISE HERO — Electric Blue Theme & 5 Front Showcase 3D Cards */}
-      <EnterpriseHero onOpenConsultation={handleOpenConsultation} />
+      {/* 3. Why teams choose Skora */}
+      <FeelTheMarket />
 
-      {/* 2. WHAT WE BUILD AT SKORA — MNC Corporate Glassmorphism Capabilities */}
-      <ScrollReveal variant="fade-up" duration={800}>
-        <CapabilitiesSection />
-      </ScrollReveal>
+      {/* 4. Process */}
+      <ProcessSection />
 
-      {/* 3. FEEL THE MARKET IN YOUR FAVOUR — 3D Rusty Frosty Ice Cubes & Melting Water Drip Loop */}
-      <ScrollReveal variant="fade-up" duration={800}>
-        <FeelTheMarket />
-      </ScrollReveal>
+      {/* 5. Technology expertise */}
+      <TechExpertiseSection />
 
-      {/* 4. OUR TECH & MEDIA EXPERTISE — Pure White Background */}
-      <ScrollReveal variant="fade-up" duration={800}>
-        <TechExpertiseSection />
-      </ScrollReveal>
+      {/* 6. Selected work */}
+      <LaptopSlider />
 
-      {/* 5. 3D 6-LAPTOP CAROUSEL WHEEL */}
-      <ScrollReveal variant="zoom" duration={900}>
-        <LaptopSlider />
-      </ScrollReveal>
+      {/* 7. Client feedback */}
+      <TestimonialsSection />
 
-      {/* 6. TESTIMONIALS SECTION ("Partnered with the Best") */}
-      <ScrollReveal variant="fade-up" duration={800}>
-        <TestimonialsSection />
-      </ScrollReveal>
-
-      {/* 7. FOOTER */}
-      <Footer onOpenConsultation={handleOpenConsultation} />
-
-      {/* Consultation Lead Modal */}
-      <ContactModal
-        isOpen={consultationModalOpen}
-        onClose={handleCloseConsultation}
-        initialService={selectedServiceForConsultation}
-      />
+      {/* 8. Footer */}
+      <Footer onOpenConsultation={openConsultation} />
     </main>
   );
 }

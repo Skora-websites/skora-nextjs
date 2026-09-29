@@ -74,7 +74,8 @@
   width: 400px;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+  /* Rotation is tweened by GSAP (see LaptopSlider.tsx) so it can carry a
+     weighted ease and stay in sync with the caption swap. */
   will-change: transform;
 }
 
@@ -236,18 +237,7 @@
 }
 
 .text-animate-wrapper {
-  animation: fadeUpText 0.6s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
-}
-
-@keyframes fadeUpText {
-  0% {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  will-change: transform, opacity;
 }
 
 .gradient-text {
