@@ -31,11 +31,11 @@ const expertiseRow2 = [
   { name: "Instagram", category: "Social Media", icon: "https://cdn.simpleicons.org/instagram/E4405F" },
   { name: "LinkedIn", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/linkedin/linkedin-original.svg" },
   { name: "X", category: "Social Media", icon: "https://cdn.simpleicons.org/x/0b1220" },
-  { name: "Pinterest", category: "Social Media", icon: "https://raw.githubusercontent.com/devicons/devicon/master/icons/pinterest/pinterest-original.svg" },
+  { name: "Pinterest", category: "Social Media", icon: "https://cdn.simpleicons.org/pinterest/E60023" },
   { name: "Meta", category: "Platform", icon: "https://cdn.simpleicons.org/meta/0467DF" },
   { name: "Google Ads", category: "Marketing", icon: "https://cdn.simpleicons.org/googleads/4285F4" },
   { name: "Google Maps", category: "API & Service", icon: "https://cdn.simpleicons.org/googlemaps/4285F4" },
-  { name: "Canva", category: "Design", icon: "https://api.iconify.design/simple-icons:canva.svg?color=%2300C4CC" },
+  { name: "Canva", category: "Design", icon: "https://api.iconify.design/simple-icons:canva.svg?color=%2300C4CC&width=96&height=96" },
 ];
 
 function TechCard({
@@ -45,8 +45,20 @@ function TechCard({
   item: { name: string; category: string; icon: string };
   fallback: string;
 }) {
+  // Writes two custom properties straight to the node — the border light
+  // tracks the cursor without any React state in the loop.
+  const trackLight = (event: React.MouseEvent<HTMLDivElement>) => {
+    const el = event.currentTarget;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+    el.style.setProperty("--my", `${event.clientY - rect.top}px`);
+  };
+
   return (
-    <div className="glass-card glass-card-hover group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4 transition-transform duration-300 hover:-translate-y-1.5 hover:scale-[1.04]">
+    <div
+      onMouseMove={trackLight}
+      className="glass-card glass-card-hover spotlight-card group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4 transition-transform duration-300 hover:-translate-y-1.5 hover:scale-[1.04]"
+    >
       <div className="flex h-14 w-full items-center justify-center p-1">
         <img
           src={item.icon}
@@ -54,7 +66,7 @@ function TechCard({
           onError={(e) => {
             (e.target as HTMLImageElement).src = fallback;
           }}
-          className="max-h-11 max-w-11 object-contain transition-transform duration-300 group-hover:scale-110"
+          className="h-11 w-11 object-contain transition-transform duration-300 group-hover:scale-110"
         />
       </div>
       <div className="w-full text-center">
@@ -76,7 +88,7 @@ function TechCard({
  */
 export default function TechExpertiseSection() {
   return (
-    <section className="relative overflow-hidden border-t border-line bg-main py-20">
+    <section className="relative overflow-hidden border-t border-line bg-main py-20 sm:py-28">
       <div
         className="absolute inset-0 opacity-70"
         style={{
@@ -90,7 +102,7 @@ export default function TechExpertiseSection() {
         aria-hidden="true"
       />
 
-      <div className="section-wrap relative mb-10 flex flex-wrap items-end justify-between gap-6">
+      <div className="section-wrap relative mb-12 flex flex-wrap items-end justify-between gap-6">
         <Reveal variant="fade-left" className="max-w-2xl">
           <span className="kicker">Toolbox</span>
           <SplitHeading as="h2" className="display-hero mt-4 text-4xl sm:text-6xl">
@@ -104,19 +116,27 @@ export default function TechExpertiseSection() {
         </Reveal>
       </div>
 
-      <Reveal variant="zoom" duration={0.9} className="relative">
+      {/* Both rails sit inside .section-wrap so the card edge lines up with the
+          heading above instead of running under the browser chrome. */}
+      <Reveal variant="zoom" duration={0.9} className="section-wrap relative">
         {/* Row 1 — travelling left */}
         <div className="marquee-container relative flex overflow-hidden py-3">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-main to-transparent md:w-48" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-main to-transparent md:w-48" />
-          <Marquee direction="left" duration={38} laneClassName="gap-5 px-4 py-2">
-            {expertiseRow1.map((item) => (
-              <TechCard
-                key={item.name}
-                item={item}
-                fallback="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg"
-              />
-            ))}
+          <Marquee direction="left" duration={38} laneClassName="gap-5 px-2.5">
+            {/* The gutter lives on this group, between the cards. The lane's
+                identical gap only separates the two loop copies — so both must
+                stay equal, and the lane's px must stay at half that gap, or the
+                -50% wrap lands off-centre and the rail jumps every cycle. */}
+            <div className="flex shrink-0 items-center gap-5">
+              {expertiseRow1.map((item) => (
+                <TechCard
+                  key={item.name}
+                  item={item}
+                  fallback="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg"
+                />
+              ))}
+            </div>
           </Marquee>
         </div>
 
@@ -124,14 +144,16 @@ export default function TechExpertiseSection() {
         <div className="marquee-container relative mt-4 flex overflow-hidden py-3">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-main to-transparent md:w-48" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-main to-transparent md:w-48" />
-          <Marquee direction="right" duration={38} laneClassName="gap-5 px-4 py-2">
-            {expertiseRow2.map((item) => (
-              <TechCard
-                key={item.name}
-                item={item}
-                fallback="https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg"
-              />
-            ))}
+          <Marquee direction="right" duration={38} laneClassName="gap-5 px-2.5">
+            <div className="flex shrink-0 items-center gap-5">
+              {expertiseRow2.map((item) => (
+                <TechCard
+                  key={item.name}
+                  item={item}
+                  fallback="https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg"
+                />
+              ))}
+            </div>
           </Marquee>
         </div>
       </Reveal>

@@ -652,3 +652,284 @@
   color: var(--text-muted);
   pointer-events: none;
 }
+
+/* ============================================================
+   CINEMATIC LAYER
+   Film grain, moving light, material depth and tactile states.
+   Everything here is transform/opacity only, and the perpetual
+   pieces are disabled wholesale under prefers-reduced-motion.
+   ============================================================ */
+
+@layer components {
+  /* Film grain over the whole viewport. Fixed + pointer-events:none means
+     the compositor never repaints it while the page scrolls — it is a
+     static texture layer, not a scrolling one. */
+  .cinema-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483645;
+    pointer-events: none;
+    opacity: 0.055;
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='160'%20height='160'%3E%3Cfilter%20id='g'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.82'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='160'%20height='160'%20filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    background-repeat: repeat;
+  }
+
+  /* A single travelling light band. Wrap dark surfaces with it so the band
+     reads as a lamp sweeping across a set instead of a flat colour block. */
+  .beam {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .beam::after {
+    content: "";
+    position: absolute;
+    top: -60%;
+    left: 0;
+    width: 55%;
+    height: 220%;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.11) 45%,
+      transparent 100%
+    );
+    transform: translate3d(-160%, 0, 0) rotate(10deg);
+    animation: beam-sweep 11s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+    will-change: transform;
+  }
+
+  /* Directional highlight that runs across primary buttons. */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    bottom: -50%;
+    width: 60%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.42),
+      transparent
+    );
+    transform: translate3d(-220%, 0, 0) skewX(-18deg);
+    animation: sheen-run 6.5s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+    pointer-events: none;
+  }
+
+  /* Cursor-tracked border light. The two custom properties are written
+     straight to the element on mousemove — no state, no re-render. */
+  .spotlight-card {
+    position: relative;
+    isolation: isolate;
+  }
+  .spotlight-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(
+      240px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(37, 99, 235, 0.55),
+      rgba(37, 99, 235, 0) 68%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .spotlight-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      300px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(37, 99, 235, 0.07),
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .spotlight-card:hover::before,
+  .spotlight-card:hover::after {
+    opacity: 1;
+  }
+
+  /* Letterbox hairline that frames a section like a film gate. */
+  .frame-rule {
+    position: relative;
+  }
+  .frame-rule::before,
+  .frame-rule::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border-strong) 12%,
+      var(--border-strong) 88%,
+      transparent
+    );
+    opacity: 0.7;
+  }
+  .frame-rule::before {
+    top: 0;
+  }
+  .frame-rule::after {
+    bottom: 0;
+  }
+
+  /* Scene marker: the running index used between sections. */
+  .scene-marker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .scene-marker::after {
+    content: "";
+    height: 1px;
+    width: 4.5rem;
+    background: linear-gradient(90deg, var(--accent-primary), transparent);
+  }
+
+  /* Tactile press — every button acknowledges the click. */
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(1px) scale(0.985);
+    box-shadow: 0 4px 12px -6px rgba(37, 99, 235, 0.55);
+  }
+  .btn-secondary:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  /* Inner refraction on the one card style, so frosted surfaces read as
+     physical glass with a caught edge instead of a flat translucent box. */
+  .glass-card {
+    box-shadow:
+      var(--shadow-card),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  }
+
+  /* Media wells hold imagery still behind a scrim so captions stay legible. */
+  .media-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(6, 11, 24, 0.92) 0%,
+      rgba(6, 11, 24, 0.35) 42%,
+      rgba(6, 11, 24, 0) 72%
+    );
+    pointer-events: none;
+  }
+
+  /* Reel frames (WorkReel) — stacked absolutely, one lit at a time. The
+     resting state lives in CSS, not inline styles: GSAP tweens write inline
+     opacity during a dissolve, but anything that later clears inline styles
+     (Reveal's reduced-motion reset, a hydration pass) drops back to exactly
+     one visible frame instead of lighting the whole stack. */
+  .reel-slide {
+    opacity: 0;
+  }
+  .reel-slide[data-active="true"] {
+    opacity: 1;
+  }
+
+  /* Vertical scroll cue in the hero margin — a line that keeps falling. */
+  .scroll-cue__rail {
+    position: relative;
+    width: 1px;
+    height: 5.5rem;
+    overflow: hidden;
+    background: var(--border-strong);
+  }
+  .scroll-cue__rail::after {
+    content: "";
+    position: absolute;
+    inset-x: 0;
+    top: 0;
+    height: 45%;
+    background: linear-gradient(180deg, transparent, var(--accent-primary));
+    animation: cue-fall 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    will-change: transform;
+  }
+}
+
+@keyframes beam-sweep {
+  0% {
+    transform: translate3d(-160%, 0, 0) rotate(10deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(320%, 0, 0) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+@keyframes sheen-run {
+  0%,
+  62% {
+    transform: translate3d(-220%, 0, 0) skewX(-18deg);
+  }
+  100% {
+    transform: translate3d(340%, 0, 0) skewX(-18deg);
+  }
+}
+
+@keyframes cue-fall {
+  0% {
+    transform: translate3d(0, -110%, 0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 240%, 0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beam::after,
+  .sheen::after,
+  .scroll-cue__rail::after {
+    animation: none;
+    display: none;
+  }
+  .spotlight-card::before,
+  .spotlight-card::after {
+    display: none;
+  }
+}

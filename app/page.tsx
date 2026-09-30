@@ -6,7 +6,7 @@ import CapabilitiesSection from "@/components/CapabilitiesSection";
 import FeelTheMarket from "@/components/FeelTheMarket";
 import TechExpertiseSection from "@/components/TechExpertiseSection";
 import ProcessSection from "@/components/ProcessSection";
-import LaptopSlider from "@/components/LaptopSlider";
+import WorkReel from "@/components/WorkReel";
 import Footer from "@/components/Footer";
 import { useConsultation } from "@/context/ConsultationContext";
 
@@ -40,7 +40,7 @@ export default function Home() {
       <TechExpertiseSection />
 
       {/* 6. Selected work */}
-      <LaptopSlider />
+      <WorkReel />
 
       {/* 7. Footer */}
       <Footer onOpenConsultation={openConsultation} />

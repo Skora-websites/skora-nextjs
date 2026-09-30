@@ -6,6 +6,7 @@ import Preloader from "@/components/Preloader";
 import SiteChrome from "@/components/SiteChrome";
 import SmoothScroll from "@/components/animation/SmoothScroll";
 import PageWipe from "@/components/transition/PageWipe";
+import AgentationMount from "@/components/AgentationMount";
 import { SiteContentProvider } from "@/context/SiteContentContext";
 import { PreloaderProvider } from "@/context/PreloaderContext";
 import { ConsultationProvider } from "@/context/ConsultationContext";
@@ -85,8 +86,14 @@ export default function RootLayout({
               <Preloader />
               <ScrollToTop />
               <PageWipe />
+              {/* Static film-grain plate: fixed, pointer-events:none, never
+                  repainted on scroll. Sits above the content layer so the
+                  whole site shares one photographic texture. */}
+              <div className="cinema-grain" aria-hidden="true" />
               <SmoothScroll>{children}</SmoothScroll>
               <SiteChrome />
+              {/* Dev-only annotation toolbar; renders nothing in production. */}
+              <AgentationMount />
             </ConsultationProvider>
           </SiteContentProvider>
         </PreloaderProvider>

@@ -93,15 +93,17 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
           ease: CINEMA.enter,
         }
       );
+      // Curtain reveal: each tile rises out from behind its own mask, so the
+      // strip looks like frames being pulled up into the light.
       gsap.fromTo(
         ".gsap-work-card",
-        { opacity: 0, y: 46, scale: 0.96 },
+        { opacity: 0, yPercent: 10, clipPath: "inset(100% 0% 0% 0%)" },
         {
           opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1,
-          stagger: 0.08,
+          yPercent: 0,
+          clipPath: "inset(0% 0% 0% 0%)",
+          duration: 1.15,
+          stagger: 0.09,
           delay: 0.95,
           ease: CINEMA.enter,
         }
@@ -117,12 +119,26 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
         className="bg-blueprint absolute inset-0 [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent_78%)]"
         aria-hidden="true"
       />
-      <div
-        className="absolute -top-32 left-1/2 h-96 w-[60rem] -translate-x-1/2 rounded-full bg-accent/[0.07] blur-3xl"
-        aria-hidden="true"
-      />
+      {/* Ambient key light — drifts against the scroll so the fold has depth. */}
+      <Parallax
+        speed={1.25}
+        className="pointer-events-none absolute -top-40 left-0 right-0 h-[34rem]"
+      >
+        <div className="mx-auto h-full w-full max-w-[62rem] rounded-full bg-accent/[0.09] blur-3xl" />
+      </Parallax>
 
       <div className="section-wrap relative">
+        {/* Margin annotation — reads bottom-to-top like a film slate. */}
+        <div
+          className="absolute -left-14 top-[34%] hidden flex-col items-center gap-3 2xl:flex"
+          aria-hidden="true"
+        >
+          <span className="rotate-180 text-[10px] font-extrabold uppercase tracking-[0.34em] text-faint [writing-mode:vertical-rl]">
+            Scroll
+          </span>
+          <span className="scroll-cue__rail" />
+        </div>
+
         {/* Top meta row */}
         <div className="gsap-hero-fade flex flex-wrap items-center justify-between gap-3 pb-8">
           <span className="kicker">Digital partner — India . UK</span>
@@ -161,7 +177,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
             <button
               type="button"
               onClick={() => onOpenConsultation()}
-              className="btn-primary group px-7 py-4 text-sm"
+              className="btn-primary sheen group px-7 py-4 text-sm"
             >
               <span>Start a project</span>
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -177,7 +193,11 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
         </div>
 
         {/* Stats band — values count up as they settle */}
-        <div className="gsap-hero-fade mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
+        <div className="gsap-hero-fade relative mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
+          <span
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[2px] bg-gradient-to-r from-accent via-glow to-transparent"
+            aria-hidden="true"
+          />
           {stats.map((s) => (
             <div key={s.label} className="bg-surface px-6 py-5">
               <p className="text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -216,7 +236,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
                   className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105 sm:aspect-[3/3.4]"
                 />
               </Parallax>
-              <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-deep/85 via-ink-deep/10 to-transparent" />
+              <span className="media-scrim" />
               <span className="sticker absolute left-3 top-3 !py-1.5 !text-[10px]">{w.tag}</span>
               <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 p-4">
                 <span className="text-sm font-extrabold text-white sm:text-base">{w.title}</span>
@@ -230,8 +250,9 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
       </div>
 
       {/* Marquee — speed reacts to scroll velocity */}
-      <div className="mt-12 overflow-hidden border-y border-ink bg-ink-deep py-4 text-white">
-        <Marquee duration={30} laneClassName="gap-8 pr-8">
+      <div className="relative mt-12 overflow-hidden border-y border-ink bg-ink-deep py-4 text-white">
+        <span className="beam" aria-hidden="true" />
+        <Marquee duration={30} className="relative z-10" laneClassName="gap-8 pr-8">
           {marqueeItems.map((item) => (
             <span
               key={item}
