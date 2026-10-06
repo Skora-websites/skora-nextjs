@@ -19,6 +19,7 @@ import { useSiteContent } from "@/context/SiteContentContext";
 import { useConsultation } from "@/context/ConsultationContext";
 import { SERVICES } from "@/lib/services";
 import { CONTACT_FAQ } from "@/lib/faq";
+import { OPENING_HOURS } from "@/lib/healthcare";
 
 /** Service picker reads from the shared list — never a hand-copied array. */
 const SERVICE_OPTIONS = SERVICES.map((s) => s.pill);
@@ -155,7 +156,7 @@ export default function ContactView() {
                   {siteContent.phone}
                 </a>
                 <p className="text-xs font-medium text-white/50">
-                  Mon to Sat, 9:00 AM to 8:00 PM IST
+                  {OPENING_HOURS}
                 </p>
               </div>
             </div>
@@ -285,7 +286,7 @@ export default function ContactView() {
                     autoComplete="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+44 7700 900000"
+                    placeholder="+91 98765 43210"
                     className="input-dark text-sm"
                   />
                 </div>

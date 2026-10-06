@@ -5,11 +5,18 @@ import { isSubmittedAdminAuthenticated } from "@/lib/auth";
 import { deletePost, getPostById, updatePost, type PostDraftInput } from "@/lib/db";
 import { parseSeoInput, slugify } from "@/lib/blog";
 
-/** Drops the ISR copies of everything a post mutation can affect. */
+/**
+ * Drops the ISR copies of everything a post mutation can affect.
+ *
+ * The paths mirror where the pages actually render: the index at /insights,
+ * each post at the site root (`app/[slug]`). Revalidating a path that no
+ * longer exists is a silent no-op, which is how a moved route keeps serving a
+ * stale copy after an edit.
+ */
 function revalidatePostViews(...slugs: string[]): void {
-  revalidatePath("/blog");
+  revalidatePath("/insights");
   for (const slug of new Set(slugs.filter(Boolean))) {
-    revalidatePath(`/blog/${slug}`);
+    revalidatePath(`/${slug}`);
   }
   revalidatePath("/sitemap.xml");
 }

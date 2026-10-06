@@ -1,23 +1,47 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight, ArrowUpRight, CalendarDays, Clock, UserRound } from "lucide-react";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/animation/Reveal";
 import { getGlobalSeoSafe, getPostBySlug, getPosts } from "@/lib/db";
-import { absoluteUrl, formatPostDate, readingTime, stripHtml, truncateWords } from "@/lib/blog";
+import {
+  absoluteUrl,
+  formatPostDate,
+  isReservedSlug,
+  readingTime,
+  socialImageUrl,
+  stripHtml,
+  truncateWords,
+} from "@/lib/blog";
 import { CTA, CTA_TRUST_LINE } from "@/lib/cta";
 
-/** A published post must reflect admin edits quickly — one minute max. */
+/**
+ * Every published article, served at the site root: `/my-post`.
+ *
+ * The route used to live at `/blog/[slug]` and moved up one level so a post is
+ * a first-class URL instead of a sub-path of a section that only exists for the
+ * index (`/insights`). `/blog/:slug` and `/blog` are permanent redirects in
+ * `next.config.ts`, so the existing rankings and links survive the move.
+ *
+ * Static segments (`/services`, `/contact`, `/about`, …) always outrank this
+ * dynamic one, so a post can never take over a real route — `isReservedSlug`
+ * is the second line of defence for slugs that only look harmless.
+ *
+ * A published post must reflect admin edits quickly — one minute max.
+ */
 export const revalidate = 60;
 
-interface BlogPostPageProps {
+interface PostPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
+  // A reserved slug belongs to a real route; there is nothing to describe.
+  if (isReservedSlug(slug)) return {};
   const post = await getPostBySlug(slug);
   if (!post) return {};
 
@@ -29,9 +53,12 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     truncateWords(post.content, 155) ||
     seo.defaultDescription;
 
-  const canonical = post.seo.canonicalUrl?.trim() || `/blog/${post.slug}`;
+  const canonical = post.seo.canonicalUrl?.trim() || `/${post.slug}`;
+  // Falls back to the generated card rather than dropping the tag: setting
+  // `openGraph.images: undefined` here would override the root layout and leave
+  // the post with no share image at all.
   const image = post.seo.ogImage || post.coverImage || seo.ogImage;
-  const imageUrl = image ? absoluteUrl(image, seo.canonicalBase) : undefined;
+  const imageUrl = socialImageUrl(image, seo.canonicalBase);
   const shareTitle = post.seo.ogTitle?.trim() || title;
   const shareDescription = post.seo.ogDescription?.trim() || description;
 
@@ -55,26 +82,30 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       authors: post.author ? [post.author] : undefined,
       section: post.category || undefined,
       tags: post.tags.length ? post.tags : undefined,
-      images: imageUrl ? [{ url: imageUrl, alt: post.title }] : undefined,
+      images: [{ url: imageUrl, alt: post.title }],
     },
     twitter: {
       card: post.seo.twitterCard,
       title: shareTitle,
       description: shareDescription,
       site: seo.twitterHandle || undefined,
-      images: imageUrl ? [imageUrl] : undefined,
+      images: [imageUrl],
     },
   };
 }
 
-export default async function BlogPostPage({ params }: BlogPostPageProps) {
+export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
+  // Guards against a post whose slug collides with a reserved route name: the
+  // static page would win the match anyway, so this keeps the response honest.
+  if (isReservedSlug(slug)) notFound();
+
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
   const [seo, allPosts] = await Promise.all([getGlobalSeoSafe(), getPosts()]);
 
-  const canonical = post.seo.canonicalUrl?.trim() || `/blog/${post.slug}`;
+  const canonical = post.seo.canonicalUrl?.trim() || `/${post.slug}`;
   const description =
     post.seo.metaDescription?.trim() ||
     post.excerpt ||
@@ -97,7 +128,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     "@type": post.seo.schemaType || "BlogPosting",
     headline: post.title,
     description,
-    image: image ? [absoluteUrl(image, seo.canonicalBase)] : undefined,
+    // Never empty: an article with no `image` is still better described by the
+    // site card than by no image at all.
+    image: [socialImageUrl(image, seo.canonicalBase)],
     datePublished: post.publishedAt || post.createdAt,
     dateModified: post.updatedAt,
     inLanguage: "en",
@@ -106,15 +139,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     wordCount: words,
     timeRequired: `PT${minutes}M`,
     mainEntityOfPage: absoluteUrl(canonical, seo.canonicalBase),
+    // A bylined article is written by a person, not by the studio: Google treats
+    // an Organization `author` on a BlogPosting as unverified authorship, so the
+    // entity points at the team page that explains who writes here.
     author: {
-      "@type": "Organization",
-      name: post.author || seo.siteName,
-      url: seo.canonicalBase,
+      "@type": "Person",
+      name: post.author || `${seo.siteName} Team`,
+      url: absoluteUrl("/about", seo.canonicalBase),
     },
     publisher: {
       "@type": "Organization",
       name: seo.siteName,
       url: seo.canonicalBase,
+      // A publisher logo must be a real raster image — the generated OG card
+      // carries display type, which reads as a broken logo in rich results, so
+      // this deliberately stays on the brand mark rather than the fallback.
       logo: {
         "@type": "ImageObject",
         url: absoluteUrl(seo.ogImage || "/logo.png", seo.canonicalBase),
@@ -139,8 +178,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 Home
               </Link>
               <span aria-hidden="true">/</span>
-              <Link href="/blog" className="hover:text-accent transition-colors">
-                Blog
+              <Link href="/insights" className="hover:text-accent transition-colors">
+                Insights
               </Link>
               {post.category && (
                 <>
@@ -185,12 +224,29 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             variant="fade-up"
             className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto mt-10"
           >
-            <div className="overflow-hidden rounded-[2rem] border border-line bg-surface">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+            {/* A cover URL comes out of MongoDB and can be any ratio, so there is
+                no intrinsic width/height to declare and `next/image` would be
+                guessing. `fill` is the documented answer for that case: the
+                wrapper owns the box. 16/9 matches the aspect every other cover
+                on the site already renders at (BlogGrid's cards), and the
+                `max-h-[32rem]` cap carries over from the old `max-h` so a wide
+                cover is still cropped rather than allowed to run past half a
+                screen — the box comes out identical, just reserved up front
+                instead of collapsing to nothing until the image decodes. */}
+            <div className="relative aspect-[16/9] max-h-[32rem] overflow-hidden rounded-[2rem] border border-line bg-surface">
+              <Image
                 src={post.coverImage}
                 alt={post.seo.ogTitle || post.title}
-                className="w-full h-auto max-h-[32rem] object-cover"
+                fill
+                /* The wrapper is `.max-w-5xl` (64rem) inside a full-bleed row, so
+                   the image is 100vw less 1/1.5/2rem padding up to 1024 - 2rem,
+                   then a flat 992px (= 1024 - 2rem) once max-w takes over. */
+                sizes="(min-width: 1088px) 992px, (min-width: 640px) 96vw, 100vw"
+                /* This page's LCP candidate, as called out for the article
+                   route: the cover is the largest element on an otherwise
+                   text-led page, and it is what a social/reader lands on. */
+                preload
+                className="object-cover"
               />
             </div>
           </Reveal>
@@ -238,7 +294,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </h2>
               </div>
               <Link
-                href="/blog"
+                href="/insights"
                 className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-accent hover:underline"
               >
                 All articles <ArrowUpRight size={14} />
@@ -249,7 +305,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {related.map((item) => (
                 <Link
                   key={item.id}
-                  href={`/blog/${item.slug}`}
+                  href={`/${item.slug}`}
                   className="group flex flex-col gap-3 rounded-[1.75rem] border border-line bg-surface p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-card-lg"
                 >
                   <span className="text-[10px] font-black uppercase tracking-widest text-accent">
@@ -286,7 +342,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <span>Book a consultation</span>
                   <ArrowRight size={16} />
                 </Link>
-                <Link href="/blog" className={CTA.secondary}>
+                <Link href="/insights" className={CTA.secondary}>
                   <span>More articles</span>
                 </Link>
               </div>

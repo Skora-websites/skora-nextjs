@@ -8,16 +8,15 @@ import { usePreloaderGate } from "@/context/PreloaderContext";
 /**
  * Routes that opt out of the smooth scroller.
  *
- * - /admin has its own fixed sidebar layout.
- * - /healthcare is frozen (AI_RULES.md) and renders its own fixed navbar and
- *   full-screen modals inside the page — a transformed smoother wrapper would
- *   break them, so it keeps native scrolling.
+ * /admin has its own fixed sidebar layout, which a transformed smoother wrapper
+ * would turn into a content-relative box that scrolls away — it keeps native
+ * scrolling.
  *
  * The wrapper/content divs are always rendered (inert plain divs when no
  * instance exists) so children never remount on navigation.
  */
 function isSmootherExcluded(pathname: string): boolean {
-  return pathname === "/healthcare" || pathname.startsWith("/admin");
+  return pathname.startsWith("/admin");
 }
 
 /** Bindings whose scroller is the smoother's proxy rather than the window. */

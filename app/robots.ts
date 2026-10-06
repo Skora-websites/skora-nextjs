@@ -1,12 +1,13 @@
 import type { MetadataRoute } from "next";
 import { getGlobalSeoSafe } from "@/lib/db";
+import { defaultGlobalSeo } from "@/lib/blog";
 
 /** robots.txt follows the toggles configured at /admin/seo. */
 export const revalidate = 300;
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const seo = await getGlobalSeoSafe();
-  const base = (seo.canonicalBase || "https://skora.digital").replace(/\/+$/, "");
+  const base = (seo.canonicalBase || defaultGlobalSeo.canonicalBase).replace(/\/+$/, "");
 
   if (!seo.robotsEnabled) {
     return {

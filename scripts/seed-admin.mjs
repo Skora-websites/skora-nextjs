@@ -62,8 +62,25 @@ async function main() {
   const fileEnv = readEnvFile();
   const env = (key) => process.env[key] ?? fileEnv[key];
 
-  const uri = env("MONGODB_URI") || "mongodb://127.0.0.1:27017";
-  const dbName = env("MONGODB_DB") || "skora";
+  // No localhost default: Atlas is the only database this project uses. Falling
+// back to 127.0.0.1 here would silently seed an admin into a local mongod that
+// nothing else reads.
+const uri = (env("MONGODB_URI") || "").trim();
+if (!uri || uri.includes("<username>") || uri.includes("<password>")) {
+  throw new Error(
+    "MONGODB_URI is not set (or still has placeholders). Set it in .env — see .env.example."
+  );
+}
+  let uriDbName = "";
+  try {
+    uriDbName = new URL(uri).pathname.replace(/^\/+/, "").split("/")[0];
+  } catch {
+    throw new Error("MONGODB_URI is not a valid connection URL.");
+  }
+  const dbName = (env("MONGODB_DB") || uriDbName || "").trim();
+  if (!dbName) {
+    throw new Error("MONGODB_DB must be set when MONGODB_URI does not include a database name.");
+  }
 
   const email = (env("ADMIN_EMAIL") || (await ask("Admin email: "))).trim();
   if (!email) throw new Error("No admin email provided.");

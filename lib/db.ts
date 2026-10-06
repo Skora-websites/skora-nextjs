@@ -1,12 +1,11 @@
 import fs from "fs";
 import path from "path";
+import { cache } from "react";
 import { ObjectId, type Db, type Filter, type OptionalId } from "mongodb";
-import clientPromise from "./mongodb";
+import { getMongoClient, hasMongoConfig } from "./mongodb";
 import {
-  DEFAULT_PACKAGES,
   DEFAULT_SERVICES,
   DEFAULT_SITE_CORE,
-  type PackageItem,
   type ServiceItem,
 } from "./site-defaults";
 import {
@@ -18,42 +17,103 @@ import {
   type GlobalSeo,
   type PostSeo,
 } from "./blog";
+import {
+  normalizePageSeoKey,
+  normalizePageSeoMap,
+  type PageSeoContext,
+  type PageSeoOverride,
+  type PageSeoOverrides,
+} from "./page-seo";
 
-const DB_NAME = process.env.MONGODB_DB || "skora";
+const DB_NAME = process.env.MONGODB_DB?.trim() || undefined;
 
 export type { Lead, LeadStatus } from "./lead";
 import type { Lead } from "./lead";
 
+/**
+ * The editable site content document.
+ *
+ * The old `/healthcare` division took a `packages` array and a separate
+ * `healthcareEmail`; both are gone. Records written before that removal may
+ * still carry them, so `stripRetiredFields` drops them on every read/write and
+ * they can never resurface through the API or the admin editors.
+ */
 export interface SiteContent {
   phone: string;
   email: string;
-  healthcareEmail: string;
   address: string;
   responseGuarantee: string;
-  packages: PackageItem[];
   services: ServiceItem[];
   textOverrides: Record<string, string>;
   /** Site-wide SEO defaults managed from /admin/seo. */
   seo: GlobalSeo;
+  /**
+   * Per-page SEO overrides for the static marketing routes, keyed by canonical
+   * route path (`"/"`, `"/about"`, …). Managed from /admin/seo/pages.
+   *
+   * Only ever contains keys present in `PAGE_SEO_REGISTRY` — `normalizePageSeoMap`
+   * enforces that on every read and write, so a route deleted from the registry
+   * cannot leave an orphan record behind.
+   */
+  pageSeo: PageSeoOverrides;
   updatedAt: string;
 }
 
-/** Partial update payload — the `seo` block may be supplied piecemeal. */
-export type { PackageItem, ServiceItem };
+/** Fields removed when the healthcare division was dropped. */
+const RETIRED_CONTENT_KEYS = ["packages", "healthcareEmail"] as const;
 
-export type SiteContentPatch = Omit<Partial<SiteContent>, "seo"> & {
+/** Partial update payload — the `seo` block may be supplied piecemeal. */
+export type { ServiceItem };
+
+export type SiteContentPatch = Omit<Partial<SiteContent>, "seo" | "pageSeo"> & {
   seo?: Partial<GlobalSeo>;
+  /**
+   * Overrides keyed by route path. A `null` value deletes that page's record —
+   * that is the Reset action, and the reason this is not a plain Partial.
+   */
+  pageSeo?: Record<string, PageSeoOverride | null>;
 };
+
+/** Copies only the live fields, so stale stored keys never survive a write. */
+function stripRetiredFields<T extends object>(content: T): T {
+  const clean = { ...content } as Record<string, unknown>;
+  for (const key of RETIRED_CONTENT_KEYS) delete clean[key];
+  return clean as T;
+}
+
+/**
+ * Merges a pageSeo patch onto the stored map.
+ *
+ * Entries merge (so a save for `/about` cannot clobber `/privacy`) but the record
+ * for a path is REPLACED, never field-patched — matching the wholesale save the
+ * admin form performs, and removing the stale-key class of bug entirely. A `null`
+ * value deletes that page's record; that is the Reset action.
+ */
+function mergePageSeoOverrides(
+  current: PageSeoOverrides | undefined,
+  patch: Record<string, PageSeoOverride | null> | undefined
+): PageSeoOverrides {
+  const next: PageSeoOverrides = { ...(current || {}) };
+  for (const [key, value] of Object.entries(patch || {})) {
+    const path = normalizePageSeoKey(key);
+    if (!value) {
+      delete next[path];
+      continue;
+    }
+    next[path] = value;
+  }
+  return normalizePageSeoMap(next);
+}
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "hrms.json");
 
 const defaultSiteContent: SiteContent = {
   ...DEFAULT_SITE_CORE,
-  packages: DEFAULT_PACKAGES,
   services: DEFAULT_SERVICES,
   textOverrides: {},
   seo: defaultGlobalSeo,
+  pageSeo: {},
   updatedAt: new Date().toISOString(),
 };
 
@@ -69,11 +129,11 @@ interface DatabaseSchema {
 function normalizeLocalContent(parsed: SiteContent): SiteContent {
   const merged: SiteContent = {
     ...defaultSiteContent,
-    ...parsed,
+    ...stripRetiredFields(parsed || {}),
     textOverrides: parsed?.textOverrides || {},
     seo: { ...defaultGlobalSeo, ...(parsed?.seo || {}) },
+    pageSeo: normalizePageSeoMap(parsed?.pageSeo),
   };
-  if (!merged.packages || merged.packages.length === 0) merged.packages = DEFAULT_PACKAGES;
   if (!merged.services || merged.services.length === 0) merged.services = DEFAULT_SERVICES;
   return merged;
 }
@@ -100,7 +160,12 @@ function ensureLocalDbFile(): DatabaseSchema {
       !parsed.content ||
       !parsed.content.textOverrides ||
       !parsed.content.seo ||
-      !parsed.content.packages;
+      // `pageSeo` may legitimately be an empty object (no page overridden yet),
+      // so an absent key is the migration trigger, not emptiness — same as the
+      // `seo` check above it.
+      parsed.content.pageSeo === undefined ||
+      !parsed.content.services ||
+      RETIRED_CONTENT_KEYS.some((key) => key in parsed.content);
     if (!parsed.posts) parsed.posts = [];
     if (contentChanged) {
       parsed.content = normalizeLocalContent(parsed.content);
@@ -130,9 +195,9 @@ function writeLocalDb(data: DatabaseSchema) {
 // ----------------------------------------------------
 
 export async function getLeads(): Promise<Lead[]> {
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
@@ -171,9 +236,9 @@ export async function createLead(leadData: Omit<Lead, "id" | "createdAt" | "stat
     createdAt: new Date().toISOString(),
   };
 
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
@@ -204,9 +269,9 @@ function leadIdFilters(id: string): Filter<Lead>[] {
 }
 
 export async function updateLeadStatus(id: string, status: Lead["status"]): Promise<Lead | null> {
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
@@ -238,9 +303,9 @@ export async function updateLeadStatus(id: string, status: Lead["status"]): Prom
 }
 
 export async function deleteLead(id: string): Promise<boolean> {
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         const collection = db.collection<Lead>("leads");
@@ -263,10 +328,26 @@ export async function deleteLead(id: string): Promise<boolean> {
   return true;
 }
 
-export async function getSiteContent(): Promise<SiteContent> {
-  if (clientPromise) {
+/**
+ * The whole site-content document.
+ *
+ * Wrapped in React's `cache()` so a single render that needs it more than once
+ * issues one query. The static marketing pages are why this matters: each one
+ * reads the document twice — once through `getPageSeoContext` in
+ * `generateMetadata`, once through `getGlobalSeoSafe` in its body for the
+ * JSON-LD. Without this that is two `findOne`s per page, every regeneration.
+ *
+ * `cache` is scoped to the React request, so it cannot serve a stale document
+ * across requests, and outside a React scope it degrades to a plain call. The
+ * one thing to keep in mind: `updateSiteContent` reads through this same
+ * function and then writes. Nothing reads after a write in the same request
+ * today, and `updateSiteContent` returns its own computed object rather than
+ * re-reading, so there is no stale-after-write path.
+ */
+export const getSiteContent = cache(async (): Promise<SiteContent> => {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         const collection = db.collection<SiteContent>("content");
@@ -274,17 +355,20 @@ export async function getSiteContent(): Promise<SiteContent> {
         if (content) {
           const stored = { ...(content as SiteContent & { _id?: unknown }) };
           delete stored._id;
-          const cleanContent = stored;
+          // Older documents may still hold the retired healthcare keys — drop
+          // them so the merged result matches the current shape.
+          const cleanContent = stripRetiredFields(stored);
           return {
             ...defaultSiteContent,
             ...cleanContent,
             seo: { ...defaultGlobalSeo, ...(cleanContent.seo || {}) },
+            pageSeo: normalizePageSeoMap(cleanContent.pageSeo),
             textOverrides: cleanContent.textOverrides || {},
           };
         }
         // Auto-seed MongoDB with initial site content if collection is empty
         const localDb = ensureLocalDbFile();
-        const seedContent = localDb.content || defaultSiteContent;
+        const seedContent = normalizeLocalContent(localDb.content || defaultSiteContent);
         await collection.updateOne(
           { key: "global_site_content" },
           { $set: { key: "global_site_content", ...seedContent } },
@@ -300,33 +384,40 @@ export async function getSiteContent(): Promise<SiteContent> {
   const db = ensureLocalDbFile();
   db.content = normalizeLocalContent(db.content);
   return db.content;
-}
+});
 
 export async function updateSiteContent(partialContent: SiteContentPatch): Promise<SiteContent> {
   const current = await getSiteContent();
+  const patch = stripRetiredFields(partialContent);
   const updatedContent: SiteContent = {
     ...current,
-    ...partialContent,
+    ...patch,
     textOverrides: {
       ...(current.textOverrides || {}),
-      ...(partialContent.textOverrides || {}),
+      ...(patch.textOverrides || {}),
     },
     seo: {
       ...(current.seo || defaultGlobalSeo),
-      ...(partialContent.seo || {}),
+      ...(patch.seo || {}),
     },
+    pageSeo: mergePageSeoOverrides(current.pageSeo, patch.pageSeo),
     updatedAt: new Date().toISOString(),
   };
 
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         const collection = db.collection("content");
         await collection.updateOne(
           { key: "global_site_content" },
-          { $set: { key: "global_site_content", ...updatedContent } },
+          // `$set` only touches the live fields; the retired healthcare keys are
+          // unset explicitly so a stale document cannot hand them back later.
+          {
+            $set: { key: "global_site_content", ...updatedContent },
+            $unset: Object.fromEntries(RETIRED_CONTENT_KEYS.map((key) => [key, ""])),
+          },
           { upsert: true }
         );
       }
@@ -423,9 +514,9 @@ async function ensurePostIndexes(db: Db): Promise<void> {
 export async function getPosts(options: PostQueryOptions = {}): Promise<BlogPost[]> {
   const filter: Filter<BlogPost> = options.includeDrafts ? {} : { status: "published" };
 
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         await ensurePostIndexes(db);
@@ -447,9 +538,9 @@ export async function getPosts(options: PostQueryOptions = {}): Promise<BlogPost
 }
 
 export async function getPostBySlug(slug: string, options: PostQueryOptions = {}): Promise<BlogPost | null> {
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         await ensurePostIndexes(db);
@@ -470,9 +561,9 @@ export async function getPostBySlug(slug: string, options: PostQueryOptions = {}
 }
 
 export async function getPostById(id: string): Promise<BlogPost | null> {
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         await ensurePostIndexes(db);
@@ -491,9 +582,9 @@ export async function createPost(input: PostDraftInput): Promise<BlogPost> {
   const now = new Date().toISOString();
   const status: BlogPost["status"] = input.status === "published" ? "published" : "draft";
 
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         await ensurePostIndexes(db);
@@ -560,9 +651,9 @@ export async function createPost(input: PostDraftInput): Promise<BlogPost> {
 }
 
 export async function updatePost(id: string, input: Partial<PostDraftInput>): Promise<BlogPost | null> {
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         await ensurePostIndexes(db);
@@ -663,9 +754,9 @@ export async function updatePost(id: string, input: Partial<PostDraftInput>): Pr
 }
 
 export async function deletePost(id: string): Promise<boolean> {
-  if (clientPromise) {
+  if (hasMongoConfig()) {
     try {
-      const client = await clientPromise;
+      const client = await getMongoClient();
       if (client) {
         const db = client.db(DB_NAME);
         const res = await db.collection(POSTS_COLLECTION).deleteOne({ id });
@@ -685,24 +776,51 @@ export async function deletePost(id: string): Promise<boolean> {
 }
 
 /**
+ * Site-wide SEO with its fallbacks applied, so both `getGlobalSeoSafe` and
+ * `getPageSeoContext` normalise identically.
+ *
+ * An explicitly saved empty value must never win over the fallback:
+ * canonicalBase is concatenated into canonical/OG/sitemap URLs and is
+ * used verbatim as author/publisher `url` in the BlogPosting JSON-LD.
+ */
+function globalSeoFrom(content: SiteContent): GlobalSeo {
+  const seo: GlobalSeo = { ...defaultGlobalSeo, ...(content.seo || {}) };
+  seo.canonicalBase = (seo.canonicalBase || defaultGlobalSeo.canonicalBase).replace(/\/+$/, "");
+  seo.siteName = seo.siteName || defaultGlobalSeo.siteName;
+  seo.titleTemplate = seo.titleTemplate || defaultGlobalSeo.titleTemplate;
+  return seo;
+}
+
+/**
  * Global SEO settings for metadata generation.
  * Never throws: `generateMetadata` must keep working even when the
  * database is unreachable (e.g. during a cold build).
  */
 export async function getGlobalSeoSafe(): Promise<GlobalSeo> {
   try {
-    const content = await getSiteContent();
-    const seo: GlobalSeo = { ...defaultGlobalSeo, ...(content.seo || {}) };
-
-    // An explicitly saved empty value must never win over the fallback:
-    // canonicalBase is concatenated into canonical/OG/sitemap URLs and is
-    // used verbatim as author/publisher `url` in the BlogPosting JSON-LD.
-    seo.canonicalBase = (seo.canonicalBase || defaultGlobalSeo.canonicalBase).replace(/\/+$/, "");
-    seo.siteName = seo.siteName || defaultGlobalSeo.siteName;
-    seo.titleTemplate = seo.titleTemplate || defaultGlobalSeo.titleTemplate;
-    return seo;
+    return globalSeoFrom(await getSiteContent());
   } catch (e) {
     console.error("Failed to load global SEO settings, using defaults:", e);
     return { ...defaultGlobalSeo };
+  }
+}
+
+/**
+ * Everything a static marketing page needs: the site-wide SEO settings plus the
+ * per-page override map, from ONE document read.
+ *
+ * The pages call `getGlobalSeoSafe()` again in their bodies (for JSON-LD), which
+ * is why `getSiteContent` is wrapped in React `cache()` — see that comment.
+ * Never takes a path: the map is a single field, so a per-path accessor would
+ * only tempt a caller into looping the registry and issuing one `findOne` per
+ * route inside a single `generateMetadata`.
+ */
+export async function getPageSeoContext(): Promise<PageSeoContext> {
+  try {
+    const content = await getSiteContent();
+    return { global: globalSeoFrom(content), overrides: content.pageSeo };
+  } catch (e) {
+    console.error("Failed to load per-page SEO settings, using defaults:", e);
+    return { global: { ...defaultGlobalSeo }, overrides: {} };
   }
 }

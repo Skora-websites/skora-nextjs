@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, CalendarDays, Clock, UserRound } from "lucide-react";
 import Reveal from "@/components/animation/Reveal";
 import { formatPostDate, readingTime, stripHtml, type BlogPost } from "@/lib/blog";
@@ -12,9 +13,9 @@ interface BlogGridProps {
 }
 
 /**
- * Featured article + category chips + article grid, all client-side so /blog
- * can stay a server page (metadata, database read) while filtering happens
- * without a round trip.
+ * Featured article + category chips + article grid, all client-side so
+ * /insights can stay a server page (metadata, database read) while filtering
+ * happens without a round trip.
  *
  * The first article is featured whenever two or more match the active filter.
  * Cards are wrapped by Reveal here rather than on the page, so filtering never
@@ -38,17 +39,33 @@ export default function BlogGrid({ posts }: BlogGridProps) {
         <Reveal variant="fade-up" className="space-y-4">
           <span className="kicker">Featured</span>
           <Link
-            href={`/blog/${featured.slug}`}
+            href={`/${featured.slug}`}
             className="group grid grid-cols-1 overflow-hidden rounded-[2rem] border border-line bg-surface transition-all duration-300 hover:-translate-y-1 hover:shadow-card-lg lg:grid-cols-2"
           >
-            {/* Cover */}
+            {/* Cover. The ratio already lives on this wrapper, which makes it a
+                natural `fill` parent — the image is taken out of flow and
+                stretched to the box the grid cell gives it, identical to the
+                `h-full w-full` it replaces but with the space reserved before
+                the bytes land. */}
             <div className="relative aspect-[16/10] overflow-hidden bg-elevated lg:aspect-auto lg:min-h-[300px]">
               {featured.coverImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={featured.coverImage}
                   alt={featured.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  fill
+                  /* One of two columns from Tailwind's `lg` (64rem) up, and the
+                     full `.section-wrap` content width below that. The 608px cap
+                     is (1280 - 2×2rem) / 2 — beyond that width the wrapper's own
+                     max-w stops the tile growing, so there is nothing bigger to
+                     fetch. */
+                  sizes="(min-width: 1280px) 608px, (min-width: 1024px) 50vw, 100vw"
+                  /* /insights' LCP candidate: the featured card is the first and
+                     largest image on the page, sitting right under the section
+                     heading. Filter chips can move a different post into this
+                     slot, but the preload follows the `src`, which is exactly
+                     what we want when someone clicks "SaaS". */
+                  preload
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/12 via-elevated to-main">
@@ -142,18 +159,25 @@ export default function BlogGrid({ posts }: BlogGridProps) {
             <Link
               key={post.id}
               data-post-card
-              href={`/blog/${post.slug}`}
+              href={`/${post.slug}`}
               className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-line bg-surface transition-all duration-300 hover:-translate-y-1 hover:shadow-card-lg"
             >
               {/* Cover */}
               <div className="relative aspect-[16/9] overflow-hidden bg-elevated">
                 {post.coverImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={post.coverImage}
                     alt={post.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    /* Grid card: one column below Tailwind's `md` (48rem), two
+                       to `lg`, three above it — each within `.section-wrap`
+                       (max 1280px, 1/1.5/2rem padding). 389px is that grid at
+                       its widest: (1280 - 2×2rem - 2×1.5rem gaps) / 3. */
+                    sizes="(min-width: 1280px) 389px, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    // Lazy by default: the featured cover above is what
+                    // /insights should preload, and these cards are at least a
+                    // full card height below it.
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/12 via-elevated to-main">

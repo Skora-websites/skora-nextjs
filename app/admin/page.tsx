@@ -132,7 +132,7 @@ export default function AdminDashboardPage() {
               RECENT CLIENT INQUIRIES
             </h2>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Live dispatches from Contact Modal &amp; Healthcare Portal forms.
+              Live dispatches from the Contact Modal and consultation forms.
             </p>
           </div>
           <Link

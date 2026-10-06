@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ServicePageTemplate from "@/components/landing/ServicePageTemplate";
 import { getServiceBySlug, serviceSlugs } from "@/lib/services";
-import { absoluteUrl } from "@/lib/blog";
+import { absoluteUrl, socialImageUrl } from "@/lib/blog";
 import { getGlobalSeoSafe } from "@/lib/db";
 
 /**
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   const seo = await getGlobalSeoSafe();
   const shareTitle = `${service.metaTitle} | ${seo.siteName}`;
   const shareUrl = absoluteUrl(`/services/${service.slug}`, seo.canonicalBase);
-  const image = seo.ogImage ? absoluteUrl(seo.ogImage, seo.canonicalBase) : undefined;
+  const image = socialImageUrl(seo.ogImage, seo.canonicalBase);
 
   return {
     title: service.metaTitle,
@@ -46,14 +46,14 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
       siteName: seo.siteName,
       locale: "en_US",
       type: "website",
-      images: image ? [{ url: image, alt: seo.siteName }] : undefined,
+      images: [{ url: image, alt: seo.siteName }],
     },
     twitter: {
       card: "summary_large_image",
       title: shareTitle,
       description: service.metaDescription,
       site: seo.twitterHandle || undefined,
-      images: image ? [image] : undefined,
+      images: [image],
     },
   };
 }

@@ -3,6 +3,7 @@ import { badRequest, created, ok, unauthorized, withErrorHandler } from "@/lib/a
 import { readJson } from "@/lib/api-utils";
 import { isSubmittedAdminAuthenticated } from "@/lib/auth";
 import { createPost, getPosts, type PostDraftInput } from "@/lib/db";
+import { parseSeoInput } from "@/lib/blog";
 
 /**
  * /api/posts
@@ -42,13 +43,19 @@ export const POST = withErrorHandler(
       category: typeof body.category === "string" ? body.category : "",
       tags: Array.isArray(body.tags) ? body.tags.map((t) => String(t)) : [],
       status: body.status === "published" ? "published" : "draft",
-      seo: typeof body.seo === "object" && body.seo ? body.seo : {},
+      // Validated, not passed through raw. PATCH has always gone through
+      // parseSeoInput; POST did not, so a create request could persist a
+      // `javascript:` og:image or a 500-keyword array that normalizeSeo's shallow
+      // spread would happily store.
+      seo: parseSeoInput(body.seo),
     });
 
-    // The blog index, the new page and the sitemap are ISR-cached — drop the
-    // cached copies so a newly published post is live on the next request.
-    revalidatePath("/blog");
-    revalidatePath(`/blog/${post.slug}`);
+    // The insights index, the new post page and the sitemap are ISR-cached —
+    // drop the cached copies so a newly published post is live on the next
+    // request. Paths must match where the pages actually render: the index at
+    // /insights, each post at the site root.
+    revalidatePath("/insights");
+    revalidatePath(`/${post.slug}`);
     revalidatePath("/sitemap.xml");
 
     return created({ post });

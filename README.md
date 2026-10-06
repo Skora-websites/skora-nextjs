@@ -1,7 +1,8 @@
 # Skora — marketing site + admin
 
-Next.js App Router site for Skora (public marketing pages, blog, healthcare
-division) with a small cookie-authenticated admin for leads and content.
+Next.js App Router site for Skora — an India-registered (Noida, Uttar Pradesh)
+digital studio with public marketing pages, a blog, and a small
+cookie-authenticated admin for leads and content.
 MongoDB stores leads, site content, posts and the admin account.
 
 ## Quick start
@@ -10,60 +11,76 @@ MongoDB stores leads, site content, posts and the admin account.
 npm install
 cp .env.example .env          # then fill in the values (see below)
 
-npm run db:start              # local mongod on 127.0.0.1:27017
+npm run db:check              # verify the Atlas connection + auth
 npm run db:seed-admin         # creates/updates the /admin/login account from .env
 npm run dev                   # http://localhost:3001
 ```
 
-MongoDB runs as your user (no sudo, no systemd): binaries and data live in
-`~/.local/share/mongodb`, MongoDB Compass can browse the same server on
-`mongodb://127.0.0.1:27017`.
+Production is intended to use **MongoDB Atlas**. Set the connection string in
+`MONGODB_URI` in `.env` (Atlas → Database Access → Copy Connection String), then
+run `npm run db:check` before anything else. Local MongoDB is also supported when
+`MONGODB_URI` and `MONGODB_DB` point to it. MongoDB Compass connects using the
+same connection string.
+
+Run `db:check` whenever the site looks wrong but nothing is erroring. A URI that
+connects but cannot authenticate makes every read fall back to `data/hrms.json`,
+so the site serves stale content — old contact details, no blog posts, SEO
+settings that ignore every admin edit — with no visible error.
 
 ## Scripts
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Next dev server on port **3001** |
-| `npm run build` / `npm start` | Production build / serve on port 3001 |
+| `npm run dev` | Next dev server on the port configured by `PORT` |
+| `npm run build` / `npm start` | Production build / serve on the port configured by `PORT` |
 | `npm run lint` | ESLint |
-| `npm run db:start` / `db:stop` / `db:status` / `db:logs` | Local mongod control |
+| `npm run db:check` | Verify the Atlas URI, auth and read access; names the fix if not |
 | `npm run db:seed-admin` | Seed the admin account from `ADMIN_EMAIL` / `ADMIN_PASSWORD` (`-- --prune` deletes every other user) |
-| `npm run test:e2e` | Playwright login suite (starts the dev server if it isn't running) |
-| `npm run test:e2e:ui` / `test:e2e:report` | Playwright UI mode / last HTML report |
 
 ## Environment (`.env`, gitignored)
 
 | Variable | Purpose |
 | --- | --- |
-| `MONGODB_URI` | `mongodb://127.0.0.1:27017` locally; an Atlas URI also works |
-| `MONGODB_DB` | Database name (default `skora`) |
+| `MONGODB_URI` | Atlas connection string — **must end in the database name** (see `.env.example`) |
+| `MONGODB_DB` | Database name; if omitted, the database in `MONGODB_URI` is used |
+| `MONGODB_ALLOW_FALLBACK` | Set to `1` to boot even when MongoDB is unreachable and use the JSON fallback |
 | `NEXT_PUBLIC_SITE_URL` | Canonical URL used by SEO/sitemap output |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Admin credentials used by `db:seed-admin` and the e2e tests |
+| `NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS` | Comma-separated hosts allowed for remote image optimization |
+| `NEXT_PUBLIC_LEGACY_HOSTS` | Extra hostnames that redirect to the canonical origin |
+| `NEXT_PUBLIC_REDIRECT_WWW` | Set to `false` to disable the canonical `www` to apex redirect |
+| `NEXT_ALLOWED_DEV_ORIGINS` | Extra comma-separated origins allowed while running `next dev` |
+| `PORT` | HTTP port used by `dev` and `start`; the npm scripts load it from `.env` before Next starts |
+| `NEXT_PUBLIC_SITE_CONTACT_*` | Default fallback contact phone, email, address and response guarantee |
+| `NEXT_PUBLIC_SITE_NAME` / `NEXT_PUBLIC_SEO_*` / `NEXT_PUBLIC_ANALYTICS_ID` | Default SEO and analytics settings; admin-managed values can override them |
+| `SUPER_ADMIN_EMAILS` | Comma-separated accounts granted the Super Admin role |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Admin credentials used by `db:seed-admin` |
 
 `.env.example` is committed and holds no secrets. Credentials never appear in
-source, tests or fixtures — the e2e suite skips itself when they are unset, and
-its throwaway users get random passwords and are deleted afterwards.
+source. Set `NEXT_PUBLIC_*` values before `npm run build`; those values are
+embedded into the client bundle at build time.
 
 ## Layout
 
 ```
-app/            pages: / /services /services/[slug] /blog /blog/[slug] /healthcare
+app/            pages: / /services /services/[slug] /blog /blog/[slug]
                 /contact /privacy /terms, admin under /admin/*, APIs under /api/*
 components/     marketing sections, animation primitives, admin UI
   admin/        PostEditor, RichTextEditor, SerpPreview, shared admin classes
 context/        Preloader, consultation modal, site content provider
 lib/            db + mongo driver, auth, blog, services, site defaults
-e2e/            Playwright specs (admin login flow)
-scripts/        local-mongo.sh, seed-admin.mjs
+scripts/        db-check.mjs, seed-admin.mjs
 data/           hrms.json — local fallback when MongoDB is unavailable (gitignored)
 ```
 
 Notes worth knowing:
 
-- `lib/site-defaults.ts` is the single source for default packages, the
-  services table and the contact block; `lib/lead.ts` is the single lead shape;
-  `components/admin/styles.ts` holds the shared admin form classes. Import
-  them instead of copying values.
+- `lib/site-defaults.ts` is the single source for the services table and the
+  contact block (phone, email, Noida address, response guarantee); `lib/lead.ts`
+  is the single lead shape; `components/admin/styles.ts` holds the shared admin
+  form classes. Import them instead of copying values.
+- Public/legal pages are written for an India-registered company: `/privacy`
+  cites the Digital Personal Data Protection Act, 2023, and the contact block
+  default is the `+91` office number.
 - `next.config.ts` builds `allowedDevOrigins` from your local interface
   addresses so opening the dev server by LAN IP doesn't 403 every JS chunk
   (which freezes the preloader at 1%). Extra hosts go in
@@ -73,11 +90,3 @@ Notes worth knowing:
   `prefers-reduced-motion`.
 - `middleware.ts` gates `/admin` on the `admin_session` cookie; the same cookie
   is what `/api/*` admin routes check.
-
-## Testing
-
-`npm run test:e2e` runs the 15-test admin login suite against Chromium using
-your installed Google Chrome (`channel: "chrome"`), covering lookup by email or
-username (case-insensitive), role and disabled-account rejection, session
-cookie behaviour, and the JSON error contract. It needs `ADMIN_EMAIL` and
-`ADMIN_PASSWORD` in `.env` and a running mongod.

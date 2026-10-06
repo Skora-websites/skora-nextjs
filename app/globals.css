@@ -6,7 +6,7 @@
 
    @theme registers tokens as Tailwind utilities:
    bg-main / bg-surface / bg-elevated / bg-accent / text-ink /
-   text-sub / text-faint / text-accent / border-accent / text-clinic ...
+   text-sub / text-faint / text-accent / border-accent ...
    ============================================================ */
 @theme {
   /* Canvas & surfaces */
@@ -32,8 +32,8 @@
 
   /* Reserved accents */
   --color-gold: #f59e0b;
-  --color-clinic: #10b981; /* healthcare content ONLY — do not use on marketing pages */
-  --color-clinic-deep: #059669;
+  /* Unused emerald was the old /healthcare palette. Kept as a spare success
+     tone only — the marketing surfaces use --color-accent. */
   --color-navy: #0a1633;
   --color-navy-deep: #060d22;
   --color-ink-deep: #060b18;
@@ -428,7 +428,7 @@
    Animations
    ============================================================ */
 
-/* Continuous Smooth Marquee Keyframes (shared by landing + healthcare rails) */
+/* Continuous Smooth Marquee Keyframes (shared by the landing rails) */
 @keyframes marquee {
   0% {
     transform: translateX(0%);

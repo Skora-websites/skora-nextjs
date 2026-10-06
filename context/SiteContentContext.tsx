@@ -3,23 +3,20 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { GlobalSeo } from "@/lib/blog";
 import {
-  DEFAULT_PACKAGES,
   DEFAULT_SERVICES,
   DEFAULT_SITE_CORE,
-  type PackageItem,
   type ServiceItem,
 } from "@/lib/site-defaults";
 
-export type { PackageItem, ServiceItem };
+export type { ServiceItem };
 
 export interface SiteContent {
   phone: string;
   email: string;
-  healthcareEmail: string;
   address: string;
   responseGuarantee: string;
-  packages: PackageItem[];
   services: ServiceItem[];
+  textOverrides?: Record<string, string>;
   /**
    * Site-wide SEO settings as served by /api/content (the whole document is
    * returned, not just these fields). The footer reads `seo.socials`.
@@ -29,7 +26,6 @@ export interface SiteContent {
 
 const defaultContent: SiteContent = {
   ...DEFAULT_SITE_CORE,
-  packages: DEFAULT_PACKAGES,
   services: DEFAULT_SERVICES,
 };
 
@@ -43,10 +39,24 @@ export function SiteContentProvider({ children }: { children: React.ReactNode })
       .then((res) => res.json())
       .then((data) => {
         if (data.content) {
-          setContent((prev) => ({
-            ...prev,
-            ...data.content,
-          }));
+          setContent((prev) => {
+            // Merge field by field rather than spreading the payload, so a
+            // server document still carrying the retired healthcare keys can
+            // never leak `packages` / `healthcareEmail` into the tree.
+            const incoming = data.content as Partial<SiteContent>;
+            return {
+              ...prev,
+              phone: incoming.phone || prev.phone,
+              email: incoming.email || prev.email,
+              address: incoming.address || prev.address,
+              responseGuarantee: incoming.responseGuarantee || prev.responseGuarantee,
+              services: incoming.services?.length ? incoming.services : prev.services,
+              textOverrides: incoming.textOverrides || prev.textOverrides,
+              // /api/content already returns a fully merged SEO document, so it
+              // replaces the default wholesale instead of being spread in.
+              seo: incoming.seo || prev.seo,
+            };
+          });
         }
       })
       .catch(() => {});

@@ -9,41 +9,17 @@ import CtaBand from "@/components/landing/CtaBand";
 import { SERVICES } from "@/lib/services";
 import { CTA, CTA_TRUST_LINE, TRUST_SIGNALS } from "@/lib/cta";
 import { absoluteUrl } from "@/lib/blog";
-import { getGlobalSeoSafe } from "@/lib/db";
+import { PAGE_SEO, buildPageMetadata } from "@/lib/page-seo";
+import { getGlobalSeoSafe, getPageSeoContext } from "@/lib/db";
 
 /** Metadata depends on the site settings stored in the database. */
 export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await getGlobalSeoSafe();
-  const shareTitle = `Services | ${seo.siteName}`;
-  const description =
-    "Nine services from SKORA — website design, digital marketing, branding, video, mobile apps, cloud, SaaS, CRM and project management systems.";
-  const image = seo.ogImage ? absoluteUrl(seo.ogImage, seo.canonicalBase) : undefined;
-  const shareUrl = absoluteUrl("/services", seo.canonicalBase);
-
-  return {
-    title: "Services",
-    description,
-    keywords: SERVICES.map((s) => s.pill),
-    alternates: { canonical: "/services" },
-    openGraph: {
-      title: shareTitle,
-      description,
-      url: shareUrl,
-      siteName: seo.siteName,
-      locale: "en_US",
-      type: "website",
-      images: image ? [{ url: image, alt: seo.siteName }] : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: shareTitle,
-      description,
-      site: seo.twitterHandle || undefined,
-      images: image ? [image] : undefined,
-    },
-  };
+  // Owned by lib/page-seo.ts: this route's code default, overlaid with
+  // whatever an admin saved at /admin/seo/pages. Clearing a field there
+  // falls back to the code default.
+  return buildPageMetadata(PAGE_SEO.services, await getPageSeoContext());
 }
 
 /** Three starting points for visitors who know the problem, not the service. */
@@ -75,17 +51,40 @@ export default async function ServicesHubPage() {
   const seo = await getGlobalSeoSafe();
   const base = seo.canonicalBase;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "SKORA services",
-    itemListElement: SERVICES.map((service, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: service.pill,
-      url: absoluteUrl(`/services/${service.slug}`, base),
-    })),
-  };
+  // Two schemas on this page: the hub is a list of services, and it is also two
+  // clicks deep from the homepage. Both are emitted as one script tag so the
+  // crawlers only parse the page head once.
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "SKORA services",
+      itemListElement: SERVICES.map((service, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: service.pill,
+        url: absoluteUrl(`/services/${service.slug}`, base),
+      })),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: absoluteUrl("/", base),
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Services",
+          item: absoluteUrl("/services", base),
+        },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -105,6 +104,19 @@ export default async function ServicesHubPage() {
           />
           <div className="section-wrap relative">
             <Reveal variant="blur" className="max-w-3xl space-y-6">
+              {/* Matches the breadcrumb pattern on /services/[slug] — same classes,
+                  same Home → Services path the BreadcrumbList above declares. */}
+              <nav
+                aria-label="Breadcrumb"
+                className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-faint"
+              >
+                <Link href="/" className="transition-colors hover:text-accent">
+                  Home
+                </Link>
+                <span aria-hidden="true">/</span>
+                <span className="text-sub">Services</span>
+              </nav>
+
               <span className="kicker">What we do</span>
               <h1 className="display-hero text-4xl sm:text-6xl">
                 Nine ways we <span className="display-accent text-accent">grow your business.</span>
@@ -234,8 +246,8 @@ export default async function ServicesHubPage() {
               description="Tell us the outcome you are after. We reply with the right service, scope, timeline and a fixed price."
               primaryLabel="Get a free audit"
               primaryHref="/contact"
-              secondaryLabel="Read the blog"
-              secondaryHref="/blog"
+              secondaryLabel="Read our insights"
+              secondaryHref="/insights"
               trustNote={CTA_TRUST_LINE}
             />
           </div>

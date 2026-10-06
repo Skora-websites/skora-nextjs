@@ -1,93 +1,55 @@
-"use client";
-
 import React from "react";
-import Footer from "@/components/Footer";
-import Reveal from "@/components/animation/Reveal";
-import SplitHeading from "@/components/animation/SplitHeading";
-import { useConsultation } from "@/context/ConsultationContext";
+import type { Metadata } from "next";
+import TermsView from "@/components/landing/TermsView";
+import { absoluteUrl } from "@/lib/blog";
+import { PAGE_SEO, buildPageMetadata } from "@/lib/page-seo";
+import { getGlobalSeoSafe, getPageSeoContext } from "@/lib/db";
 
-const clauses = [
-  {
-    num: "01.",
-    title: "Acceptance of Terms",
-    body: 'By accessing, browsing, or utilizing the web development, mobile software, cloud engineering, or digital marketing services provided by SKORA ("Company", "We", "Us"), you ("Client", "User") agree to be bound by these Terms & Conditions. If you do not agree to all terms, you must cease use of our services immediately.',
-  },
-  {
-    num: "02.",
-    title: "Scope of Engineering & Marketing Services",
-    body: "SKORA delivers custom Next.js web applications, mobile applications, AWS cloud infrastructure, SaaS platform engineering, GMB Local SEO, and video production services. Specific project scope, milestones, deliverables, and timelines are documented in individual Statements of Work (SOW) executed between SKORA and the Client.",
-  },
-  {
-    num: "03.",
-    title: "Intellectual Property & Ownership",
-    body: "Upon full final payment of all invoiced milestone amounts, SKORA transfers 100% full ownership of custom application source code, designs, and assets created specifically for the Client under the agreed SOW. Pre-existing proprietary libraries, frameworks, or developer tools remain the intellectual property of SKORA.",
-  },
-  {
-    num: "04.",
-    title: "Payment Terms & Invoicing",
-    body: "Invoices are issued according to project milestones detailed in your SOW. Milestone payments are due within 7 business days of invoice issuance. Late payments may incur a monthly interest rate of 1.5% until settled. Retainers for recurring digital marketing or cloud maintenance are billed on the 1st of each calendar month.",
-  },
-  {
-    num: "05.",
-    title: "Service Level Agreement (SLA) & Uptime Guarantee",
-    body: "For managed cloud hosting and enterprise retainer contracts, SKORA targets the uptime level agreed in your service agreement. Scheduled maintenance windows will be communicated at least 48 hours in advance. Emergency hotfixes are deployed without notice to protect security integrity.",
-  },
-  {
-    num: "06.",
-    title: "Limitation of Liability",
-    body: "To the maximum extent permitted by law, SKORA shall not be liable for indirect, incidental, or consequential damages, lost profits, or data loss arising from service usage. Total liability shall not exceed the fees paid by Client to SKORA in the 3 months preceding the claim.",
-  },
-];
+/**
+ * Server page: the clause markup lives in `components/landing/TermsView` (it
+ * opens the consultation modal), while the route stays server-side so it can
+ * export metadata and the breadcrumb schema.
+ *
+ * Same structure as `app/privacy/page.tsx` and `app/contact/page.tsx`.
+ */
+export const revalidate = 300;
 
-export default function TermsPage() {
-  const { openConsultation } = useConsultation();
+export async function generateMetadata(): Promise<Metadata> {
+  // Owned by lib/page-seo.ts: this route's code default, overlaid with
+  // whatever an admin saved at /admin/seo/pages. Clearing a field there
+  // falls back to the code default.
+  return buildPageMetadata(PAGE_SEO.terms, await getPageSeoContext());
+}
+
+export default async function TermsPage() {
+  const base = (await getGlobalSeoSafe()).canonicalBase;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: absoluteUrl("/", base),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Terms and Conditions",
+        item: absoluteUrl("/terms", base),
+      },
+    ],
+  };
 
   return (
-    <main className="min-h-screen bg-main text-ink font-sans relative overflow-x-hidden">
-      {/* Hero Header */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-        <Reveal variant="blur" className="text-center max-w-3xl mx-auto space-y-6 relative">
-          <span className="kicker justify-center">Legal agreement</span>
-
-          <SplitHeading as="h1" className="display-hero text-4xl sm:text-6xl" delay={0.1}>
-            Terms and <span className="display-accent text-accent">conditions.</span>
-          </SplitHeading>
-
-          <p className="text-sm sm:text-base text-sub font-medium leading-relaxed">
-            Effective Date: January 1, 2026 • SKORA Technologies Inc.
-          </p>
-        </Reveal>
-      </section>
-
-      {/* Main Content Terms & Conditions Clauses */}
-      <section className="pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-        <Reveal
-          variant="fade-up"
-          className="overflow-hidden rounded-[2rem] border border-line bg-surface"
-          staggerSelector="[data-clause]"
-          stagger={0.12}
-        >
-          {clauses.map((clause) => (
-            <div
-              key={clause.num}
-              data-clause
-              className="grid grid-cols-[auto_1fr] gap-4 border-b border-line px-6 py-7 last:border-0 sm:gap-8 sm:px-10"
-            >
-              <span className="ghost-numeral text-3xl sm:text-4xl">{clause.num}</span>
-              <div className="space-y-2">
-                <h2 className="text-lg font-extrabold tracking-tight text-ink sm:text-xl">
-                  {clause.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-sub font-medium leading-relaxed">
-                  {clause.body}
-                </p>
-              </div>
-            </div>
-          ))}
-        </Reveal>
-      </section>
-
-      <Footer onOpenConsultation={() => openConsultation("Legal Inquiry")} />
-    </main>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <TermsView />
+    </>
   );
 }

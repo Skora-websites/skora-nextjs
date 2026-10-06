@@ -21,15 +21,16 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { phone, email, healthcareEmail, address, responseGuarantee, packages, services, textOverrides } = body;
+    // `packages` and `healthcareEmail` were dropped with the /healthcare
+    // division — they are no longer part of SiteContent, so anything a stale
+    // admin client still sends is simply ignored by the destructuring below.
+    const { phone, email, address, responseGuarantee, services, textOverrides } = body;
 
     const updated = await updateSiteContent({
       ...(phone ? { phone } : {}),
       ...(email ? { email } : {}),
-      ...(healthcareEmail ? { healthcareEmail } : {}),
       ...(address ? { address } : {}),
       ...(responseGuarantee ? { responseGuarantee } : {}),
-      ...(packages ? { packages } : {}),
       ...(services ? { services } : {}),
       ...(textOverrides ? { textOverrides } : {}),
     });

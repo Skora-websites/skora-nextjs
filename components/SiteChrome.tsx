@@ -15,13 +15,13 @@ import { useConsultation } from "@/context/ConsultationContext";
  * 2. One instance survives navigation, so the header never re-mounts and its
  *    scroll state, mega-menu and mobile drawer stay continuous between routes.
  *
- * /healthcare and /admin render their own chrome, so this stays out of the way.
+ * /admin renders its own chrome, so this stays out of the way there.
  */
 export default function SiteChrome() {
   const pathname = usePathname();
   const { openConsultation } = useConsultation();
 
-  if (pathname === "/healthcare" || pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <>

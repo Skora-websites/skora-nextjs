@@ -7,6 +7,10 @@ import Reveal from "@/components/animation/Reveal";
 import SplitHeading from "@/components/animation/SplitHeading";
 import { gsap, prefersReducedMotion, CINEMA } from "@/lib/gsap";
 import { SERVICES } from "@/lib/services";
+import { HEALTHCARE } from "@/lib/healthcare";
+
+/** The sector page is not one of the nine services, so it gets its own constant. */
+const HEALTHCARE_ROUTE = "/healthcare";
 
 const services = [
   {
@@ -47,18 +51,20 @@ const services = [
   {
     index: "06",
     title: "Healthcare practice growth",
-    description: "Clinic websites, appointment flows, and patient systems for doctors and hospitals.",
-    tags: ["Clinics", "Appointments", "EHR-ready"],
-    link: "/healthcare",
-    healthcare: true,
+    description: "Clinic websites, appointment booking, and local search for patient enquiries.",
+    tags: ["Clinics", "Booking", "Local SEO"],
+    link: HEALTHCARE_ROUTE,
+    sector: true,
   },
 ];
 
-/** Imagery is the service page's own hero shot — one source, no new assets. */
+/**
+ * Imagery is the destination page's own hero shot — one source, no new assets.
+ * /healthcare is not one of the nine SERVICES, so its image comes from the
+ * healthcare copy rather than the service list.
+ */
 const previewImage = (link: string): string => {
-  if (link === "/healthcare") {
-    return "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80";
-  }
+  if (link === HEALTHCARE_ROUTE) return HEALTHCARE.heroImage;
   const slug = link.replace("/services/", "");
   return SERVICES.find((s) => s.slug === slug)?.heroImage ?? "";
 };
@@ -200,14 +206,7 @@ export default function CapabilitiesSection() {
                 {s.index}
               </span>
               <span>
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="text-lg font-extrabold tracking-tight sm:text-2xl">{s.title}</span>
-                  {s.healthcare && (
-                    <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-emerald-700">
-                      Healthcare
-                    </span>
-                  )}
-                </span>
+                <span className="text-lg font-extrabold tracking-tight sm:text-2xl">{s.title}</span>
                 <span className="mt-1 block max-w-xl text-sm font-medium leading-relaxed text-sub">
                   {s.description}
                 </span>
@@ -236,10 +235,22 @@ export default function CapabilitiesSection() {
           className="pointer-events-none absolute left-0 top-0 z-30 hidden w-[21rem] overflow-hidden rounded-2xl border border-white/15 bg-ink-deep opacity-0 shadow-[0_36px_70px_-28px_rgba(6,11,24,0.7)] lg:block"
         >
           <div className="relative h-[13.5rem] w-full overflow-hidden">
+            {/*
+              Plain <img> by necessity: the hover handler assigns
+              `previewImgRef.current.src` directly on every row change. Under
+              next/image the optimiser emits a `srcset`, and the browser
+              re-resolves from that set whenever the `src` attribute changes —
+              so the imperative swap would resolve back to the original URL and
+              the frame would never update. It is also `aria-hidden` and purely
+              decorative, so it carries no SEO weight either way.
+            */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={previewImgRef}
               src={previewImage(services[0].link)}
               alt=""
+              width={672}
+              height={432}
               className="h-full w-full object-cover"
             />
             <span className="media-scrim" />

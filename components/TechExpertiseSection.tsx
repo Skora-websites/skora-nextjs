@@ -60,9 +60,24 @@ function TechCard({
       className="glass-card glass-card-hover spotlight-card group flex h-[130px] w-[140px] shrink-0 cursor-pointer flex-col items-center justify-between rounded-2xl p-4 transition-transform duration-300 hover:-translate-y-1.5 hover:scale-[1.04]"
     >
       <div className="flex h-14 w-full items-center justify-center p-1">
+        {/*
+          Deliberately a plain <img>, not next/image: these are third-party
+          SVGs (devicons / simpleicons / iconify) in a fixed 44px box. The image
+          optimiser would refuse to re-encode SVG without `dangerouslyAllowSVG`,
+          and even then it can add nothing — SVG is already vector. Each card
+          also swaps `src` imperatively in onError below, which is a prop swap
+          on <Image>. The optimiser's caching would only add a hop.
+        */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.icon}
           alt={item.name}
+          // Critical: without this, React 19's SSR hoists every one of these
+          // into a <link rel="preload"> — 20 of them on the homepage — and they
+          // compete with the actual LCP image for bandwidth. The marquee sits
+          // several viewports down, so lazy is both correct and faster.
+          loading="lazy"
+          decoding="async"
           onError={(e) => {
             (e.target as HTMLImageElement).src = fallback;
           }}

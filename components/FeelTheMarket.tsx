@@ -5,11 +5,17 @@ import Reveal from "@/components/animation/Reveal";
 import SplitHeading from "@/components/animation/SplitHeading";
 import Counter from "@/components/animation/Counter";
 
+/**
+ * Verifiable counts only. AI_RULES.md forbids inventing metrics that cannot be
+ * traced to something real, so nothing here claims a project total or an
+ * industry breadth we cannot evidence — "9 practices" is the real size of
+ * SERVICES, and the response time matches CTA_TRUST_LINE.
+ */
 const metrics = [
-  { value: "120+", label: "Projects delivered", note: "Web, software, apps and marketing" },
   { value: "9", label: "Service practices", note: "One accountable team" },
-  { value: "15+", label: "Industries served", note: "Including healthcare" },
+  { value: "9", label: "Disciplines in-house", note: "Design, build, marketing" },
   { value: "4 hrs", label: "Response time", note: "Business days, guaranteed" },
+  { value: "NDA", label: "Before scoping", note: "On request, standard" },
 ];
 
 export default function FeelTheMarket() {

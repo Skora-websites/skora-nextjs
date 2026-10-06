@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, CircleAlert, Globe, ListTree, Plus, Search, Share2, ShieldCheck, X } from "lucide-react";
 import SerpPreview from "@/components/admin/SerpPreview";
-import { applyTitleTemplate, type GlobalSeo, type SocialProfile } from "@/lib/blog";
+import { applyTitleTemplate, defaultGlobalSeo, type GlobalSeo, type SocialProfile } from "@/lib/blog";
 import { SOCIAL_PLATFORMS } from "@/lib/socials";
 import { inputClass, labelClass } from "@/components/admin/styles";
 
@@ -114,7 +114,7 @@ export default function AdminSeoPage() {
         "Allow: /",
         ...(seo.robotsDisallow.length ? seo.robotsDisallow : ["/admin", "/api"]).map((p) => `Disallow: ${p}`),
         seo.sitemapEnabled
-          ? `\nSitemap: ${seo.canonicalBase.replace(/\/+$/, "") || "https://skora.digital"}/sitemap.xml`
+          ? `\nSitemap: ${seo.canonicalBase.replace(/\/+$/, "") || defaultGlobalSeo.canonicalBase}/sitemap.xml`
           : "",
       ]
         .filter((line) => line !== "")
@@ -192,7 +192,7 @@ export default function AdminSeoPage() {
                 type="url"
                 value={seo.canonicalBase}
                 onChange={(e) => set("canonicalBase", e.target.value)}
-                placeholder="https://skora.digital"
+                placeholder={defaultGlobalSeo.canonicalBase}
                 className={`${inputClass} font-mono`}
               />
             </div>
@@ -259,9 +259,14 @@ export default function AdminSeoPage() {
                 type="url"
                 value={seo.ogImage}
                 onChange={(e) => set("ogImage", e.target.value)}
-                placeholder="https://…/og-default.jpg"
+                placeholder="Leave empty to use the generated card"
                 className={inputClass}
               />
+              <p className="text-[11px] text-slate-500 font-medium leading-snug">
+                Optional. Leave empty and Next serves the generated 1200×630 card from{" "}
+                <code className="font-mono">app/opengraph-image.tsx</code>. Setting a URL here
+                overrides that image on every page — only set one you know resolves.
+              </p>
             </div>
             <div className="space-y-1">
               <label className={labelClass}>Twitter / X handle</label>
@@ -375,15 +380,11 @@ export default function AdminSeoPage() {
                 <span className="text-slate-400">priority 1.0</span>
               </li>
               <li className="flex justify-between gap-3">
-                <span>/healthcare</span>
-                <span className="text-slate-400">priority 0.8</span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span>/blog</span>
+                <span>/insights</span>
                 <span className="text-slate-400">priority 0.9</span>
               </li>
               <li className="flex justify-between gap-3">
-                <span className="text-[#2563EB]">/blog/&lt;each published post&gt;</span>
+                <span className="text-[#2563EB]">/&lt;each published post&gt;</span>
                 <span className="text-slate-400">priority 0.7</span>
               </li>
             </ul>

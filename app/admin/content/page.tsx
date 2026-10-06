@@ -1,18 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Save, CheckCircle2, Layers, Stethoscope, Plus, Trash2 } from "lucide-react";
+import { Save, CheckCircle2, Layers, Phone } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface PackageItem {
-  id: string;
-  name: string;
-  price: string;
-  period: string;
-  popular: boolean;
-  subtitle: string;
-  features: string[];
-}
+import { inputClassLg, labelClassLg } from "@/components/admin/styles";
+import { DEFAULT_SITE_CORE } from "@/lib/site-defaults";
 
 interface ServiceItem {
   id: string;
@@ -22,8 +14,22 @@ interface ServiceItem {
   status: "Active" | "Inactive";
 }
 
+/** The contact block fields this screen edits (all optional in the API payload). */
+interface ContactCore {
+  phone: string;
+  email: string;
+  address: string;
+  responseGuarantee: string;
+}
+
 export default function AdminContentPage() {
-  const [packages, setPackages] = useState<PackageItem[]>([]);
+  // Contact block — seeded from lib/site-defaults so the form never starts blank.
+  const [contact, setContact] = useState<ContactCore>({
+    phone: DEFAULT_SITE_CORE.phone,
+    email: DEFAULT_SITE_CORE.email,
+    address: DEFAULT_SITE_CORE.address,
+    responseGuarantee: DEFAULT_SITE_CORE.responseGuarantee,
+  });
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -38,7 +44,14 @@ export default function AdminContentPage() {
         const data = await res.json();
         if (!cancelled) {
           if (data.content) {
-            if (data.content.packages) setPackages(data.content.packages);
+            // Field by field, so a stored document still carrying the retired
+            // healthcare keys can never reach the form state.
+            setContact((prev) => ({
+              phone: data.content.phone || prev.phone,
+              email: data.content.email || prev.email,
+              address: data.content.address || prev.address,
+              responseGuarantee: data.content.responseGuarantee || prev.responseGuarantee,
+            }));
             if (data.content.services) setServices(data.content.services);
           }
           setLoading(false);
@@ -52,32 +65,8 @@ export default function AdminContentPage() {
     };
   }, []);
 
-  const handlePackageChange = (index: number, field: keyof PackageItem, value: PackageItem[keyof PackageItem]) => {
-    const updated = [...packages];
-    const item = { ...updated[index] } as Record<string, PackageItem[keyof PackageItem]>;
-    item[field] = value;
-    updated[index] = { ...updated[index], ...item } as PackageItem;
-    setPackages(updated);
-  };
-
-  const handleFeatureChange = (pkgIndex: number, featIndex: number, value: string) => {
-    const updated = [...packages];
-    const features = [...updated[pkgIndex].features];
-    features[featIndex] = value;
-    updated[pkgIndex].features = features;
-    setPackages(updated);
-  };
-
-  const handleAddFeature = (pkgIndex: number) => {
-    const updated = [...packages];
-    updated[pkgIndex].features.push("New Feature");
-    setPackages(updated);
-  };
-
-  const handleRemoveFeature = (pkgIndex: number, featIndex: number) => {
-    const updated = [...packages];
-    updated[pkgIndex].features.splice(featIndex, 1);
-    setPackages(updated);
+  const handleContactChange = (field: keyof ContactCore, value: string) => {
+    setContact((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleServiceChange = (index: number, field: keyof ServiceItem, value: ServiceItem[keyof ServiceItem]) => {
@@ -94,7 +83,7 @@ export default function AdminContentPage() {
       const res = await fetch("/api/content", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packages, services }),
+        body: JSON.stringify({ ...contact, services }),
       });
       if (res.ok) {
         setSuccess(true);
@@ -114,10 +103,10 @@ export default function AdminContentPage() {
         <div>
           <span className="kicker mb-2">Content</span>
           <h1 className="display-hero text-3xl sm:text-5xl text-[#0B1310]">
-            Packages <span className="display-accent text-accent">&amp; services.</span>
+            Contact <span className="display-accent text-accent">&amp; services.</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
-            Edit subscription amounts, package names, features, and active service pricing.
+            Edit the public contact block and active service pricing.
           </p>
         </div>
 
@@ -144,120 +133,77 @@ export default function AdminContentPage() {
           className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold text-xs flex items-center gap-2"
         >
           <CheckCircle2 size={18} className="text-emerald-600" />
-          <span>Package amounts and service settings updated live in database!</span>
+          <span>Contact details and service settings updated live in database!</span>
         </motion.div>
       )}
 
-      {/* HEALTHCARE CLINIC PACKAGES CONFIGURATOR */}
+      {/* PUBLIC CONTACT BLOCK */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E1E6DF] space-y-6 shadow-xl">
         <div className="flex items-center gap-3 pb-4 border-b border-[#E1E6DF]">
-          <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-            <Stethoscope size={20} />
+          <div className="p-2.5 rounded-xl bg-[#EFF6FF] text-[#2563EB] border border-[#2563EB]/20">
+            <Phone size={20} />
           </div>
           <div>
-            <h2 className="text-lg font-black uppercase text-[#0B1310]">HEALTHCARE CLINIC PACKAGES &amp; AMOUNTS</h2>
-            <p className="text-xs text-slate-500 font-medium">Edit pricing amounts (in ₹ INR), package titles, and deliverables.</p>
+            <h2 className="text-lg font-black uppercase text-[#0B1310]">PUBLIC CONTACT BLOCK</h2>
+            <p className="text-xs text-slate-500 font-medium">
+              These values feed the footer, contact page and WhatsApp / call links site-wide.
+            </p>
           </div>
         </div>
 
-        {loading ? (
-          <div className="py-12 text-center font-mono text-xs text-slate-400">Loading package data...</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {packages.map((pkg, idx) => (
-              <div
-                key={pkg.id || idx}
-                className="p-6 rounded-2xl bg-[#F4F6F1] border border-[#E1E6DF] space-y-4"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold uppercase text-emerald-700">Package #{idx + 1}</span>
-                  <label className="flex items-center gap-1.5 text-xs text-slate-700 font-mono cursor-pointer font-bold">
-                    <input
-                      type="checkbox"
-                      checked={pkg.popular}
-                      onChange={(e) => handlePackageChange(idx, "popular", e.target.checked)}
-                      className="rounded border-emerald-500 text-emerald-600 focus:ring-0"
-                    />
-                    <span>Highlight Popular</span>
-                  </label>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Package Name</label>
-                  <input
-                    type="text"
-                    value={pkg.name}
-                    onChange={(e) => handlePackageChange(idx, "name", e.target.value)}
-                    className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-xs text-[#0B1310] font-bold"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Amount (₹)</label>
-                    <input
-                      type="text"
-                      value={pkg.price}
-                      onChange={(e) => handlePackageChange(idx, "price", e.target.value)}
-                      className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-xs text-emerald-700 font-black font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Billing Period</label>
-                    <input
-                      type="text"
-                      value={pkg.period}
-                      onChange={(e) => handlePackageChange(idx, "period", e.target.value)}
-                      className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-xs text-slate-700 font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Subtitle</label>
-                  <input
-                    type="text"
-                    value={pkg.subtitle}
-                    onChange={(e) => handlePackageChange(idx, "subtitle", e.target.value)}
-                    className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-xs text-slate-700 font-medium"
-                  />
-                </div>
-
-                <div className="space-y-2 pt-2 border-t border-[#E1E6DF]">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Deliverables</label>
-                    <button
-                      type="button"
-                      onClick={() => handleAddFeature(idx)}
-                      className="text-[10px] font-mono font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus size={12} /> Add Deliverable
-                    </button>
-                  </div>
-
-                  {pkg.features.map((feat, fIdx) => (
-                    <div key={fIdx} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={feat}
-                        onChange={(e) => handleFeatureChange(idx, fIdx, e.target.value)}
-                        className="w-full bg-white border border-[#E1E6DF] rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFeature(idx, fIdx)}
-                        className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs font-mono">
+          <div className="space-y-1.5">
+            <label className={labelClassLg} htmlFor="content-phone">
+              Phone / WhatsApp Number
+            </label>
+            <input
+              id="content-phone"
+              type="text"
+              value={contact.phone}
+              onChange={(e) => handleContactChange("phone", e.target.value)}
+              className={inputClassLg}
+            />
           </div>
-        )}
+
+          <div className="space-y-1.5">
+            <label className={labelClassLg} htmlFor="content-email">
+              Main Contact Email
+            </label>
+            <input
+              id="content-email"
+              type="email"
+              value={contact.email}
+              onChange={(e) => handleContactChange("email", e.target.value)}
+              className={inputClassLg}
+            />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+            <label className={labelClassLg} htmlFor="content-address">
+              Office Location Address
+            </label>
+            <input
+              id="content-address"
+              type="text"
+              value={contact.address}
+              onChange={(e) => handleContactChange("address", e.target.value)}
+              className={inputClassLg}
+            />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+            <label className={labelClassLg} htmlFor="content-response">
+              Response Time Guarantee
+            </label>
+            <input
+              id="content-response"
+              type="text"
+              value={contact.responseGuarantee}
+              onChange={(e) => handleContactChange("responseGuarantee", e.target.value)}
+              className={inputClassLg}
+            />
+          </div>
+        </div>
       </div>
 
       {/* SERVICES CONFIGURATOR */}
@@ -272,46 +218,50 @@ export default function AdminContentPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {services.map((srv, idx) => (
-            <div
-              key={srv.id || idx}
-              className="p-4 rounded-2xl bg-[#F4F6F1] border border-[#E1E6DF] space-y-3"
-            >
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Service Title</label>
-                <input
-                  type="text"
-                  value={srv.title}
-                  onChange={(e) => handleServiceChange(idx, "title", e.target.value)}
-                  className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-xs font-bold text-[#0B1310]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
+        {loading ? (
+          <div className="py-12 text-center font-mono text-xs text-slate-400">Loading service data...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {services.map((srv, idx) => (
+              <div
+                key={srv.id || idx}
+                className="p-4 rounded-2xl bg-[#F4F6F1] border border-[#E1E6DF] space-y-3"
+              >
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Category</label>
+                  <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Service Title</label>
                   <input
                     type="text"
-                    value={srv.category}
-                    onChange={(e) => handleServiceChange(idx, "category", e.target.value)}
-                    className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-[11px] text-[#2563EB] font-mono font-bold"
+                    value={srv.title}
+                    onChange={(e) => handleServiceChange(idx, "title", e.target.value)}
+                    className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-xs font-bold text-[#0B1310]"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Budget Range</label>
-                  <input
-                    type="text"
-                    value={srv.pricing}
-                    onChange={(e) => handleServiceChange(idx, "pricing", e.target.value)}
-                    className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-[11px] text-[#0B1310] font-mono font-bold"
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Category</label>
+                    <input
+                      type="text"
+                      value={srv.category}
+                      onChange={(e) => handleServiceChange(idx, "category", e.target.value)}
+                      className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-[11px] text-[#2563EB] font-mono font-bold"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold uppercase text-slate-500">Budget Range</label>
+                    <input
+                      type="text"
+                      value={srv.pricing}
+                      onChange={(e) => handleServiceChange(idx, "pricing", e.target.value)}
+                      className="w-full bg-white border border-[#E1E6DF] rounded-xl px-3 py-2 text-[11px] text-[#0B1310] font-mono font-bold"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

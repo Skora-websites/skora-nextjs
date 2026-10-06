@@ -22,8 +22,8 @@ const works = [
   },
   {
     id: "clinic",
-    title: "Clinic website and recruitment",
-    description: "Service pages, doctor profiles, and application flow.",
+    title: "Clinic website and patient enquiries",
+    description: "Department pages, appointment booking, and enquiry capture.",
     tag: "Healthcare",
     image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d",
   },
@@ -270,12 +270,40 @@ export default function WorkReel() {
                 className="reel-slide absolute inset-0"
                 aria-hidden={i !== index}
               >
+                {/*
+                  Deliberately still a plain <img>, and the only one left on the
+                  site.
+
+                  The onError fallback rewrites `e.target.src` in place. That
+                  cannot survive next/image: the optimiser emits a `srcset`
+                  alongside `src`, and for an <img> that carries a srcset the
+                  browser re-runs candidate selection on the `src` attribute and
+                  picks the srcset entry again — the original, failing URL. So
+                  the swap would not land, onError would fire again, and the
+                  frame would sit in an error loop rather than showing the
+                  stand-in. Expressing it through next/image needs a `failed`
+                  set in state that swaps the `src` *prop* (which does re-render
+                  the srcset) — a change to this component's state model, not a
+                  tag swap, and out of scope here.
+
+                  Until that lands, the frames keep the hand-rolled srcset below
+                  so the fallback is not silently broken. They are still
+                  lazy-loaded, and they are the last thing on the homepage, so
+                  they are not competing for the fold either way.
+                */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={frame(w.image, 1600)}
                   srcSet={`${frame(w.image, 800)} 800w, ${frame(w.image, 1600)} 1600w`}
                   sizes="(min-width: 1024px) 1280px, 100vw"
                   alt={w.title}
-                  loading={i === 0 ? "eager" : "lazy"}
+                  // All lazy. This section sits below the fold and React 19's SSR
+                  // hoists any eager <img> into a preload link, which would put
+                  // six full-size photos in the critical path for a frame most
+                  // visitors never reach. The first slide is selected by
+                  // `data-active` (a CSS opacity switch), not by load order, so
+                  // lazy costs nothing visually.
+                  loading="lazy"
                   decoding="async"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = frame(FALLBACK_IMAGE, 1600);

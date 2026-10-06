@@ -31,8 +31,8 @@ export const CONTACT_FAQ: FaqItem[] = [
       "Yes. We sign an NDA before any detailed discussion and your files, credentials and customer data stay on accounts you control.",
   },
   {
-    question: "Do you work with clients outside the UK?",
+    question: "Can you work with our team remotely?",
     answer:
-      "We do. Most projects run remotely across UK, EU and India time zones with a shared board, weekly demos and written status updates.",
+      "Yes — we are based in Noida, Uttar Pradesh and work remotely with teams across India and further time zones. Every engagement runs on a shared board with weekly demos and written status updates, so nobody has to be in a meeting to know where the project stands.",
   },
 ];

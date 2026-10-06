@@ -6,16 +6,6 @@
  * both sides at once instead of drifting between copies.
  */
 
-export interface PackageItem {
-  id: string;
-  name: string;
-  price: string;
-  period: string;
-  popular: boolean;
-  subtitle: string;
-  features: string[];
-}
-
 export interface ServiceItem {
   id: string;
   title: string;
@@ -24,64 +14,18 @@ export interface ServiceItem {
   status: "Active" | "Inactive";
 }
 
-/** Contact block shown in the footer, contact modal and admin content editor. */
+/**
+ * Contact block shown in the footer, contact page and admin editors.
+ *
+ * Skora is registered in India (Noida, Uttar Pradesh), so the default phone is
+ * an Indian mobile and the postal address is the Noida office.
+ */
 export const DEFAULT_SITE_CORE = {
-  phone: "+44 07756083473",
-  email: "info@skorainfotech.com",
-  healthcareEmail: "info@skorainfotech.com",
-  address: "5 Market Square, High Street, Uxbridge, UB8 1LH, London",
-  responseGuarantee: "Rapid 4-Hour Response Guarantee",
+  phone: process.env.NEXT_PUBLIC_SITE_CONTACT_PHONE || "",
+  email: process.env.NEXT_PUBLIC_SITE_CONTACT_EMAIL || "",
+  address: process.env.NEXT_PUBLIC_SITE_CONTACT_ADDRESS || "",
+  responseGuarantee: process.env.NEXT_PUBLIC_SITE_RESPONSE_GUARANTEE || "",
 };
-
-export const DEFAULT_PACKAGES: PackageItem[] = [
-  {
-    id: "pkg-1",
-    name: "Basic Growth Plan",
-    price: "₹5,000",
-    period: "+ GST / month",
-    popular: false,
-    subtitle: "Essential local visibility for solo doctors & clinics",
-    features: [
-      "Custom 5-Page Doctor Website",
-      "Google My Business (GMB) Setup",
-      "8 Social Media Posts / month",
-      "Basic Local SEO Setup",
-      "Monthly Growth Report",
-    ],
-  },
-  {
-    id: "pkg-2",
-    name: "Standard Growth Plan",
-    price: "₹15,000",
-    period: "+ GST / month",
-    popular: true,
-    subtitle: "Our most popular package for growing medical practices",
-    features: [
-      "Custom 10-Page Medical Website + Booking",
-      "GMB Profile Optimization & Map Rank",
-      "14 Posts + 2 Reels / month",
-      "High-Intent Local SEO Keywords",
-      "Report Dispatched Every 15 Days",
-      "Priority Clinical Support",
-    ],
-  },
-  {
-    id: "pkg-3",
-    name: "Premium Growth Plan",
-    price: "₹32,000",
-    period: "+ GST / month",
-    popular: false,
-    subtitle: "Complete digital dominance for multi-specialty centers",
-    features: [
-      "Facebook, Instagram, LinkedIn & GMB",
-      "18 Posts + 4 Reels / month",
-      "Dedicated Medical Content Team",
-      "Weekly Analytical Dispatches",
-      "Advanced Local SEO & Maps Ads",
-      "24/7 Dedicated Account Manager",
-    ],
-  },
-];
 
 export const DEFAULT_SERVICES: ServiceItem[] = [
   { id: "srv-1", title: "Website Design & Web Apps", category: "Core Development", pricing: "25K - 1.5L", status: "Active" },

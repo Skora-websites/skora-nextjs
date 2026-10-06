@@ -8,7 +8,6 @@ import { DEFAULT_SITE_CORE } from "@/lib/site-defaults";
 export default function AdminSettingsPage() {
   const [phone, setPhone] = useState(DEFAULT_SITE_CORE.phone);
   const [email, setEmail] = useState(DEFAULT_SITE_CORE.email);
-  const [healthcareEmail, setHealthcareEmail] = useState(DEFAULT_SITE_CORE.email);
   const [address, setAddress] = useState(DEFAULT_SITE_CORE.address);
   const [responseGuarantee, setResponseGuarantee] = useState(DEFAULT_SITE_CORE.responseGuarantee);
 
@@ -23,7 +22,6 @@ export default function AdminSettingsPage() {
         if (data.content) {
           if (data.content.phone) setPhone(data.content.phone);
           if (data.content.email) setEmail(data.content.email);
-          if (data.content.healthcareEmail) setHealthcareEmail(data.content.healthcareEmail);
           if (data.content.address) setAddress(data.content.address);
           if (data.content.responseGuarantee) setResponseGuarantee(data.content.responseGuarantee);
         }
@@ -45,7 +43,6 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({
           phone,
           email,
-          healthcareEmail,
           address,
           responseGuarantee,
         }),
@@ -128,17 +125,6 @@ export default function AdminSettingsPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={inputClassLg}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className={labelClassLg}>Healthcare Division Email</label>
-              <input
-                type="email"
-                required
-                value={healthcareEmail}
-                onChange={(e) => setHealthcareEmail(e.target.value)}
                 className={inputClassLg}
               />
             </div>

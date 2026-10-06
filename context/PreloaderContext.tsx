@@ -1,78 +1,54 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useContext, useMemo } from "react";
 
 interface PreloaderGate {
   /**
-   * True while the preloader overlay is (or may be) covering the page.
-   * Starts true so mount-time entrance animations wait; the Preloader
-   * opens the gate as soon as it decides to skip or starts fading out.
+   * Was true while the preloader overlay was (or might be) covering the page,
+   * which held mount-time entrance animations back. The overlay is gone, so
+   * this is now permanently `false` — kept so every consumer's existing guard
+   * still compiles and still short-circuits correctly.
    */
   isPreloaderActive: boolean;
-  /** Called by the Preloader when it is skipped, errors, or fades out. */
+  /** Retained for call-site compatibility; now a no-op. */
   markPreloaderDone: () => void;
 }
 
+/** Stable no-op so the context value never changes identity across renders. */
+const noop = () => {};
+
 const PreloaderContext = createContext<PreloaderGate>({
   isPreloaderActive: false,
-  markPreloaderDone: () => {},
+  markPreloaderDone: noop,
 });
 
 /**
- * Ceiling on how long the gate may stay closed — must be longer than the
- * Preloader's HARD_CAP_MS (components/Preloader.tsx), which is itself well
- * above the normal count (a ~2.6s 1→100% run plus its fade). This timer only
- * exists so content can never be stuck un-animated if the Preloader fails
- * to mount or report.
+ * @deprecated The preloader is deleted, so nothing waits on a gate any more.
+ * Exported only so a stale import cannot hard-fail the build.
  */
-export const PRELOADER_GATE_SAFETY_MS = 13000;
+export const PRELOADER_GATE_SAFETY_MS = 0;
 
 /**
  * Gate for entrance animations.
  *
- * The preloader overlay covers the page for ~3s on the first visit of a
- * session, while mount-time animations (GSAP / Framer) would otherwise play
- * hidden behind it and be over by the time the overlay fades.
+ * There is no preloader overlay any more. It covered the page for ~3s on the
+ * first visit of a session and locked body scroll, which pushed LCP past 3s and
+ * meant a visitor with JS disabled never saw the page at all. Entrance
+ * animations now run as soon as the component mounts.
  *
- * The gate starts CLOSED (active) so consumers hold their entrance
- * animations. The Preloader opens it pre-paint when it skips (already seen,
- * reduced motion, /admin) and at the moment the fade-out begins when it
- * plays — so animations run just as the overlay fades away. A safety timer
- * force-opens the gate so content can never be stuck un-animated if the
- * Preloader is ever removed or fails to report.
+ * The context is kept — deliberately — so the consumers
+ * (`Reveal`, `SplitHeading`, `Counter`, `SmoothScroll`, `EnterpriseHero`,
+ * `ProcessSection`) keep their existing `usePreloaderGate()` shape and their
+ * reduced-motion branches. `isPreloaderActive` is a constant `false`, so each
+ * of those guards simply never fires.
+ *
+ * If animations ever need holding again, this is the one place to reintroduce
+ * real state — but do not re-add a full-screen blocking overlay.
  */
 export function PreloaderProvider({ children }: { children: React.ReactNode }) {
-  const [isPreloaderActive, setIsPreloaderActive] = useState(true);
+  const value = useMemo(() => ({ isPreloaderActive: false, markPreloaderDone: noop }), []);
 
-  const markPreloaderDone = useCallback(() => setIsPreloaderActive(false), []);
-
-  // Safety net: never keep animations locked beyond PRELOADER_GATE_SAFETY_MS,
-  // even if the Preloader fails to report done.
-  useEffect(() => {
-    const fallback = setTimeout(
-      () => setIsPreloaderActive(false),
-      PRELOADER_GATE_SAFETY_MS
-    );
-    return () => clearTimeout(fallback);
-  }, []);
-
-  const value = useMemo(
-    () => ({ isPreloaderActive, markPreloaderDone }),
-    [isPreloaderActive, markPreloaderDone]
-  );
-
-  return (
-    <PreloaderContext.Provider value={value}>
-      {children}
-    </PreloaderContext.Provider>
-  );
+  return <PreloaderContext.Provider value={value}>{children}</PreloaderContext.Provider>;
 }
 
 export function usePreloaderGate() {

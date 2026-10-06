@@ -105,29 +105,34 @@ export const defaultPostSeo: PostSeo = {
 };
 
 export const defaultGlobalSeo: GlobalSeo = {
-  siteName: "SKORA",
-  titleTemplate: "%s | SKORA — Digital Marketing & Tech Solutions",
-  defaultTitle: "SKORA — Next-Gen Digital Marketing & Tech Solutions Enterprise",
-  defaultDescription:
-    "Enterprise Digital Marketing, Website Design, Mobile Apps, Cloud Services, SaaS Platforms, Project Management Systems & CRM Solutions.",
-  defaultKeywords: [
-    "Digital Marketing",
-    "SEO",
-    "Website Design",
-    "Mobile Development",
-    "Cloud Services",
-    "SaaS Development",
-    "Project Management System",
-    "PMS",
-    "CRM Solutions",
-  ],
-  ogImage: "/logo.png",
-  canonicalBase: "https://skora.digital",
-  twitterHandle: "",
-  robotsEnabled: true,
-  robotsDisallow: ["/admin", "/api"],
-  sitemapEnabled: true,
-  analyticsId: "",
+  siteName: process.env.NEXT_PUBLIC_SITE_NAME || "",
+  titleTemplate: process.env.NEXT_PUBLIC_SEO_TITLE_TEMPLATE || "%s",
+  defaultTitle: process.env.NEXT_PUBLIC_SEO_DEFAULT_TITLE || "",
+  defaultDescription: process.env.NEXT_PUBLIC_SEO_DEFAULT_DESCRIPTION || "",
+  defaultKeywords: (process.env.NEXT_PUBLIC_SEO_DEFAULT_KEYWORDS || "")
+    .split(",")
+    .map((keyword) => keyword.trim())
+    .filter(Boolean),
+  /**
+   * Empty on purpose. When set, this string is written onto every page's
+   * `openGraph.images` and therefore OVERRIDES the generated card from
+   * `app/opengraph-image.tsx`. Leaving it empty lets Next serve the generated
+   * one (always correct, always 1200x630); a bad value here is what made every
+   * social share 404 on og-default.jpg.
+   */
+  ogImage: process.env.NEXT_PUBLIC_SEO_OG_IMAGE || "",
+  // The only origin we serve. Every canonical, Open Graph URL and the sitemap
+  // URL are built from this, so it must match the host the redirects in
+  // next.config.ts consolidate onto.
+  canonicalBase: (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, ""),
+  twitterHandle: process.env.NEXT_PUBLIC_SEO_TWITTER_HANDLE || "",
+  robotsEnabled: process.env.NEXT_PUBLIC_SEO_ROBOTS_ENABLED === "true",
+  robotsDisallow: (process.env.NEXT_PUBLIC_SEO_ROBOTS_DISALLOW || "")
+    .split(",")
+    .map((path) => path.trim())
+    .filter(Boolean),
+  sitemapEnabled: process.env.NEXT_PUBLIC_SEO_SITEMAP_ENABLED === "true",
+  analyticsId: process.env.NEXT_PUBLIC_ANALYTICS_ID || "",
   socials: [],
 };
 
@@ -148,6 +153,63 @@ export function slugify(input: string): string {
     .slice(0, 80)
     // Only trim hyphens left dangling by the slice above.
     .replace(/^-+|-+$/g, "");
+}
+
+// ── Reserved slugs ───────────────────────────────────
+
+/**
+ * Slugs a post must never take.
+ *
+ * Posts live at the site root (`app/[slug]/page.tsx`), so a post slug *is* a
+ * first-class URL. The App Router ranks static segments above dynamic ones,
+ * which means a post slugged "about" would still be served by
+ * `app/about/page.tsx` — the article is silently unreachable from the index,
+ * the sitemap and every share card, with no error anywhere to notice it.
+ *
+ * The list is deliberately boring and conservative: real routes first, then the
+ * metadata routes Next generates at the root, then the crawl noise that has no
+ * business being an article. `isReservedSlug` is the shared predicate for the
+ * slug generators in `lib/db.ts` and the admin editor.
+ *
+ * Plain string data: safe to import from server and client components.
+ */
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
+  // Real routes — a post here would be shadowed by the page itself.
+  "about",
+  "admin",
+  "api",
+  "blog",
+  "contact",
+  "health",
+  "healthcare",
+  "home",
+  "insights",
+  "privacy",
+  "services",
+  "terms",
+  // Metadata routes Next serves from the root segment.
+  "favicon",
+  "robots",
+  "sitemap",
+  "www",
+  // Crawl noise / evergreen traps.
+  "feed",
+  "login",
+  "logout",
+  "rss",
+  "search",
+  "tag",
+  "tags",
+]);
+
+/**
+ * True when `slug` (or anything that slugifies to it) is reserved.
+ *
+ * Normalising through `slugify` means "About", "about " and "/about" are all
+ * rejected the same way `slugify` would render them in a URL.
+ */
+export function isReservedSlug(slug: string): boolean {
+  return RESERVED_SLUGS.has(slugify(slug));
 }
 
 // ── Text helpers ─────────────────────────────────────
@@ -425,6 +487,21 @@ export function applyTitleTemplate(template: string, title: string, fallback: st
   return template.replace("%s", base);
 }
 
+/**
+ * The Open Graph / Twitter image for a page, as an absolute URL.
+ *
+ * Falls back to `/opengraph-image` — the generated card from
+ * `app/opengraph-image.tsx` — when no custom `ogImage` is configured. That
+ * fallback matters: a page that sets `openGraph.images: undefined` overrides
+ * the root layout and loses the generated image entirely, which is how every
+ * page ended up sharing no og:image at all. Returning the generated route keeps
+ * the tag present without hard-coding a file an editor can delete.
+ */
+export function socialImageUrl(ogImage: string, canonicalBase: string): string {
+  const configured = (ogImage || "").trim();
+  return absoluteUrl(configured || "/opengraph-image", canonicalBase);
+}
+
 /** Resolves a possibly relative URL against the canonical base origin. */
 export function absoluteUrl(url: string, canonicalBase: string): string {
   if (!url) return "";
@@ -456,4 +533,3 @@ export function sanitizeAbsoluteUrl(value: string): string {
 export function toBool(value: unknown, fallback = false): boolean {
   return asBool(value, fallback);
 }
-

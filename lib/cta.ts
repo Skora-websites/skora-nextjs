@@ -1,17 +1,31 @@
 /**
- * One CTA anatomy, applied to every navy conversion band on the site.
+ * One CTA anatomy, applied to every navy conversion band on the site, plus the
+ * one name the whole site calls its main ask.
  *
  * The bands keep their own markup (services, blog index and blog posts each
  * render their own block), but they all pull their classes from here so the
  * hierarchy — kicker → display headline → body → primary/secondary → trust
  * line — never drifts again.
  *
- * Plain class strings: safe to import from server and client components.
+ * `primaryLabel` lives here for the same reason. The navbar had grown a second,
+ * parallel CTA ("Free audit") whose inline form never persisted anything — it
+ * only fired an `alert()` — so every conversion is now one button with one
+ * label. Single-sourcing it means the desktop bar, the mobile menu and any
+ * future surface cannot quietly start offering two different asks again.
+ *
+ * Plain class strings and literals: safe to import from server and client
+ * components.
  */
 
 import type { CSSProperties } from "react";
 
 export const CTA = {
+  /**
+   * The one primary CTA label used across the site — pair with the button that
+   * opens the shared consultation modal (`onOpenConsultation`), which is the
+   * only lead-capturing path in the marketing chrome.
+   */
+  primaryLabel: "Book a consultation",
   /** Wrapper: navy band with the dotted texture, one per page maximum. */
   band: "navy-band relative overflow-hidden rounded-[2rem] px-6 py-12 text-center text-white sm:px-12 sm:py-14",
   /** The dotted radial texture behind the band content. */

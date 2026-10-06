@@ -3,12 +3,14 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { DEFAULT_SITE_CORE } from "@/lib/site-defaults";
 import {
   LayoutDashboard,
   Users,
   Sliders,
   Settings,
   FileText,
+  FileCog,
   Search,
   LogOut,
   Globe,
@@ -70,6 +72,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Content & Packages", href: "/admin/content", icon: Sliders },
     { label: "Blog Posts", href: "/admin/blog", icon: FileText },
     { label: "SEO Settings", href: "/admin/seo", icon: Search },
+    // Distinct href, not a nested child of /admin/seo: the active-state check
+    // highlights on `startsWith(`${href}/`)`, so a nested route would light up
+    // "SEO Settings" at the same time as its own entry.
+    { label: "Page SEO", href: "/admin/seo/pages", icon: FileCog },
     { label: "Site Settings", href: "/admin/settings", icon: Settings },
   ];
 
@@ -156,7 +162,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <p className="text-xs font-bold text-[#0B1310]">Administrator</p>
-                <p className="text-[10px] font-mono text-slate-500">info@skorainfotech.com</p>
+                <p className="text-[10px] font-mono text-slate-500">{DEFAULT_SITE_CORE.email}</p>
               </div>
             </div>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />

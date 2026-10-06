@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
-import Preloader from "@/components/Preloader";
 import SiteChrome from "@/components/SiteChrome";
 import SmoothScroll from "@/components/animation/SmoothScroll";
 import PageWipe from "@/components/transition/PageWipe";
@@ -11,6 +10,7 @@ import { SiteContentProvider } from "@/context/SiteContentContext";
 import { PreloaderProvider } from "@/context/PreloaderContext";
 import { ConsultationProvider } from "@/context/ConsultationContext";
 import { getGlobalSeoSafe } from "@/lib/db";
+import { defaultGlobalSeo, socialImageUrl } from "@/lib/blog";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -29,7 +29,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // Site-wide defaults come from the admin panel (/admin/seo). Falls back to
   // the built-in constants when the database is unreachable.
   const seo = await getGlobalSeoSafe();
-  const base = seo.canonicalBase || "https://skora.digital";
+  const base = seo.canonicalBase || defaultGlobalSeo.canonicalBase;
 
   return {
     metadataBase: new URL(base),
@@ -56,17 +56,15 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: seo.siteName,
       locale: "en_US",
       type: "website",
-      images: seo.ogImage ? [{ url: seo.ogImage, alt: seo.siteName }] : undefined,
+      images: [{ url: socialImageUrl(seo.ogImage, base), alt: seo.siteName }],
     },
-    twitter: seo.twitterHandle
-      ? {
-          card: "summary_large_image",
-          site: seo.twitterHandle,
-          title: seo.defaultTitle,
-          description: seo.defaultDescription,
-          images: seo.ogImage ? [seo.ogImage] : undefined,
-        }
-      : undefined,
+    twitter: {
+      card: "summary_large_image",
+      site: seo.twitterHandle || undefined,
+      title: seo.defaultTitle,
+      description: seo.defaultDescription,
+      images: [socialImageUrl(seo.ogImage, base)],
+    },
   };
 }
 
@@ -83,7 +81,6 @@ export default function RootLayout({
             <ConsultationProvider>
               {/* Everything fixed lives outside the smoother wrapper: a
                   transformed #smooth-content would break position: fixed. */}
-              <Preloader />
               <ScrollToTop />
               <PageWipe />
               {/* Static film-grain plate: fixed, pointer-events:none, never

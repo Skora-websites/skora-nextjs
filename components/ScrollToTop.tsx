@@ -11,7 +11,7 @@ import { ScrollTrigger, ScrollSmoother } from "@/lib/gsap";
  * With ScrollSmoother active the body height is synthetic, so the smoother's
  * own `scrollTop(0)` is what actually repositions the transformed content —
  * plain `window.scrollTo` is kept as well for native-scroll routes
- * (/healthcare, /admin, reduced motion).
+ * (/admin, reduced motion).
  */
 export default function ScrollToTop() {
   const pathname = usePathname();

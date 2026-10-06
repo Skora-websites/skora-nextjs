@@ -59,9 +59,3 @@ next-env.d.ts
 
 .aider*
 .dyad/
-
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/

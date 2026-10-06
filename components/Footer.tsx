@@ -13,11 +13,14 @@ import {
   Phone,
 } from "lucide-react";
 import { prefersReducedMotion } from "@/lib/gsap";
+import { CTA } from "@/lib/cta";
 import { useSiteContent } from "@/context/SiteContentContext";
 import { useConsultation } from "@/context/ConsultationContext";
 import Reveal from "@/components/animation/Reveal";
 import SplitHeading from "@/components/animation/SplitHeading";
 import { SERVICES } from "@/lib/services";
+import { DEFAULT_SITE_CORE } from "@/lib/site-defaults";
+import { OPENING_HOURS } from "@/lib/healthcare";
 import { resolveSocialLinks } from "@/lib/socials";
 
 interface FooterProps {
@@ -34,7 +37,6 @@ const serviceColumns = [SERVICES.slice(0, 5), SERVICES.slice(5)];
 
 const companyLinks = [
   { label: "Home", href: "/" },
-  { label: "Healthcare", href: "/healthcare" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
   { label: "Privacy policy", href: "/privacy" },
@@ -112,7 +114,13 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
     window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
   };
 
-  const whatsappNumber = (siteContent.phone || "+447756083473").replace(/[^0-9]/g, "");
+  // Skora is India-registered, so the WhatsApp fallback is the Indian mobile.
+  // wa.me needs digits only — no +, spaces or dashes — so the shared
+  // `siteContent.phone` is normalised here.
+  const whatsappNumber = (siteContent.phone || DEFAULT_SITE_CORE.phone).replace(
+    /[^0-9]/g,
+    ""
+  );
   const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     "Hi Skora team, I would like to discuss my requirements."
   )}`;
@@ -188,7 +196,8 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button type="button" onClick={requestCallback} className="btn-primary sheen group">
-                <span>Request a callback</span>
+                {/* Same one label as the hero and navbar — see lib/cta.ts. */}
+                <span>{CTA.primaryLabel}</span>
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </button>
               <Link href="/contact" className="btn-secondary group">
@@ -291,7 +300,7 @@ export default function Footer({ onOpenConsultation }: FooterProps) {
             </p>
             <p className="flex items-start gap-2 font-medium text-sub">
               <Clock size={15} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-              <span>Mon to Sat, 9:00 AM to 8:00 PM IST</span>
+              <span>{OPENING_HOURS}</span>
             </p>
           </FootColumn>
         </Reveal>

@@ -1,49 +1,86 @@
-"use client";
-
 import React from "react";
-import EnterpriseHero from "@/components/EnterpriseHero";
-import CapabilitiesSection from "@/components/CapabilitiesSection";
-import FeelTheMarket from "@/components/FeelTheMarket";
-import TechExpertiseSection from "@/components/TechExpertiseSection";
-import ProcessSection from "@/components/ProcessSection";
-import WorkReel from "@/components/WorkReel";
-import Footer from "@/components/Footer";
-import { useConsultation } from "@/context/ConsultationContext";
+import type { Metadata } from "next";
+import HomeView from "@/components/home/HomeView";
+import { absoluteUrl } from "@/lib/blog";
+import { PAGE_SEO, buildPageMetadata } from "@/lib/page-seo";
+import { getGlobalSeoSafe, getPageSeoContext } from "@/lib/db";
+import { SERVICES } from "@/lib/services";
 
 /**
- * Homepage composition.
+ * Server page: the sections live in `components/home/HomeView` (they are client
+ * components and two open the consultation modal), while the route stays
+ * server-side so it can export its own title/description/canonical rather than
+ * inheriting the root layout's defaults — three pages used to share one title.
  *
- * No chrome here: the navbar, scroll progress bar and consultation modal are
- * hoisted into the root layout (see SiteChrome / ConsultationContext) so they
- * sit outside ScrollSmoother's transformed wrapper and survive navigation.
- * Each section owns its own scroll choreography rather than being wrapped in
- * a reveal layer that would animate twice.
+ * Also emits the Organization + WebSite schema the homepage should always have
+ * carried, plus the ItemList of service divisions.
  */
-export default function Home() {
-  const { openConsultation } = useConsultation();
+export const revalidate = 300;
+
+export async function generateMetadata(): Promise<Metadata> {
+  // The homepage is the one route whose code default IS the site-wide default
+  // from /admin/seo, so its registry entry resolves against `global` rather than
+  // hardcoding strings — and a saved per-page override wins over it. Clearing the
+  // override falls back to the site default. `absoluteTitle` on that entry is why
+  // this page cannot share the ordinary title-template path.
+  return buildPageMetadata(PAGE_SEO.home, await getPageSeoContext());
+}
+
+export default async function HomePage() {
+  const seo = await getGlobalSeoSafe();
+  const base = seo.canonicalBase;
+
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": `${base}/#organization`,
+      name: seo.siteName,
+      url: base,
+      description: seo.defaultDescription,
+      ...(seo.ogImage ? { logo: absoluteUrl(seo.ogImage, base) } : {}),
+      sameAs: seo.socials.map((s) => s.url),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": `${base}/#website`,
+      name: seo.siteName,
+      url: base,
+      publisher: { "@id": `${base}/#organization` },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: absoluteUrl("/", base),
+        },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: `${seo.siteName} services`,
+      itemListElement: SERVICES.map((service, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: service.pill,
+        url: absoluteUrl(`/services/${service.slug}`, base),
+      })),
+    },
+  ];
 
   return (
-    <main className="min-h-screen bg-main text-ink flex flex-col relative overflow-hidden">
-      {/* 1. Hero */}
-      <EnterpriseHero onOpenConsultation={openConsultation} />
-
-      {/* 2. Services overview */}
-      <CapabilitiesSection />
-
-      {/* 3. Why teams choose Skora */}
-      <FeelTheMarket />
-
-      {/* 4. Process */}
-      <ProcessSection />
-
-      {/* 5. Technology expertise */}
-      <TechExpertiseSection />
-
-      {/* 6. Selected work */}
-      <WorkReel />
-
-      {/* 7. Footer */}
-      <Footer onOpenConsultation={openConsultation} />
-    </main>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <HomeView />
+    </>
   );
 }

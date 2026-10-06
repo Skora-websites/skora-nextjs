@@ -2,8 +2,10 @@
 
 import React, { useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ArrowUpRight, Asterisk } from "lucide-react";
 import { gsap, prefersReducedMotion, CINEMA } from "@/lib/gsap";
+import { CTA } from "@/lib/cta";
 import { usePreloaderGate } from "@/context/PreloaderContext";
 
 // Layout effect that stays quiet during SSR — the entrance timeline must be
@@ -25,29 +27,42 @@ const marqueeItems = [
   "Video production",
 ];
 
+/**
+ * Hero work strip — four service-led tiles, each linking to the /services page
+ * it belongs to. (The old clinic tile went with the healthcare division; the
+ * imagery is reused from components/WorkReel.tsx so nothing new is invented.)
+ *
+ * The `w=`/`q=` params are gone from these URLs on purpose. They existed for a
+ * raw `<img>`, which had to be told how large to ask for; `next/image` now owns
+ * that decision. Leaving `w=800` in place would cap what Unsplash is willing to
+ * hand the optimiser at 800px, and the biggest variant this strip ever needs
+ * (a quarter of a 2048px viewport = 512 CSS px, 1024px on a retina panel) would
+ * then be an upscale of an 800px original. `auto=format&fit=crop` stays: format
+ * negotiation is the optimiser's job and `fit` is a no-op without dimensions.
+ */
 const workStrip = [
   {
-    title: "Clinic growth platform",
-    tag: "Healthcare",
-    img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80",
-    link: "/healthcare",
+    title: "Video and content library",
+    tag: "Media",
+    img: "https://images.unsplash.com/photo-1616469829581-73993eb86b02?auto=format&fit=crop",
+    link: "/services/video-production",
   },
   {
     title: "SaaS billing suite",
     tag: "Software",
-    img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+    img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop",
     link: "/services/saas-development",
   },
   {
     title: "Cloud migration",
     tag: "Infrastructure",
-    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop",
     link: "/services/cloud-services",
   },
   {
     title: "Marketing site",
     tag: "Web",
-    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop",
     link: "/services/website-design",
   },
 ];
@@ -141,7 +156,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
 
         {/* Top meta row */}
         <div className="gsap-hero-fade flex flex-wrap items-center justify-between gap-3 pb-8">
-          <span className="kicker">Digital partner — India . UK</span>
+          <span className="kicker">Digital partner — India</span>
           <span className="hidden items-center gap-2 text-xs font-bold text-faint sm:inline-flex">
             <span className="relative flex h-2 w-2">
               <span className="absolute h-full w-full animate-ping rounded-full bg-accent opacity-60" />
@@ -179,7 +194,7 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
               onClick={() => onOpenConsultation()}
               className="btn-primary sheen group px-7 py-4 text-sm"
             >
-              <span>Start a project</span>
+              <span>{CTA.primaryLabel}</span>
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </button>
             <a href="#work" className="btn-secondary group px-7 py-4 text-sm">
@@ -228,12 +243,30 @@ export default function EnterpriseHero({ onOpenConsultation }: EnterpriseHeroPro
               className="gsap-work-card group relative overflow-hidden rounded-2xl"
               style={{ willChange: "transform" }}
             >
-              <Parallax speed={1 + (i % 2 === 0 ? 0.06 : 0.12)}>
-                <img
+              {/* The aspect box lives on the Parallax wrapper rather than the
+                  image: `fill` takes the image out of flow and stretches it to
+                  the nearest positioned ancestor, so the wrapper is what has to
+                  carry the ratio. Same rendered box as before, but the space is
+                  now reserved before the bytes arrive (no CLS), and `sizes`
+                  tells the optimiser how wide the tile really is. */}
+              <Parallax
+                speed={1 + (i % 2 === 0 ? 0.06 : 0.12)}
+                className="relative aspect-[4/5] sm:aspect-[3/3.4]"
+              >
+                <Image
                   src={w.img}
                   alt={w.title}
-                  loading="eager"
-                  className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105 sm:aspect-[3/3.4]"
+                  fill
+                  // Two columns up to Tailwind's `lg` (64rem), four above it, and
+                  // the strip is full-bleed (`px-4 sm:px-6 lg:px-8`) rather than
+                  // inside `.section-wrap`, so each tile is a clean half (or a
+                  // quarter) of the viewport minus its gutter.
+                  sizes="(min-width: 1024px) 25vw, 50vw"
+                  // Deliberately not `priority`: the strip lands well below the
+                  // fold and this page's LCP element is the 13.5vw headline above
+                  // it, not a photograph — the Navbar logo already owns the one
+                  // preload the homepage should spend.
+                  className="object-cover transition duration-700 group-hover:scale-105"
                 />
               </Parallax>
               <span className="media-scrim" />

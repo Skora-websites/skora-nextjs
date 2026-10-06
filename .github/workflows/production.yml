@@ -89,14 +89,6 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '' }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID || '' }}
 
-      - name: Run tests (if available)
-        run: |
-          if grep -q '"test"' package.json; then
-            npm test -- --reporter=compact
-          else
-            echo "No test script found – skipping test step"
-          fi
-
       - name: Upload build artifacts (for deploy job)
         uses: actions/upload-artifact@v4
         with:

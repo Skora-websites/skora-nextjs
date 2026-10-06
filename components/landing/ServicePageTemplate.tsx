@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Footer from "@/components/Footer";
 import SectionHeader from "@/components/landing/SectionHeader";
 import CtaBand from "@/components/landing/CtaBand";
@@ -108,12 +109,28 @@ export default function ServicePageTemplate(props: ServicePageTemplateProps) {
 
           <Reveal variant="mask" delay={0.2} className="mt-12">
             <Parallax speed={1.08}>
-              <div className="glass-card group relative cursor-default overflow-hidden rounded-[2rem]">
-                <img
+              {/* The fixed 320/440px height moved from the image to this wrapper:
+                  `fill` positions the image absolutely, so the wrapper is the
+                  element that has to define the box it stretches into. It was
+                  already `relative` (the scrim below is absolutely positioned
+                  against it), so no positioning had to be invented. */}
+              <div className="glass-card group relative h-[320px] cursor-default overflow-hidden rounded-[2rem] sm:h-[440px]">
+                <Image
                   src={props.heroImage}
                   alt={props.heroImageAlt}
-                  className="h-[320px] w-full object-cover transition-transform duration-700 group-hover:scale-[1.02] sm:h-[440px]"
-                  loading="eager"
+                  fill
+                  /* Full content width of `.section-wrap`: 100vw less its
+                     1/1.5/2rem inline padding, and that wrapper caps at 80rem,
+                     so the widest this ever renders is 1280 - 2×2rem = 1216px.
+                     Stating the cap keeps the optimiser from being asked for a
+                     1920w variant on a wide desktop that can never use it. */
+                  sizes="(min-width: 1280px) 1216px, (min-width: 1024px) 96vw, 100vw"
+                  /* The service hero is this route's LCP candidate — a 1216×440
+                     picture is by far the largest contentful element once the
+                     heading block has scrolled past, and it is the first thing
+                     the visitor asked for when they opened a service page. */
+                  preload
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-main/70 via-transparent to-transparent" />
               </div>
