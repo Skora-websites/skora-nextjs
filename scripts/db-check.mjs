@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Verifies the configured MongoDB (Atlas) is actually usable.
+ * Verifies the configured MongoDB server is actually usable.
  *
  *   npm run db:check
  *
@@ -79,8 +79,7 @@ if (!uri) {
   fail("MONGODB_URI still contains the <username>/<password> placeholders.");
 } else if (uri.startsWith("mongodb://127.0.0.1") || uri.startsWith("mongodb://localhost")) {
   warn(
-    "MONGODB_URI points at a LOCAL mongod. This project targets MongoDB Atlas — " +
-      "if that is deliberate you can ignore the rest of this check."
+    "MONGODB_URI points at a local MongoDB server."
   );
   ok("URI is set (local)");
 } else {

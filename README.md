@@ -16,11 +16,17 @@ npm run db:seed-admin         # creates/updates the /admin/login account from .e
 npm run dev                   # http://localhost:3001
 ```
 
-Production is intended to use **MongoDB Atlas**. Set the connection string in
-`MONGODB_URI` in `.env` (Atlas → Database Access → Copy Connection String), then
-run `npm run db:check` before anything else. Local MongoDB is also supported when
-`MONGODB_URI` and `MONGODB_DB` point to it. MongoDB Compass connects using the
-same connection string.
+For a persistent local MongoDB service on Ubuntu 24.04+ x86_64, configure
+`MONGODB_URI=mongodb://127.0.0.1:27017/skora` and `MONGODB_DB=skora` in `.env`,
+then run `npm run db:setup-local` once. This downloads the official MongoDB
+server, installs a per-user systemd service, stores database files under
+`~/.local/share/skora-mongodb`, and enables service restarts. Then run
+`npm run db:check` and `npm run db:seed-admin`.
+
+For production, use **MongoDB Atlas**: put its connection string in
+`MONGODB_URI` (Atlas → Database Access → Copy Connection String) and run
+`npm run db:check` before deploying. MongoDB Compass can connect using the same
+URI.
 
 Run `db:check` whenever the site looks wrong but nothing is erroring. A URI that
 connects but cannot authenticate makes every read fall back to `data/hrms.json`,
@@ -34,7 +40,9 @@ settings that ignore every admin edit — with no visible error.
 | `npm run dev` | Next dev server on the port configured by `PORT` |
 | `npm run build` / `npm start` | Production build / serve on the port configured by `PORT` |
 | `npm run lint` | ESLint |
-| `npm run db:check` | Verify the Atlas URI, auth and read access; names the fix if not |
+| `npm run db:check` | Verify MongoDB configuration, reachability, authentication and read access |
+| `npm run db:setup-local` | Install and enable the persistent per-user MongoDB service on Ubuntu 24.04+ x86_64 |
+| `npm run db:start` / `npm run db:stop` / `npm run db:status` | Control or inspect the local MongoDB service |
 | `npm run db:seed-admin` | Seed the admin account from `ADMIN_EMAIL` / `ADMIN_PASSWORD` (`-- --prune` deletes every other user) |
 
 ## Environment (`.env`, gitignored)
@@ -43,7 +51,7 @@ settings that ignore every admin edit — with no visible error.
 | --- | --- |
 | `MONGODB_URI` | Atlas connection string — **must end in the database name** (see `.env.example`) |
 | `MONGODB_DB` | Database name; if omitted, the database in `MONGODB_URI` is used |
-| `MONGODB_ALLOW_FALLBACK` | Set to `1` to boot even when MongoDB is unreachable and use the JSON fallback |
+| `MONGODB_ALLOW_FALLBACK` | Set to `1` only to explicitly accept serving the JSON fallback; otherwise MongoDB failures remain visible |
 | `NEXT_PUBLIC_SITE_URL` | Canonical URL used by SEO/sitemap output |
 | `NEXT_PUBLIC_ALLOWED_IMAGE_HOSTS` | Comma-separated hosts allowed for remote image optimization |
 | `NEXT_PUBLIC_LEGACY_HOSTS` | Extra hostnames that redirect to the canonical origin |

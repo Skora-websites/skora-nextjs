@@ -8,6 +8,10 @@
     "start": "node scripts/run-next.mjs start",
     "lint": "eslint",
     "db:check": "node scripts/db-check.mjs",
+    "db:setup-local": "node scripts/setup-local-mongodb.mjs",
+    "db:start": "systemctl --user start skora-mongodb.service",
+    "db:stop": "systemctl --user stop skora-mongodb.service",
+    "db:status": "systemctl --user status skora-mongodb.service --no-pager",
     "db:seed-admin": "node scripts/seed-admin.mjs"
   },
   "dependencies": {
